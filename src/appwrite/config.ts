@@ -1,74 +1,86 @@
-import conf from "@/conf/config";
 import { Client, Account, ID } from "appwrite";
 
-type CreateUserAccount ={
-    email: string,
-    password: string,
-    name: string,
-}
+export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
+export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
 
-type LoginUserAccount ={
-    email: string,
-    password: string,
-}
+type CreateUserAccount = {
+  email: string;
+  password: string;
+  name: string;
+};
 
-const appwriteClient =  new Client()
+type LoginUserAccount = {
+  email: string;
+  password: string;
+};
 
-appwriteClient.setEndpoint(conf.appwriteUrl).setProject(conf.appwriteProjectID)
+const appwriteClient = new Client()
+  .setEndpoint(API_ENDPOINT)
+  .setProject(PROJECT_ID);
 
-export const account = new Account(appwriteClient)
+const account = new Account(appwriteClient);
 
 export class AppwriteService {
-    //creating a new user 
-    async createUserAccount({email, password, name}:
-    CreateUserAccount){
-        try{
-            const userAccount = await account.create(ID.unique(), email, password, name)
-            if (userAccount){
-                return this.login({email, password})
-            }else{
-                return userAccount
-            }
-        }catch (error) {
-            throw error
-        }
-    }
 
-    async login({email, password}: LoginUserAccount){
-        try {
-            return await account.createEmailPasswordSession(email,password)            
-        } catch (error:any) {
-            throw error
-        }
+  async createUserAccount({ email, password, name }: CreateUserAccount) {
+    try {
+      // Generate a valid user ID
+      let userId = ID.unique();
+      
+    
+      // Create user account
+      const userAccount = await account.create(userId, email, password, name);
+      console.log('Account creation response:');
+      alert("Successful");
+      if (userAccount) {
+        return this.login({ email, password });
+      } else {
+        return userAccount;
+      }
+    } catch (error: any) {
+      console.error("Error creating user account:", error.message);
+      throw new Error(error.message || "Unable to create account. Please try again.");
     }
+  }
 
-    async isLoggedIn(): Promise<boolean>{
-        try {
-            const data = await this.getCurrentUser()
-            return Boolean(data)
-        } catch (error) {}
-        return false
+  async login({ email, password }: LoginUserAccount) {
+    try {
+      // Create a session using email and password
+      return await account.createSession(email, password);
+    } catch (error: any) {
+      console.error("Login error:", error.message);
+      throw new Error(error.message || "Unable to login. Please check your credentials.");
     }
+  }
 
-    async getCurrentUser(){
-        try {
-            return account.get()
-        } catch (error) {
-            console.log("getcurrentUser error: " + error);
-        }
+  async isLoggedIn(): Promise<boolean> {
+    try {
+      const user = await this.getCurrentUser();
+      return !!user; 
+    } catch (error: any) {
+      console.error("Error checking login status:", error.message);
+      return false;
     }
+  }
 
-    async logout(){
-        try {
-            return await account.deleteSession("current")
-           
-        } catch (error) {
-            console.log("logout error: " + error);
-        }
+  async getCurrentUser() {
+    try {
+      return await account.get();
+    } catch (error: any) {
+      console.error("Error fetching current user:", error.message);
+      throw new Error("Unable to retrieve current user.");
     }
+  }
 
+  async logout() {
+    try {
+      return await account.deleteSession("current");
+    } catch (error: any) {
+      console.error("Logout error:", error.message);
+      throw new Error("Unable to log out. Please try again.");
+    }
+  }
 }
 
-const appwriteService = new AppwriteService()
-
-export default appwriteService
+const appwriteService = new AppwriteService();
+export default appwriteService;

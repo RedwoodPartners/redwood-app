@@ -14,10 +14,13 @@ const Signup = () => {
     name: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { setAuthStatus } = useAuth();
 
   const create = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
     try {
       const userData = await appwriteService.createUserAccount(formData);
       if (userData) {
@@ -25,21 +28,20 @@ const Signup = () => {
         router.push("/profile");
       }
     } catch (error: any) {
-      setError(error.message);
+      setError(error.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+
   return (
     <div className="flex h-screen">
-      {/* Left side image 50% */}
       <div className="w-1/2 bg-gray-200 flex items-center justify-center">
-        {/* Placeholder for image */}
         <div className="text-gray-400 text-5xl">🖼️</div>
-        {/*<div className="text-gray-400 text-5xl"><Image src="/signup.jpg" alt="image" layout="fill" /></div>*/}
       </div>
 
-      {/* Right side form 50% */}
-      <div className="flex w-1/2 flex-col items-center justify-center  bg-white relative">
+      <div className="flex w-1/2 flex-col items-center justify-center bg-white relative">
         <Link href="/login" className="absolute top-4 right-4 text-sm text-gray-500">
           Login
         </Link>
@@ -54,10 +56,8 @@ const Signup = () => {
             type="text"
             placeholder="Name"
             value={formData.name}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, name: e.target.value }))
-            }
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
             required
           />
           <input
@@ -65,10 +65,8 @@ const Signup = () => {
             type="email"
             placeholder="name@example.com"
             value={formData.email}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
             required
           />
           <input
@@ -76,20 +74,16 @@ const Signup = () => {
             type="password"
             placeholder="Password"
             value={formData.password}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                password: e.target.value,
-              }))
-            }
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
             required
           />
           <button
             type="submit"
             className="w-full mb-4 rounded-lg bg-black py-3 text-sm text-white hover:bg-gray-800"
+            disabled={isLoading}
           >
-            Sign Up
+            {isLoading ? "Signing Up..." : "Sign Up"}
           </button>
           <div className="flex items-center justify-center mb-4">
             <span className="text-sm text-gray-500">OR</span>
@@ -97,9 +91,8 @@ const Signup = () => {
           <button
             type="button"
             className="flex items-center justify-center w-full rounded-lg border border-gray-300 py-3 text-sm text-gray-900 hover:bg-gray-100"
-            onClick={() => console.log('Continue with Google clicked')}
           >
-            <img src="/" alt="Google" className="h-5 w-5 mr-2" />
+            <img src="/path-to-google-icon.png" alt="Google" className="h-5 w-5 mr-2" />
             Continue with Google
           </button>
         </form>
