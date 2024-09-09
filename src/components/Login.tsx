@@ -1,6 +1,6 @@
 "use client";
 import React, { FormEvent, useState } from "react";
-import appwriteService from "@/appwrite/config";
+import { loginUser } from "@/appwrite/config";
 import useAuth from "@/context/useAuth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,7 +17,7 @@ const Login = () => {
   const login = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const session = await appwriteService.login(formData);
+      const session = await loginUser(formData.email, formData.password); 
       if (session) {
         setAuthStatus(true);
         router.push("/profile");

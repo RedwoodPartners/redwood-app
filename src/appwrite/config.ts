@@ -1,4 +1,5 @@
 import { Client, Account, ID } from "appwrite";
+import { v4 as uuidv4 } from 'uuid';
 
 export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
 export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
@@ -9,10 +10,7 @@ type CreateUserAccount = {
   name: string;
 };
 
-type LoginUserAccount = {
-  email: string;
-  password: string;
-};
+
 
 const appwriteClient = new Client()
   .setEndpoint(API_ENDPOINT)
@@ -21,38 +19,23 @@ const appwriteClient = new Client()
 const account = new Account(appwriteClient);
 
 export class AppwriteService {
-
   async createUserAccount({ email, password, name }: CreateUserAccount) {
     try {
-      // Generate a valid user ID
-      let userId = ID.unique();
+      // userId using uuidv4
+      const userId = uuidv4().replace(/-/g, '');
       
-    
-      // Create user account
       const userAccount = await account.create(userId, email, password, name);
-      console.log('Account creation response:');
+      console.log('Account creation response:', userAccount);
       alert("Successful");
-      if (userAccount) {
-        return this.login({ email, password });
-      } else {
-        return userAccount;
-      }
+      return userAccount; 
+
     } catch (error: any) {
       console.error("Error creating user account:", error.message);
       throw new Error(error.message || "Unable to create account. Please try again.");
     }
   }
 
-  async login({ email, password }: LoginUserAccount) {
-    try {
-      // Create a session using email and password
-      return await account.createSession(email, password);
-    } catch (error: any) {
-      console.error("Login error:", error.message);
-      throw new Error(error.message || "Unable to login. Please check your credentials.");
-    }
-  }
-
+  
   async isLoggedIn(): Promise<boolean> {
     try {
       const user = await this.getCurrentUser();
@@ -81,6 +64,15 @@ export class AppwriteService {
     }
   }
 }
+export const loginUser = async (email: string, password: string) => {
+  try {
+    // Create a session using email and password
+    return await account.createSession(email, password);
+  } catch (error: any) {
+    console.error("Login error:", error.message);
+    throw new Error(error.message || "Unable to login. Please check your credentials.");
+  }
+};
 
 const appwriteService = new AppwriteService();
 export default appwriteService;

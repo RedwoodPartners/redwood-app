@@ -25,7 +25,7 @@ const Signup = () => {
       const userData = await appwriteService.createUserAccount(formData);
       if (userData) {
         setAuthStatus(true);
-        router.push("/profile");
+        router.push("/login");
       }
     } catch (error: any) {
       setError(error.message || "Registration failed. Please try again.");

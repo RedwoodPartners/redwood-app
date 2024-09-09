@@ -1,11 +1,16 @@
 import { createContext } from "react";
 
-export const AuthContext = createContext<{
+interface AuthContextType {
     authStatus: boolean;
-    setAuthStatus: (Status: boolean) => void;
-}>({
+    setAuthStatus: (status: boolean) => void;
+}
+
+// Create AuthContext with default values
+export const AuthContext = createContext<AuthContextType>({
     authStatus: false,
-    setAuthStatus: () => {},
+    setAuthStatus: (status: boolean) => {
+        console.warn("setAuthStatus called without provider");
+    },
 });
 
 export const AuthProvider = AuthContext.Provider;
