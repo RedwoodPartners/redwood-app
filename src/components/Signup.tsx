@@ -47,7 +47,7 @@ const Signup = () => {
         </Link>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Create an account</h2>
         <p className="text-center text-base text-gray-600 mb-6">
-          Enter your email below to create your account
+          Enter your details below to create your account
         </p>
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
         <form onSubmit={create} className="w-full max-w-sm">
