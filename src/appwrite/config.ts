@@ -8,7 +8,12 @@ type CreateUserAccount = {
   email: string;
   password: string;
   name: string;
-};
+}
+
+type LoginUserAccount = {
+  email: string,
+  password: string,
+}
 
 
 
@@ -34,6 +39,14 @@ export class AppwriteService {
       throw new Error(error.message || "Unable to create account. Please try again.");
     }
   }
+
+  async login( { email, password }: LoginUserAccount) {
+    try {
+         return await account.createEmailPasswordSession(email, password)
+    } catch (error:any) {
+      throw error
+    }
+ }
 
   
   async isLoggedIn(): Promise<boolean> {
@@ -64,15 +77,7 @@ export class AppwriteService {
     }
   }
 }
-export const loginUser = async (email: string, password: string) => {
-  try {
-    // Create a session using email and password
-    return await account.createEmailPasswordSession(email, password);
-  } catch (error: any) {
-    console.error("Login error:", error.message);
-    throw new Error(error.message || "Unable to login. Please check your credentials.");
-  }
-};
+
 
 const appwriteService = new AppwriteService();
 export default appwriteService;

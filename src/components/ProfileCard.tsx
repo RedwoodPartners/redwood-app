@@ -27,7 +27,7 @@ const ProfileCard = () => {
         <div className="relative">
           <p className="font-bold text-xl w-full mb-1">{user.name}</p>
           <div className="text-[12px] p-0.5 inline-block rounded-md bg-gradient-to-tr from-primary to-secondary">
-            <button className="px-2 rounded-md font-bold bg-white">FREE</button>
+            <button className="px-2 rounded-md font-bold bg-white"></button>
           </div>
         </div>
       </div>

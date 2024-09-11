@@ -11,7 +11,7 @@ const SignupPage = () =>{
 
 
     if (authStatus) {
-        router.replace("/profile");
+        router.push("/login");
         return<></>;
     }
 
