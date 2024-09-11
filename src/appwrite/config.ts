@@ -67,7 +67,7 @@ export class AppwriteService {
 export const loginUser = async (email: string, password: string) => {
   try {
     // Create a session using email and password
-    return await account.createSession(email, password);
+    return await account.createEmailPasswordSession(email, password);
   } catch (error: any) {
     console.error("Login error:", error.message);
     throw new Error(error.message || "Unable to login. Please check your credentials.");
