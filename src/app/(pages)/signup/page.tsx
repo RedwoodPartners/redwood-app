@@ -11,7 +11,6 @@ const SignupPage = () =>{
 
 
     if (authStatus) {
-        router.push("/login");
         return<></>;
     }
 

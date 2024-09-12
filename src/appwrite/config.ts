@@ -1,4 +1,4 @@
-import { Client, Account, ID } from "appwrite";
+import { Client, Account, ID, OAuthProvider } from "appwrite";
 import { v4 as uuidv4 } from 'uuid';
 
 export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
@@ -31,8 +31,12 @@ export class AppwriteService {
       
       const userAccount = await account.create(userId, email, password, name);
       console.log('Account creation response:', userAccount);
-      alert("Successful");
-      return userAccount; 
+      alert("Successful")
+      if (userAccount) {
+        return this.login({email, password})
+      } else {
+        return userAccount
+      } 
 
     } catch (error: any) {
       console.error("Error creating user account:", error.message);
@@ -61,10 +65,24 @@ export class AppwriteService {
 
   async getCurrentUser() {
     try {
-      return await account.get();
+        return account.get()
+    } catch (error) {
+        console.log("getcurrentUser error: " + error)
+        
+    }
+
+    return null
+  }
+
+
+
+  async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
+    try {
+      // Use OAuthProvider.GOOGLE instead of the string "Google"
+      await account.createOAuth2Session(OAuthProvider.Google, "http://localhost:3000/profile", "http://localhost:3000/");
     } catch (error: any) {
-      console.error("Error fetching current user:", error.message);
-      throw new Error("Unable to retrieve current user.");
+      console.error("Error during Google login:", error.message);
+      throw new Error(error.message || "Google login failed.");
     }
   }
 
@@ -77,6 +95,8 @@ export class AppwriteService {
     }
   }
 }
+
+
 
 
 const appwriteService = new AppwriteService();

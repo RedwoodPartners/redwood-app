@@ -21,7 +21,7 @@ const ProtectedLayout = ({
     return <AuthProvider value={{ authStatus, setAuthStatus }}>
             {!loader && (
                 <>
-                    <main className="px-2 py-4">{children}</main>
+                    <main >{children}</main>
                 </>
             )}
         </AuthProvider>
