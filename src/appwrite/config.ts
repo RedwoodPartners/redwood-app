@@ -32,6 +32,8 @@ export class AppwriteService {
       const userAccount = await account.create(userId, email, password, name);
       console.log('Account creation response:', userAccount);
       alert("Successful")
+
+      // Auto-login after account creation
       if (userAccount) {
         return this.login({email, password})
       } else {
@@ -78,7 +80,6 @@ export class AppwriteService {
 
   async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
     try {
-      // Use OAuthProvider.GOOGLE instead of the string "Google"
       await account.createOAuth2Session(OAuthProvider.Google, "http://localhost:3000/profile", "http://localhost:3000/");
     } catch (error: any) {
       console.error("Error during Google login:", error.message);
@@ -92,6 +93,27 @@ export class AppwriteService {
     } catch (error: any) {
       console.error("Logout error:", error.message);
       throw new Error("Unable to log out. Please try again.");
+    }
+  }
+
+  // Method to send password reset email
+  async sendPasswordResetEmail(email: string) {
+    try {
+      await account.createRecovery(email, "http://localhost:3000/resetpassword");
+      alert("Password reset link sent to your email!");
+    } catch (error: any) {
+      console.error("Error sending password reset email:", error.message);
+      throw new Error(error.message || "Failed to send password reset email.");
+    }
+  }
+
+  async resetPassword(userId: string, secret: string, newPassword: string) {
+    try {
+      await account.updateRecovery(userId, secret, newPassword); 
+      alert("Password has been reset successfully!");
+    } catch (error: any) {
+      console.error("Error resetting password:", error.message);
+      throw new Error(error.message || "Failed to reset password.");
     }
   }
 }

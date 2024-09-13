@@ -136,6 +136,12 @@ const Signup = () => {
             Continue with Google
           </button>
         </form>
+        <p className="text-center text-sm text-gray-500 mt-4">
+          already have an account?&nbsp;
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            login
+          </Link>
+        </p>
       </div>
     </div>
   );

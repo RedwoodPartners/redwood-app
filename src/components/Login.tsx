@@ -90,7 +90,7 @@ const Login = () => {
               <input type="checkbox" className="mr-2" />
               Remember me
             </label>
-            <Link href="/forgot-password" className="text-sm text-gray-700">
+            <Link href="/resetpassword" className="text-sm text-gray-700">
               Forgot password?
             </Link>
           </div>
