@@ -6,58 +6,176 @@ import React, { useEffect, useState } from "react";
 
 const ProfileCard = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState(""); 
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    (async () => {
       const userData = await appwriteService.getCurrentUser();
-      if (userData) setUser(userData);
-    };
-    fetchUser();
+      if (userData) {
+        setUser(userData);
+        // Fetch and set the user's profile picture if available
+        if (userData.prefs?.profilePic) {
+          setProfilePic(userData.prefs.profilePic);
+        }
+      }
+    })();
   }, []);
 
-  if (!user) return null;
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("Passwords do not match!");
+      return;
+    }
+    try {
+      await appwriteService.updatePassword(currentPassword, newPassword);
+      setMessage("Password updated successfully!");
+      setEditingPassword(false);
+    } catch (error) {
+      setMessage("Error updating password. Please check your current password.");
+    }
+  };
+
+  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const fileUrl = URL.createObjectURL(file);
+      setProfilePic(fileUrl);
+
+      try {
+        // Upload the file and get the file ID
+        const fileId = await appwriteService.uploadProfilePicture(file);
+        // Update the user's profile with the new profile picture URL
+        const profilePicUrl = `https://cloud.appwrite.io/v1/storage/buckets/66eb0cfc000e821db4d9/files/${fileId}/view`;
+        await appwriteService.updateUserProfilePicture(user?.$id || '', profilePicUrl);
+        alert("Profile picture updated successfully!");
+      } catch (error) {
+        console.error("Error uploading profile picture:", error);
+        setMessage("Failed to upload profile picture.");
+      }
+    }
+  };
 
   return (
-    <div className="flex gap-y-6 flex-wrap">
-      {/* User Info */}
-      <div className="flex w-full gap-x-4 items-center">
-        <div className="shrink-0 w-20">
-          {/* Add Profile Picture here */}
-        </div>
+    user && (
+      <div className="flex flex-col items-center gap-8 p-8 bg-gray-50 min-h-screen">
+        {/* Profile Section */}
         <div className="relative">
-          <p className="font-bold text-xl w-full mb-1">{user.name}</p>
-          <div className="text-[12px] p-0.5 inline-block rounded-md bg-gradient-to-tr from-primary to-secondary">
-            <button className="px-2 rounded-md font-bold bg-white"></button>
+          {/* Profile Picture */}
+          <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105">
+            <img
+              src={profilePic || "/default-profile.png"}
+              alt="Profile Pic"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <label className="absolute bottom-2 right-2 bg-gray-200 p-2 rounded-full cursor-pointer transition duration-300 hover:bg-gray-300">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfilePicChange}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="w-6 h-6 text-gray-600"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </label>
+        </div>
+
+        {/* User Details */}
+        <div className="text-center">
+          <p className="text-3xl font-bold text-gray-800">{user.name}</p>
+          <p className="text-gray-600 mt-2">{user.email}</p>
+        </div>
+
+        {/* User Info Section */}
+        <div className="bg-white shadow-xl rounded-lg p-6 w-full max-w-md">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">Display Name</p>
+              <p className="font-semibold text-lg">{user.name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Email Address</p>
+              <p className="font-semibold text-lg">{user.email}</p>
+            </div>
+
+            {/* Password Update */}
+            <div>
+              <p className="text-sm text-gray-500">Password</p>
+              {editingPassword ? (
+                <>
+                  <input
+                    type="password"
+                    placeholder="Current Password"
+                    className="w-full mb-2 p-3 border rounded focus:ring focus:ring-blue-200 transition duration-300"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                  <input
+                    type="password"
+                    placeholder="New Password"
+                    className="w-full mb-2 p-3 border rounded focus:ring focus:ring-blue-200 transition duration-300"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    className="w-full mb-2 p-3 border rounded focus:ring focus:ring-blue-200 transition duration-300"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    className="bg-blue-500 text-white w-full py-2 rounded-lg transition-transform duration-300 hover:scale-105"
+                    onClick={handlePasswordUpdate}
+                  >
+                    Update Password
+                  </button>
+                  {message && <p className="text-red-500 mt-2">{message}</p>}
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-lg">********</p>
+                  <button
+                    className="text-blue-500 underline hover:text-blue-700 transition duration-300"
+                    onClick={() => setEditingPassword(true)}
+                  >
+                    Edit Password
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* User Details */}
-      <div className="bg-gray-200/70 rounded-xl px-8 py-8 w-full flex gap-y-4 flex-wrap">
-        <UserProfileField label="Display Name" value={user.name} />
-        <UserProfileField label="Email Id" value={user.email} />
-        <UserProfileField label="Phone Number" value="999-888-7777" />
-        <UserProfileField label="Password" value="********" />
-      </div>
-
-      {/* Logout Button */}
-      <div className="w-full flex justify-center">
+        {/* Logout Button */}
         <Link
           href="/logout"
-          className="bg-gray-200/70 rounded-xl px-6 py-3 inline-block hover:bg-gray-100 duration-150"
+          className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300"
         >
           Logout
         </Link>
       </div>
-    </div>
+    )
   );
 };
-
-const UserProfileField = ({ label, value }: { label: string; value: string }) => (
-  <div className="relative w-full">
-    <p className="text-sm text-gray-700">{label}</p>
-    <p className="font-semibold">{value}</p>
-  </div>
-);
 
 export default ProfileCard;
