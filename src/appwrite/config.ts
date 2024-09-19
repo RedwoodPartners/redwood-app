@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
 export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
+export const BUCKET_ID = '66eb0cfc000e821db4d9';
 
 type CreateUserAccount = {
   email: string;
@@ -22,7 +23,7 @@ const appwriteClient = new Client()
   .setProject(PROJECT_ID);
 
 const account = new Account(appwriteClient);
-const storage = new Storage(appwriteClient);
+const storageClient = new Storage(appwriteClient);
 
 
 export class AppwriteService {
@@ -69,14 +70,16 @@ export class AppwriteService {
 
   async getCurrentUser() {
     try {
-        return account.get()
+      const user = await account.get();
+      const prefs = await account.getPrefs();
+      return { ...user, prefs };
     } catch (error) {
-        console.log("getcurrentUser error: " + error)
-        
+      console.log("getCurrentUser error: " + error);
     }
-
-    return null
+  
+    return null;
   }
+  
 
 
 
@@ -130,25 +133,24 @@ export class AppwriteService {
   }
 
 
-  async uploadProfilePicture(file: File): Promise<string> {
+  async uploadFile(file: File) {
     try {
-      // Replace 'your-bucket-id' with your actual bucket ID
-      const fileId = uuidv4(); // Use a unique ID for the file
-      const result = await storage.createFile('66eb0cfc000e821db4d9', fileId, file);
-      return result.$id;
-    } catch (error: any) {
-      console.error("Error uploading profile picture:", error.message);
-      throw new Error(error.message || "Failed to upload profile picture.");
+      const fileId = uuidv4(); // Generate a unique ID for the file
+      const response = await storageClient.createFile(BUCKET_ID, fileId, file);
+      return response;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
     }
   }
 
   async updateUserProfilePicture(userId: string, photoUrl: string) {
     try {
-      // Appwrite does not directly support updating user profiles; use a custom solution or database to store the URL.
-      // Example:
-      // await databases.updateDocument('your-database-id', 'your-collection-id', userId, { profilePic: photoUrl });
-      // For this example, we'll assume that profile picture URL is managed in some custom storage.
-      console.log(`Update user profile with photo URL: ${photoUrl}`);
+        // Appwrite doesn't support direct user profile updates, so use preferences to store the photo URL
+        await account.updatePrefs({
+            profilePic: photoUrl
+        });
+        console.log('Profile picture URL updated in user preferences');
       alert("Profile picture updated successfully!");
     } catch (error: any) {
       console.error("Error updating profile picture:", error.message);
