@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
 export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
 export const BUCKET_ID = '66eb0cfc000e821db4d9';
+export const DATABASE_ID = '66ebe85b002fb4aab493';
+export const PHONE_COLLECTION_ID = '66ebe86a001cd51b669f';
 
 type CreateUserAccount = {
   email: string;
@@ -157,6 +159,19 @@ export class AppwriteService {
       throw new Error(error.message || "Failed to update profile picture.");
     }
   }
+
+  async updateUserDetails(name: string, email: string, password: string) {
+    try {
+      await account.updateEmail(email, password); // Provide both email and password
+      await account.updatePrefs({ name }); // Update user preferences with the new name
+      alert("User details updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating user details:", error.message);
+      throw new Error(error.message || "Failed to update user details.");
+    }
+  }
+  
+  
 
 
   
