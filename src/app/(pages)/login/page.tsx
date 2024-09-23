@@ -10,7 +10,7 @@ const LoginPage = () => {
 
 
     if (authStatus) {
-        router.replace("/profile");
+        router.replace("/home");
         return<></>;
     }
 

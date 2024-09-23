@@ -14,7 +14,7 @@ const ProfileCard = () => {
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [name, setName] = useState("");
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -22,10 +22,6 @@ const ProfileCard = () => {
         const userData = await appwriteService.getCurrentUser();
         if (userData) {
           setUser(userData);
-          setName(userData.name);
-          if (userData.prefs?.profilePic) {
-            setProfilePic(userData.prefs.profilePic); 
-          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error);

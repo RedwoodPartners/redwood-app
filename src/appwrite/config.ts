@@ -73,8 +73,7 @@ export class AppwriteService {
   async getCurrentUser() {
     try {
       const user = await account.get();
-      const prefs = await account.getPrefs();
-      return { ...user, prefs };
+      return user;
     } catch (error) {
       console.log("getCurrentUser error: " + error);
     }
@@ -87,7 +86,7 @@ export class AppwriteService {
 
   async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
     try {
-      await account.createOAuth2Session(OAuthProvider.Google, "http://localhost:3000/profile", "http://localhost:3000/");
+      await account.createOAuth2Session(OAuthProvider.Google, "http://localhost:3000/home", "http://localhost:3000/");
     } catch (error: any) {
       console.error("Error during Google login:", error.message);
       throw new Error(error.message || "Google login failed.");
@@ -148,7 +147,7 @@ export class AppwriteService {
 
   async updateUserProfilePicture(userId: string, photoUrl: string) {
     try {
-        // Appwrite doesn't support direct user profile updates, so use preferences to store the photo URL
+        // Appwrite doesn't support direct user profile updates, so using preferences to store the photo URL
         await account.updatePrefs({
             profilePic: photoUrl
         });
@@ -162,8 +161,8 @@ export class AppwriteService {
 
   async updateUserDetails(name: string, email: string, password: string) {
     try {
-      await account.updateEmail(email, password); // Provide both email and password
-      await account.updatePrefs({ name }); // Update user preferences with the new name
+      await account.updateEmail(email, password); 
+      await account.updatePrefs({ name }); 
       alert("User details updated successfully!");
     } catch (error: any) {
       console.error("Error updating user details:", error.message);

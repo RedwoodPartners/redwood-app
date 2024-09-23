@@ -37,9 +37,9 @@ const Signup = () => {
   const loginWithGoogle = async () => {
     try {
       setIsLoading(true);
-      await appwriteService.loginWithGoogle("/profile", "/signup");
+      await appwriteService.loginWithGoogle("/home", "/signup");
       setAuthStatus(true);
-      router.push("/profile");
+      router.push("/home");
     } catch (error: any) {
       setError(error.message || "Google sign-up failed. Please try again.");
     } finally {

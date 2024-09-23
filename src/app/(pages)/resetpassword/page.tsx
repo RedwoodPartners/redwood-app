@@ -10,11 +10,10 @@ const ResetPasswordPage = () => {
   const { authStatus } = useAuth();
 
   if (authStatus) {
-    router.replace("/profile");
+    router.replace("/home");
     return <></>; 
   }
 
-  // Render the ResetPassword component if not logged in
   return <ResetPassword />;
 };
 

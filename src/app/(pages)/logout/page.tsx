@@ -2,24 +2,27 @@
 import appwriteService from "@/appwrite/config";
 import useAuth from "@/context/useAuth";
 import { useRouter } from "next/navigation";
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 
 const LogoutPage = () => {
-    const router = useRouter();
-    const {setAuthStatus} = useAuth();
+  const router = useRouter();
+  const { setAuthStatus } = useAuth();
 
-    useEffect(() => {
-        appwriteService.logout()
-        .then(() => {
-            setAuthStatus(false);
-            router.replace("/");
-        })
-    }, []);
+  useEffect(() => {
+    const performLogout = async () => {
+      try {
+        await appwriteService.logout();
+        setAuthStatus(false);
+        router.replace("/login"); // Redirect to login page
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
+    };
 
-    return(
-        <></>
-    )
-}
+    performLogout();
+  }, [router, setAuthStatus]);
 
+  return <></>;
+};
 
 export default LogoutPage;

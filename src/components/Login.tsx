@@ -22,7 +22,7 @@ const Login = () => {
       const session = await appwriteService.login(formData);
       if (session) {
         setAuthStatus(true);
-        router.push("/profile");
+        router.push("/home");
       }
     } catch (error: any) {
       setError(error.message);
@@ -32,7 +32,7 @@ const Login = () => {
   const loginWithGoogle = async () => {
     try {
       setLoading(true);
-      await appwriteService.loginWithGoogle("/profile", "/login");
+      await appwriteService.loginWithGoogle("/home", "/login");
       setLoading(false);
       setAuthStatus(true);
     } catch (error: any) {
