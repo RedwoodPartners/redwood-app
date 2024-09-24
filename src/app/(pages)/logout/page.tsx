@@ -13,7 +13,7 @@ const LogoutPage = () => {
       try {
         await appwriteService.logout();
         setAuthStatus(false);
-        router.replace("/login"); // Redirect to login page
+        router.replace("/login"); 
       } catch (error) {
         console.error("Error during logout:", error);
       }

@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
-import * as Popover from "@radix-ui/react-popover"; //Radix UI Popover for dropdown
+import * as Popover from "@radix-ui/react-popover"; // Radix UI Popover for dropdown
 import Image from "next/image";
 
 const HomePage = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -17,11 +18,14 @@ const HomePage = () => {
         if (userData) {
           setUser(userData);
         } else {
-          router.push("/login");
+          router.push("/");
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        router.push("/login");
+        setError("Unable to fetch user data. Redirecting to login...");
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000); // Optional delay for better UX
       }
     };
 
@@ -29,9 +33,13 @@ const HomePage = () => {
   }, []);
 
   const handleLogout = async () => {
-    await appwriteService.logout();
-    setUser(null);
-    router.replace("/login");
+    try {
+      await appwriteService.logout();
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      setError("Error logging out. Please try again.");
+    }
   };
 
   return (
@@ -42,9 +50,15 @@ const HomePage = () => {
           {/* Logo and Links */}
           <div className="flex items-center space-x-6">
             <h1 className="text-xl font-bold text-gray-800">Logo</h1>
-            <a href="/admin" className="text-gray-800 hover:text-blue-600">Home</a>
-            <a href="/about" className="text-gray-800 hover:text-blue-600">About</a>
-            <a href="/contact" className="text-gray-800 hover:text-blue-600">Contact</a>
+            <a href="/admin" className="text-gray-800 hover:text-blue-600">
+              Home
+            </a>
+            <a href="/about" className="text-gray-800 hover:text-blue-600">
+              About
+            </a>
+            <a href="/contact" className="text-gray-800 hover:text-blue-600">
+              Contact
+            </a>
           </div>
 
           {/* Search bar and Avatar */}
@@ -112,7 +126,7 @@ const HomePage = () => {
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm transition-colors focus:bg-red-500 focus:text-white"
+                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm transition-colors focus:bg-red-500 focus:text-white"
                   >
                     Logout
                   </button>
@@ -123,10 +137,21 @@ const HomePage = () => {
         </div>
       </nav>
 
+      {/* Error Handling */}
+      {error && (
+        <div className="mt-4 text-red-500">
+          {error}
+        </div>
+      )}
+
       {/* Welcome Message */}
       <div className="mt-10 text-center">
-        <h2 className="text-3xl font-semibold text-gray-900">Welcome Back, {user?.name}!</h2>
-        <p className="mt-4 text-gray-700">We're glad to see you again. Explore the links above to continue.</p>
+        <h2 className="text-3xl font-semibold text-gray-900">
+          {user ? `Welcome Back, ${user.name}!` : "Loading..."}
+        </h2>
+        <p className="mt-4 text-gray-700">
+          We're glad to see you again. Explore the links above to continue.
+        </p>
       </div>
     </div>
   );
