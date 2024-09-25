@@ -22,6 +22,7 @@ const ProfileCard = () => {
         const userData = await appwriteService.getCurrentUser();
         if (userData) {
           setUser(userData);
+          setName(userData.name);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);

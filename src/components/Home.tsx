@@ -153,6 +153,10 @@ const HomePage = () => {
           We're glad to see you again. Explore the links above to continue.
         </p>
       </div>
+      
+
+
+
     </div>
   );
 };
