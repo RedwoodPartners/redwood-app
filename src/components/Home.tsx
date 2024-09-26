@@ -9,6 +9,7 @@ import Image from "next/image";
 const HomePage = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
   const router = useRouter();
 
   useEffect(() => {
@@ -55,9 +56,13 @@ const HomePage = () => {
             </a>
 
             {/* Tables Dropdown */}
-            <Popover.Root>
+            <Popover.Root open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <Popover.Trigger asChild>
-                <button className="text-gray-800 hover:text-blue-600">
+                <button
+                  className="text-gray-800 hover:text-blue-600"
+                  onMouseEnter={() => setIsDropdownOpen(true)}
+                  
+                >
                   Tables
                 </button>
               </Popover.Trigger>
@@ -66,6 +71,8 @@ const HomePage = () => {
                 className="z-50 mt-2 w-40 origin-top-right rounded-md bg-white shadow-md ring-1 ring-black ring-opacity-5 focus:outline-none"
                 align="start"
                 sideOffset={8}
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)} 
               >
                 <div className="py-1">
                   <button

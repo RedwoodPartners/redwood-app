@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AgGridReact } from "ag-grid-react"; 
 import { ColDef, GridReadyEvent } from "ag-grid-community"; 
 import "ag-grid-community/styles/ag-grid.css"; 
@@ -16,8 +16,10 @@ type Startup = {
 
 const StartupsPage: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
-  
+  const gridRef = useRef<AgGridReact<Startup>>(null); // Create a ref for AgGridReact
+
   const columnDefs: ColDef<Startup>[] = [ 
+    { headerCheckboxSelection: true, checkboxSelection: true }, // Enable checkbox for row selection
     { field: "id", headerName: "ID", sortable: true, filter: true },
     { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
     { field: "status", headerName: "Status", sortable: true, filter: true, editable: true },
@@ -44,6 +46,20 @@ const StartupsPage: React.FC = () => {
     setStartups((prev) => [...prev, newStartup]);
   };
 
+  // Remove Selected Startups
+  const handleRemoveSelected = () => {
+    const gridApi = gridRef.current?.api; // Access the grid API using the ref
+    if (gridApi) {
+      const selectedNodes = gridApi.getSelectedNodes();
+      const selectedIds = selectedNodes
+        .map(node => node.data) // Get the node data
+        .filter(data => data !== undefined) // Filter out any undefined data
+        .map(data => data.id); // Now safely access the ID
+      
+      setStartups((prev) => prev.filter(startup => !selectedIds.includes(startup.id)));
+    }
+  };
+
   // Use the GridReadyEvent type for the params argument
   const onGridReady = (params: GridReadyEvent) => { 
     params.api.sizeColumnsToFit();
@@ -54,16 +70,23 @@ const StartupsPage: React.FC = () => {
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
 
       {/* Add Startup Button */}
-      <button
-        onClick={handleAddStartup}
-        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mb-4"
+      <button onClick={handleAddStartup}
+        className="bg-gray-100 text-gray-800 text-sm py-2 px-4 mb-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
       >
-        Add New Startup
+        Add Startup
+      </button>
+
+      {/* Remove Selected Button with Updated Style */}
+      <button onClick={handleRemoveSelected}
+        className="bg-gray-100 text-gray-800 text-sm py-2 px-2 mb-3 ml-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+      >
+        Remove Selected
       </button>
 
       {/* Startups Grid */}
       <div className="ag-theme-quartz" style={{ height: 400, width: '100%' }}>
         <AgGridReact
+          ref={gridRef} // Attach the ref to AgGridReact
           rowData={startups}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
@@ -71,6 +94,7 @@ const StartupsPage: React.FC = () => {
           paginationPageSize={10}
           domLayout='autoHeight'
           editType='fullRow' // Enable full row editing
+          rowSelection="multiple" // Enable multiple row selection
         />
       </div>
     </div>
