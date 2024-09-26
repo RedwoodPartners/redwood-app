@@ -53,6 +53,37 @@ const HomePage = () => {
             <a href="/admin" className="text-gray-800 hover:text-blue-600">
               Home
             </a>
+
+            {/* Tables Dropdown */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button className="text-gray-800 hover:text-blue-600">
+                  Tables
+                </button>
+              </Popover.Trigger>
+
+              <Popover.Content
+                className="z-50 mt-2 w-40 origin-top-right rounded-md bg-white shadow-md ring-1 ring-black ring-opacity-5 focus:outline-none"
+                align="start"
+                sideOffset={8}
+              >
+                <div className="py-1">
+                  <button
+                    className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                    onClick={() => router.push("/startup")}
+                  >
+                    Startups
+                  </button>
+                  <button
+                    className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                    onClick={() => router.push("/admin/projects")}
+                  >
+                    Projects
+                  </button>
+                </div>
+              </Popover.Content>
+            </Popover.Root>
+
             <a href="/about" className="text-gray-800 hover:text-blue-600">
               About
             </a>
@@ -153,10 +184,6 @@ const HomePage = () => {
           We're glad to see you again. Explore the links above to continue.
         </p>
       </div>
-      
-
-
-
     </div>
   );
 };

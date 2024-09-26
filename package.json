@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.1",
+    "ag-grid-community": "^32.2.0",
+    "ag-grid-react": "^32.2.0",
     "appwrite": "^15.0.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.31",
