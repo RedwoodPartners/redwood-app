@@ -6,29 +6,38 @@ import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-communit
 import "ag-grid-community/styles/ag-grid.css"; 
 import "ag-grid-community/styles/ag-theme-quartz.css"; 
 
-type Startup = {
+type Project = {
   id: string;
   name: string;
-  status: string;
-  founded: string; 
+  manager: string;
+  startDate: string;
+  endDate: string;
   description: string;
 };
 
-const StartupsPage: React.FC = () => {
-  const [startups, setStartups] = useState<Startup[]>([]);
+const ProjectsPage: React.FC = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [tempStartups, setTempStartups] = useState<Startup[]>([]);
-  const [editedRow, setEditedRow] = useState<Startup | null>(null); // Track the edited row
-  const gridRef = useRef<AgGridReact<Startup>>(null); // Create a ref for AgGridReact
+  const [editedRow, setEditedRow] = useState<Project | null>(null); // Track the edited row
+  const [tempProjects, setTempProjects] = useState<Project[]>([]); // Temporary state to store changes
+  const gridRef = useRef<AgGridReact<Project>>(null);
 
-  const columnDefs: ColDef<Startup>[] = [ 
+  const columnDefs: ColDef<Project>[] = [ 
     { headerCheckboxSelection: true, checkboxSelection: true }, // Enable checkbox for row selection
     { field: "id", headerName: "ID", sortable: true, filter: true },
     { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
-    { field: "status", headerName: "Status", sortable: true, filter: true, editable: true },
+    { field: "manager", headerName: "Manager", sortable: true, filter: true, editable: true },
     {
-      field: "founded",
-      headerName: "Founded",
+      field: "startDate",
+      headerName: "Start Date",
+      sortable: true,
+      filter: true,
+      editable: true,
+      valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
+    },
+    {
+      field: "endDate",
+      headerName: "End Date",
       sortable: true,
       filter: true,
       editable: true,
@@ -37,29 +46,30 @@ const StartupsPage: React.FC = () => {
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true },
   ];
 
-  // Add New Startup
-  const handleAddStartup = () => {
-    const newStartup: Startup = {
-      id: `${startups.length + 1}`, // Mock ID generation
+  // Add New Project
+  const handleAddProject = () => {
+    const newProject: Project = {
+      id: `${projects.length + 1}`, // Mock ID generation
       name: "",
-      status: "",
-      founded: new Date().toISOString().split("T")[0], // Default to today's date
+      manager: "",
+      startDate: new Date().toISOString().split("T")[0], // Default to today's date
+      endDate: "",
       description: "",
     };
-    setStartups((prev) => [...prev, newStartup]);
+    setProjects((prev) => [...prev, newProject]);
   };
 
-  // Remove Selected Startups
+  // Remove Selected Projects
   const handleRemoveSelected = () => {
-    const gridApi = gridRef.current?.api; // Access the grid API using the ref
+    const gridApi = gridRef.current?.api;
     if (gridApi) {
       const selectedNodes = gridApi.getSelectedNodes();
       const selectedIds = selectedNodes
-        .map(node => node.data) // Get the node data
-        .filter(data => data !== undefined) // Filter out any undefined data
-        .map(data => data.id); // Now safely access the ID
+        .map(node => node.data)
+        .filter(data => data !== undefined)
+        .map(data => data.id);
       
-      setStartups((prev) => prev.filter(startup => !selectedIds.includes(startup.id)));
+      setProjects((prev) => prev.filter(project => !selectedIds.includes(project.id)));
     }
   };
 
@@ -70,18 +80,18 @@ const StartupsPage: React.FC = () => {
 
   // Handle the changes after row editing
   const onRowEditingStopped = (event: RowEditingStoppedEvent) => {
-    const updatedRow = event.data as Startup;
+    const updatedRow = event.data as Project;
     setEditedRow(updatedRow); // Save the edited row
-    setTempStartups([...startups]); // Save temporary changes
+    setTempProjects([...projects]); // Save temporary changes
     setShowModal(true); // Show confirmation modal
   };
 
   // Confirm Changes for the edited row
   const handleConfirmChanges = () => {
     if (editedRow) {
-      setStartups((prev) => 
-        prev.map((startup) => 
-          startup.id === editedRow.id ? editedRow : startup
+      setProjects((prev) => 
+        prev.map((project) => 
+          project.id === editedRow.id ? editedRow : project
         )
       );
       setEditedRow(null); // Clear edited row
@@ -92,11 +102,7 @@ const StartupsPage: React.FC = () => {
   // Discard Changes for the edited row
   const handleDiscardChanges = () => {
     if (editedRow) {
-      setTempStartups((prev) => 
-        prev.map((startup) => 
-          startup.id === editedRow.id ? startups.find(s => s.id === editedRow.id)! : startup
-        )
-      );
+      setProjects(tempProjects); // Revert to original state using tempProjects
       setEditedRow(null); // Clear edited row
       gridRef.current?.api.refreshCells(); // Refresh the grid to original state
     }
@@ -105,34 +111,34 @@ const StartupsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-4">Startups</h1>
+      <h1 className="text-2xl font-semibold mb-4">Projects</h1>
 
-      {/* Add Startup Button */}
-      <button onClick={handleAddStartup}
+      {/* Add Project Button */}
+      <button onClick={handleAddProject}
         className="bg-gray-100 text-gray-800 text-sm py-2 px-4 mb-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
       >
-        Add Startup
+        Add Project
       </button>
 
-      {/* Remove Selected Button with Updated Style */}
+      {/* Remove Selected Button */}
       <button onClick={handleRemoveSelected}
         className="bg-gray-100 text-gray-800 text-sm py-2 px-2 mb-3 ml-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
       >
         Remove Selected
       </button>
 
-      {/* Startups Grid */}
+      {/* Projects Grid */}
       <div className="ag-theme-quartz" style={{ height: 400, width: '100%' }}>
         <AgGridReact
-          ref={gridRef} // Attach the ref to AgGridReact
-          rowData={startups}
+          ref={gridRef}
+          rowData={projects}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
           pagination={true}
           paginationPageSize={10}
           domLayout='autoHeight'
-          editType='fullRow' // Enable full row editing
-          rowSelection="multiple" // Enable multiple row selection
+          editType='fullRow'
+          rowSelection="multiple"
           onRowEditingStopped={onRowEditingStopped} // Capture editing events
         />
       </div>
@@ -164,4 +170,4 @@ const StartupsPage: React.FC = () => {
   );
 };
 
-export default StartupsPage;
+export default ProjectsPage;

@@ -83,7 +83,7 @@ const HomePage = () => {
                   </button>
                   <button
                     className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                    onClick={() => router.push("/admin/projects")}
+                    onClick={() => router.push("/projects")}
                   >
                     Projects
                   </button>
