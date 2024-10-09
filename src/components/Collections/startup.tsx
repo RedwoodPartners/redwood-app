@@ -112,21 +112,39 @@ const StartupsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleConfirmChanges = () => {
+  const handleConfirmChanges = async () => {
     if (editedRow) {
-      setStartups((prev) =>
-        prev.map((startup) =>
-          startup.id === editedRow.id ? editedRow : startup
-        )
-      );
-      setEditedRow(null);
+      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+      const databases = new Databases(client);
+  
+      try {
+        // Update the edited startup in Appwrite
+        await databases.updateDocument(DATABASE_ID, STARTUP_ID, editedRow.id, {
+          name: editedRow.name,
+          status: editedRow.status,
+          founded: editedRow.founded,
+          description: editedRow.description,
+        });
+  
+        // Reflect the updated data in the UI
+        setStartups((prev) =>
+          prev.map((startup) =>
+            startup.id === editedRow.id ? editedRow : startup
+          )
+        );
+  
+        // Clear edited row state
+        setEditedRow(null);
+        setShowModal(false);
+      } catch (error) {
+        console.error("Error updating startup:", error);
+      }
     }
-    setShowModal(false);
   };
-
+  
   const handleDiscardChanges = () => {
     setEditedRow(null);
-    gridRef.current?.api.refreshCells();
+    gridRef.current?.api.refreshCells(); // Refresh cells to revert changes
     setShowModal(false);
   };
 
