@@ -1,28 +1,137 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { AgGridReact } from "ag-grid-react"; 
-import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-community"; 
-import "ag-grid-community/styles/ag-grid.css"; 
-import "ag-grid-community/styles/ag-theme-quartz.css"; 
+import React, { useState, useEffect, useRef } from "react";
+import { AgGridReact } from "ag-grid-react";
+import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-community";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import { Client, Databases, ID } from "appwrite";
+import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
 type Startup = {
   id: string;
   name: string;
   status: string;
-  founded: string; 
+  founded: string;
   description: string;
+};
+
+type Document = {
+  $id: string;
+  [key: string]: any;
 };
 
 const StartupsPage: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [tempStartups, setTempStartups] = useState<Startup[]>([]);
-  const [editedRow, setEditedRow] = useState<Startup | null>(null); // Track the edited row
-  const gridRef = useRef<AgGridReact<Startup>>(null); // Create a ref for AgGridReact
+  const [editedRow, setEditedRow] = useState<Startup | null>(null);
+  const gridRef = useRef<AgGridReact<Startup>>(null);
 
-  const columnDefs: ColDef<Startup>[] = [ 
-    { headerCheckboxSelection: true, checkboxSelection: true }, // Enable checkbox for row selection
+  // Initialize Appwrite client and fetch startups only on the client side
+  useEffect(() => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+
+    const fetchStartups = async () => {
+      try {
+        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const startupData = response.documents.map((doc: Document) => ({
+          id: doc.$id,
+          name: doc.name || "",
+          status: doc.status || "",
+          founded: doc.founded || "",
+          description: doc.description || "",
+        }));
+        setStartups(startupData);
+      } catch (error) {
+        console.error("Error fetching startups:", error);
+      }
+    };
+
+    fetchStartups();
+  }, []);
+
+  const handleAddStartup = async () => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+
+    const newStartup: Partial<Startup> = {
+      name: "New Startup",
+      status: "Active",
+      founded: new Date().toISOString().split("T")[0],
+      description: "Description",
+    };
+    try {
+      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, "unique()", newStartup);
+      setStartups((prev) => [
+        ...prev,
+        {
+          id: createdStartup.$id,
+          name: createdStartup.name || "",
+          status: createdStartup.status || "",
+          founded: createdStartup.founded || "",
+          description: createdStartup.description || "",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error adding startup:", error);
+    }
+  };
+
+  const handleRemoveSelected = async () => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+  
+    const gridApi = gridRef.current?.api;
+    if (gridApi) {
+      const selectedNodes = gridApi.getSelectedNodes();
+      const selectedIds = selectedNodes
+        .map((node) => node.data?.id) 
+        .filter((id): id is string => id !== undefined);
+  
+      try {
+        await Promise.all(
+          selectedIds.map((id) => databases.deleteDocument(DATABASE_ID, STARTUP_ID, id))
+        );
+        setStartups((prev) => prev.filter((startup) => !selectedIds.includes(startup.id)));
+      } catch (error) {
+        console.error("Error deleting startups:", error);
+      }
+    }
+  };
+  
+  
+  
+  const onGridReady = (params: GridReadyEvent) => {
+    params.api.sizeColumnsToFit();
+  };
+
+  const onRowEditingStopped = (event: RowEditingStoppedEvent) => {
+    const updatedRow = event.data as Startup;
+    setEditedRow(updatedRow);
+    setShowModal(true);
+  };
+
+  const handleConfirmChanges = () => {
+    if (editedRow) {
+      setStartups((prev) =>
+        prev.map((startup) =>
+          startup.id === editedRow.id ? editedRow : startup
+        )
+      );
+      setEditedRow(null);
+    }
+    setShowModal(false);
+  };
+
+  const handleDiscardChanges = () => {
+    setEditedRow(null);
+    gridRef.current?.api.refreshCells();
+    setShowModal(false);
+  };
+
+  const columnDefs: ColDef<Startup>[] = [
+    { headerCheckboxSelection: true, checkboxSelection: true },
     { field: "id", headerName: "ID", sortable: true, filter: true },
     { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
     { field: "status", headerName: "Status", sortable: true, filter: true, editable: true },
@@ -37,107 +146,35 @@ const StartupsPage: React.FC = () => {
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true },
   ];
 
-  // Add New Startup
-  const handleAddStartup = () => {
-    const newStartup: Startup = {
-      id: `${startups.length + 1}`, // Mock ID generation
-      name: "",
-      status: "",
-      founded: new Date().toISOString().split("T")[0], // Default to today's date
-      description: "",
-    };
-    setStartups((prev) => [...prev, newStartup]);
-  };
-
-  // Remove Selected Startups
-  const handleRemoveSelected = () => {
-    const gridApi = gridRef.current?.api; // Access the grid API using the ref
-    if (gridApi) {
-      const selectedNodes = gridApi.getSelectedNodes();
-      const selectedIds = selectedNodes
-        .map(node => node.data) // Get the node data
-        .filter(data => data !== undefined) // Filter out any undefined data
-        .map(data => data.id); // Now safely access the ID
-      
-      setStartups((prev) => prev.filter(startup => !selectedIds.includes(startup.id)));
-    }
-  };
-
-  // Use the GridReadyEvent type for the params argument
-  const onGridReady = (params: GridReadyEvent) => { 
-    params.api.sizeColumnsToFit();
-  };
-
-  // Handle the changes after row editing
-  const onRowEditingStopped = (event: RowEditingStoppedEvent) => {
-    const updatedRow = event.data as Startup;
-    setEditedRow(updatedRow); // Save the edited row
-    setTempStartups([...startups]); // Save temporary changes
-    setShowModal(true); // Show confirmation modal
-  };
-
-  // Confirm Changes for the edited row
-  const handleConfirmChanges = () => {
-    if (editedRow) {
-      setStartups((prev) => 
-        prev.map((startup) => 
-          startup.id === editedRow.id ? editedRow : startup
-        )
-      );
-      setEditedRow(null); // Clear edited row
-    }
-    setShowModal(false); // Close modal
-  };
-
-  // Discard Changes for the edited row
-  const handleDiscardChanges = () => {
-    if (editedRow) {
-      setTempStartups((prev) => 
-        prev.map((startup) => 
-          startup.id === editedRow.id ? startups.find(s => s.id === editedRow.id)! : startup
-        )
-      );
-      setEditedRow(null); // Clear edited row
-      gridRef.current?.api.refreshCells(); // Refresh the grid to original state
-    }
-    setShowModal(false); // Close modal
-  };
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
-
-      {/* Add Startup Button */}
-      <button onClick={handleAddStartup}
+      <button
+        onClick={handleAddStartup}
         className="bg-gray-100 text-gray-800 text-sm py-2 px-4 mb-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
       >
         Add Startup
       </button>
-
-      {/* Remove Selected Button with Updated Style */}
-      <button onClick={handleRemoveSelected}
+      <button
+        onClick={handleRemoveSelected}
         className="bg-gray-100 text-gray-800 text-sm py-2 px-2 mb-3 ml-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
       >
         Remove Selected
       </button>
-
-      {/* Startups Grid */}
       <div className="ag-theme-quartz" style={{ height: 400, width: '100%' }}>
         <AgGridReact
-          ref={gridRef} // Attach the ref to AgGridReact
+          ref={gridRef}
           rowData={startups}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
           pagination={true}
           paginationPageSize={10}
           domLayout='autoHeight'
-          editType='fullRow' // Enable full row editing
-          rowSelection="multiple" // Enable multiple row selection
-          onRowEditingStopped={onRowEditingStopped} // Capture editing events
+          editType='fullRow'
+          rowSelection="multiple"
+          onRowEditingStopped={onRowEditingStopped}
         />
       </div>
-
-      {/* Confirmation Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-lg">
