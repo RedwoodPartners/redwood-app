@@ -6,6 +6,7 @@ export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
 export const BUCKET_ID = '66eb0cfc000e821db4d9';
 export const DATABASE_ID = '66ebe85b002fb4aab493';
 export const STARTUP_ID = '6704bbd6003c907e60dc';
+export const PROJECTS_ID = '67077994001c72cd4b42';
 
 type CreateUserAccount = {
   email: string;

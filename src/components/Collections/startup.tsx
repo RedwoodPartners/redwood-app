@@ -142,11 +142,29 @@ const StartupsPage: React.FC = () => {
     }
   };
   
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = async () => {
     setEditedRow(null);
-    gridRef.current?.api.refreshCells(); // Refresh cells to revert changes
     setShowModal(false);
+    
+    // Re-fetch data from the database to revert changes
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+  
+    try {
+      const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+      const startupData = response.documents.map((doc: Document) => ({
+        id: doc.$id,
+        name: doc.name || "",
+        status: doc.status || "",
+        founded: doc.founded || "",
+        description: doc.description || "",
+      }));
+      setStartups(startupData);
+    } catch (error) {
+      console.error("Error fetching startups:", error);
+    }
   };
+  
 
   const columnDefs: ColDef<Startup>[] = [
     { headerCheckboxSelection: true, checkboxSelection: true },
