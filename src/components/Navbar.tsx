@@ -1,4 +1,3 @@
-"use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import appwriteService from "@/appwrite/config";
@@ -6,7 +5,7 @@ import { Models } from "appwrite";
 import * as Popover from "@radix-ui/react-popover"; // Radix UI Popover for dropdown
 import Image from "next/image";
 
-const HomePage = () => {
+const Navbar = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
@@ -19,14 +18,14 @@ const HomePage = () => {
         if (userData) {
           setUser(userData);
         } else {
-          router.push("/");
+          router.push("/login"); // Redirect to login if no user data
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
         setError("Unable to fetch user data. Redirecting to login...");
         setTimeout(() => {
-          router.push("/login");
-        }, 2000); // Optional delay for better UX
+          router.push("/login"); // Optional delay for better UX
+        }, 2000);
       }
     };
 
@@ -44,9 +43,9 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-slate-50">
+    <div className="flex flex-col items-center mb-20 bg-slate-50">
       {/* Navigation Bar */}
-      <nav className="w-full shadow-md p-3 bg-white">
+      <nav className="w-full shadow-md p-3 bg-white fixed top-0 z-50">
         <div className="max-w-8xl mx-auto flex justify-between items-center">
           {/* Logo and Links */}
           <div className="flex items-center space-x-6">
@@ -61,7 +60,6 @@ const HomePage = () => {
                 <button
                   className="text-gray-800 hover:text-blue-600"
                   onMouseEnter={() => setIsDropdownOpen(true)}
-                  
                 >
                   Tables
                 </button>
@@ -174,25 +172,8 @@ const HomePage = () => {
           </div>
         </div>
       </nav>
-
-      {/* Error Handling */}
-      {error && (
-        <div className="mt-4 text-red-500">
-          {error}
-        </div>
-      )}
-
-      {/* Welcome Message */}
-      <div className="mt-10 text-center">
-        <h2 className="text-3xl font-semibold text-gray-900">
-          {user ? `Welcome Back, ${user.name}!` : "Loading..."}
-        </h2>
-        <p className="mt-4 text-gray-700">
-          We're glad to see you again. Explore the links above to continue.
-        </p>
-      </div>
     </div>
   );
 };
 
-export default HomePage;
+export default Navbar;
