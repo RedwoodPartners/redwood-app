@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+import { ICellRendererParams } from 'ag-grid-community';
+
 import { Client, Databases, ID } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
@@ -164,10 +167,35 @@ const StartupsPage: React.FC = () => {
       console.error("Error fetching startups:", error);
     }
   };
+
+  const handleViewStartup = (id: string) => {
+  console.log("View Startup ID:", id);
+  // navigate(`/startups/${id}`);
+  };
+
   
 
   const columnDefs: ColDef<Startup>[] = [
     { headerCheckboxSelection: true, checkboxSelection: true },
+    {
+      headerName: "View",
+      cellRenderer: (params: ICellRendererParams<Startup>) => (
+        <button
+          onClick={() => {
+            if (params.data) {
+              handleViewStartup(params.data.id);
+            }
+          }}
+          className="text-blue-500 hover:text-blue-700"
+          title="View Startup"
+          disabled={!params.data} // Disable button if no data
+        >
+          👁️
+        </button>
+      ),
+      width: 100,
+      cellClass: "justify-center",
+    },
     { field: "id", headerName: "ID", sortable: true, filter: true },
     { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
     { field: "status", headerName: "Status", sortable: true, filter: true, editable: true },
@@ -180,7 +208,9 @@ const StartupsPage: React.FC = () => {
       valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
     },
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true },
+    
   ];
+
 
   return (
     <div className="container mx-auto p-4">
@@ -236,5 +266,5 @@ const StartupsPage: React.FC = () => {
     </div>
   );
 };
-
+   
 export default StartupsPage;
