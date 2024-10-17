@@ -119,7 +119,7 @@ const Navbar = () => {
                     <Image
                       className="aspect-square h-full w-full"
                       alt={`@${user?.name || "user"}`}
-                      src="/avatar.png"
+                      src="/avatar.jpg"
                       width={32}
                       height={32}
                     />
