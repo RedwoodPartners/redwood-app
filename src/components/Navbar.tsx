@@ -35,7 +35,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await appwriteService.logout();
-      router.replace("/login");
+      router.replace("/");
     } catch (error) {
       console.error("Logout error:", error);
       setError("Error logging out. Please try again.");
