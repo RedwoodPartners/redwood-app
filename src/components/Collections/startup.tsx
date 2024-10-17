@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ICellRendererParams } from 'ag-grid-community';
+import { FaEye } from 'react-icons/fa';
 
 import { Client, Databases, ID } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -29,6 +30,8 @@ const StartupsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editedRow, setEditedRow] = useState<Startup | null>(null);
   const gridRef = useRef<AgGridReact<Startup>>(null);
+  const router = useRouter();
+  
 
   // Initialize Appwrite client and fetch startups only on the client side
   useEffect(() => {
@@ -170,7 +173,7 @@ const StartupsPage: React.FC = () => {
 
   const handleViewStartup = (id: string) => {
   console.log("View Startup ID:", id);
-  // navigate(`/startups/${id}`);
+  router.push(`/startup/${id}`);
   };
 
   
@@ -180,17 +183,18 @@ const StartupsPage: React.FC = () => {
     {
       headerName: "View",
       cellRenderer: (params: ICellRendererParams<Startup>) => (
-        <button
-          onClick={() => {
+        <button onClick={() => {
             if (params.data) {
               handleViewStartup(params.data.id);
             }
           }}
-          className="text-blue-500 hover:text-blue-700"
+          className="bg-transparent text-gray-600 hover:text-blue-700 
+               px-2 py-1 border border-transparent transition-colors 
+               duration-200 ease-in-out disabled:opacity-50"
           title="View Startup"
-          disabled={!params.data} // Disable button if no data
+          disabled={!params.data}
         >
-          👁️
+         <FaEye size={18} />
         </button>
       ),
       width: 100,

@@ -1,4 +1,4 @@
-import { Client, Account, ID, OAuthProvider, Storage } from "appwrite";
+import { Client, Account, Databases, ID, OAuthProvider, Storage } from "appwrite";
 import { v4 as uuidv4 } from 'uuid';
 
 export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
@@ -27,6 +27,7 @@ const appwriteClient = new Client()
 
 const account = new Account(appwriteClient);
 const storageClient = new Storage(appwriteClient);
+export const databases = new Databases(appwriteClient);
 
 
 export class AppwriteService {
