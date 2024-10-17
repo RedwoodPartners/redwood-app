@@ -194,7 +194,7 @@ const ProjectsPage: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-16 -mt-10">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
       <button
         onClick={handleAddProject}

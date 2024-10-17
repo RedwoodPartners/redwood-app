@@ -4,10 +4,12 @@
 import React from 'react';
 import StartupsPage from '@/components/Collections/startup';
 import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/menu';
 
 const Startup: React.FC = () => {
   return (
-    <div className="mt-0">
+    <div>
+      <Sidebar />
       <Navbar />
       <StartupsPage />
     </div>
