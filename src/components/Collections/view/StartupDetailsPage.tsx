@@ -76,6 +76,9 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
               </span>
               <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full">Equity</span>
               <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full">Deep Dive</span>
+              <button className="border border-blue-500 text-blue-500 px-3 py-1 rounded-full hover:bg-blue-500 hover:text-white transition">
+                Pipeline
+              </button>
               <button className="text-blue-500 underline hover:text-blue-700 transition">
                 Add Profile Info
               </button>

@@ -29,7 +29,7 @@ const CompanyInformation: React.FC = () => {
 
       {/* Right Sidebar */}
       <div className="hidden lg:flex flex-col fixed right-0 h-full -mt-3 w-52 border-l-black border-gray-300 bg-gray-800 text-white">
-        <ul className="flex-grow p-4 space-y-4">
+        <ul className="flex-grow p-5 space-y-4">
           {[
             "Company Details",
             "Regulatory Information",
@@ -37,14 +37,20 @@ const CompanyInformation: React.FC = () => {
             "About Business",
             "Customer Testimonials",
           ].map((link, index) => (
-            <li key={index}>
-              <a href="#" className="text-white hover:text-blue-400 transition-colors"> {/* Change text color to white */}
-                {link}
-              </a>
-            </li>
+          <li key={index}>
+          <a
+          href="#"
+          className={`block py-2 w-screen -ml-4 transition-colors ${
+            link === "Company Details" ? "bg-white text-black" : "text-white"
+          } hover:bg-white hover:text-black`} 
+          >
+          {link}
+           </a>
+          </li>
           ))}
         </ul>
       </div>
+
     </div>
   );
 };
