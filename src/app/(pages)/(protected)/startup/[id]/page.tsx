@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import StartupDetailsPage from "@/components/Collections/StartupDetailsPage";
+import StartupDetailsPage from "@/components/Collections/view/StartupDetailsPage";
 import Sidebar from "@/components/menu";
 import Navbar from "@/components/Navbar";
 
