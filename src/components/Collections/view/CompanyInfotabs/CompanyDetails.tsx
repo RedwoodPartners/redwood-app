@@ -4,7 +4,7 @@ import React from "react";
 const CompanyDetails: React.FC = () => {
     return (
       <>
-        <h2 className="text-xl font-bold mb-4">Company Details</h2>
+        <h2 className="text-lg font-bold mb-4">Company Details</h2>
         <div className="grid grid-cols-5 gap-4 mt-2">
           {[
             [["Brand Name", "FeNix"], ["Date of Incorporation", "20 Jun 2021"], ["Company Stage", "PoC"]],

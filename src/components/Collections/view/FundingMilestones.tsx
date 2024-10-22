@@ -1,54 +1,58 @@
 "use client";
-import React from "react";
+
+import React, { useState } from "react";
+import FundRaisedSoFar from "./FundingMilestonestabs/FundRaised";
+import Shareholders from "./FundingMilestonestabs/Shareholders";
+import CapTable from "./FundingMilestonestabs/CapTable";
+import FundAsk from "./FundingMilestonestabs/FundAsk";
+import TranchesMilestones from "./FundingMilestonestabs/Milestones";
+import RightSidebar from "./RightSidebar";
 
 const FundingMilestones: React.FC = () => {
+  // State to track the active sidebar tab
+  const [activeTab, setActiveTab] = useState("Fund Raised So Far");
+
+  const tabs = [
+    "Fund Raised So Far",
+    "Shareholders",
+    "Cap Table",
+    "Fund Ask",
+    "Tranches & Milestones",
+  ];
+
+  // Function to render content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Fund Raised So Far":
+        return <FundRaisedSoFar />;
+      case "Shareholders":
+        return <Shareholders />;
+      case "Cap Table":
+        return <CapTable />;
+      case "Fund Ask":
+        return <FundAsk />;
+      case "Tranches & Milestones":
+        return <TranchesMilestones />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex">
       {/* Main Content */}
       <div className="bg-white p-4 rounded-lg shadow-md flex-grow mr-52">
         <h2 className="text-xl font-bold mb-4">Funding & Milestones</h2>
-        <div className="grid grid-cols-3 gap-4 mt-2">
-          {[ 
-            [["Round Name", "TANSIM"], ["Shareholder Name", "Ravi Senji"], ["Role", "Founder"], ["Capital Structure", "33%"]],
-            [["Round Name", "TANSIM"], ["Shareholder Name", "Pandian"], ["Role", "Founder"], ["Capital Structure", "61%"]],
-            [["Round Name", "TANSIM"], ["Shareholder Name", "Techin Palakkad"], ["Role", "Institutional Investor"], ["Capital Structure", "6%"]],
-          ].map((columnData, columnIndex) => (
-            <div key={columnIndex} className="space-y-2 border-r border-dotted border-gray-300 pr-4">
-              {columnData.map(([label, value]) => (
-                <div key={label}>
-                  <p className="font-semibold text-gray-700 mt-6">{label}</p>
-                  <p className="text-gray-600">{value}</p>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+        {/* Render the content for the active tab */}
+        {renderTabContent()}
       </div>
 
-      {/* Right Sidebar */}
-      <div className="hidden lg:flex flex-col fixed right-0 h-full -mt-3 w-52 border-l-black border-gray-300 bg-gray-800 text-white">
-        <ul className="flex-grow p-5 space-y-4">
-          {[
-            "Fund Raised So Far",
-            "Shareholders",
-            "Cap Table",
-            "Fund Ask",
-            "Tranches & Milestones",
-          ].map((link, index) => (
-          <li key={index}>
-          <a
-          href="#"
-          className={`block py-2 px-2 w-screen -ml-5 transition-colors ${
-            link === "Cap Table" ? "bg-white text-black" : "text-white"
-          } hover:bg-white hover:text-black`} 
-          >
-          {link}
-           </a>
-          </li>
-          ))}
-        </ul>
-      </div>
-
+      {/* Render the RightSidebar */}
+      <RightSidebar
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabClick={setActiveTab}
+      />
     </div>
   );
 };

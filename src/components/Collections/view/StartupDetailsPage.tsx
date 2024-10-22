@@ -101,7 +101,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           </div>
 
           {/* Tabs */}
-          <div className="flex space-x-8 mb-3 mt-4 border-b-2 border-black">
+          <div className="flex space-x-8 mb-3 mt-4 border-b-2  border-black">
             <button
               className={`font-semibold pb-2 ${activeTab === "companyInfo" ? "border-b-2 border-black" : "text-gray-600"}`}
               onClick={() => setActiveTab("companyInfo")}

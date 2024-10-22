@@ -1,67 +1,58 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import IncomeTaxCompliance from "./Compliancetabs/IncomeTax";
+import RocCompliance from "./Compliancetabs/ROCcompliance";
+import GstCompliance from "./Compliancetabs/GSTcompliance";
+import GstrCompliance from "./Compliancetabs/GSTR1";
+import Audits from "./Compliancetabs/Audit";
+import RightSidebar from "./RightSidebar";
 
 const Compliance: React.FC = () => {
+  // State to track the active sidebar tab
+  const [activeTab, setActiveTab] = useState("ROC Compliance");
+
+  // Tabs data
+  const tabs = [
+    "ROC Compliance",
+    "GST Compliances",
+    "Income Tax Compliances",
+    "GSTR-1 & GSTR-3B",
+    "Audits",
+  ];
+
+  // Function to render content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Income Tax Compliances":
+        return <IncomeTaxCompliance />;
+      case "ROC Compliance":
+        return <RocCompliance />;
+      case "GST Compliances":
+        return <GstCompliance />;
+      case "GSTR-1 & GSTR-3B":
+        return <GstrCompliance />;
+      case "Audits":
+        return <Audits />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex">
       {/* Main Content */}
       <div className="bg-white p-4 rounded-lg shadow-md flex-grow mr-52">
-        <h2 className="text-xl font-bold mb-4">Income Tax Compliances</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-300">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b">Form Queries</th>
-                <th className="py-2 px-4 border-b">Yes/No</th>
-                <th className="py-2 px-4 border-b">Choose Date</th>
-                <th className="py-2 px-4 border-b">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="py-2 px-4 border-b">
-                  Whether the company filed ITR-6 for AY (Mention the relevant AY)
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <input type="radio" name="itr6" value="yes" checked readOnly /> Yes
-                  <input type="radio" name="itr6" value="no" /> No
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <input type="date" />
-                </td>
-                <td className="py-2 px-4 border-b">
-                  The company filed the ITR-6 for AY on (Mention the date)
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <h2 className="text-xl font-bold mb-4">{activeTab}</h2>
+        {/* Render the content for the active tab */}
+        {renderTabContent()}
       </div>
 
-      {/* Right Sidebar */}
-      <div className="hidden lg:flex flex-col fixed right-0 h-full -mt-3 w-52 border-l-black border-gray-300 bg-gray-800 text-white">
-        <ul className="flex-grow p-5 space-y-4">
-          {[
-            "ROC Compliance",
-            "GST Compliances",
-            "Income Tax Compliances",
-            "GSTR-1 & GSTR-3B",
-            "Audits",
-          ].map((link, index) => (
-            <li key={index}>
-              <a
-                href="#"
-                className={`block py-2 px-2 w-screen -ml-5 transition-colors ${
-                  link === "Income Tax Compliances" ? "bg-white text-black" : "text-white"
-                } hover:bg-white hover:text-black`}
-              >
-                {link}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
+      {/* Render the RightSidebar */}
+      <RightSidebar
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabClick={setActiveTab}
+      />
     </div>
   );
 };
