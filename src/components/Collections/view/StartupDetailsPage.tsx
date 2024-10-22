@@ -1,7 +1,9 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
 import { HiOutlineMail, HiOutlinePhone, HiOutlineGlobeAlt } from "react-icons/hi";
+
 import CompanyInformation from "@/components/Collections/view/CompanyInformation";
 import FundingMilestones from "@/components/Collections/view/FundingMilestones";
 import Compliance from "@/components/Collections/view/Compliance";
@@ -20,6 +22,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("companyInfo");
 
+  // Fetch startup details when the component is mounted
   useEffect(() => {
     const fetchStartupDetails = async () => {
       if (startupId) {
@@ -35,6 +38,12 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
     fetchStartupDetails();
   }, [startupId]);
 
+  // Debugging active tab state
+  useEffect(() => {
+    console.log("Active Tab:", activeTab);
+  }, [activeTab]);
+
+  // Function to render content based on the active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
@@ -66,7 +75,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           </div>
 
           {/* Info Box */}
-          <div className="flex items-center justify-between p-2 rounded-2xl border border-gray-300">
+          <div className="flex items-center justify-between p-1 mx-auto rounded-xl border border-gray-300">
             <div className="flex flex-wrap items-center space-x-4">
               <span className="font-semibold text-gray-700">₹2 Cr</span>
               <span className="font-semibold text-gray-700">20 Jun 2024 - 12 Nov 2024</span>
@@ -74,14 +83,15 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <span className="bg-red-500 h-2 w-2 rounded-full"></span>
                 <span className="text-gray-700">TANSIM</span>
               </span>
-              <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full">Equity</span>
-              <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full">Deep Dive</span>
-              <button className="border border-blue-500 text-blue-500 px-3 py-1 rounded-full hover:bg-blue-500 hover:text-white transition">
+              <span className="text-gray-700 border border-gray-300 px-3 rounded-full">Equity</span>
+              <span className="text-gray-700 border border-gray-300 px-3 rounded-full">Deep Dive</span>
+              <button className="border border-blue-500 text-blue-500 px-3 rounded-full hover:bg-blue-500 hover:text-white transition">
                 Pipeline
               </button>
               <button className="text-blue-500 underline hover:text-blue-700 transition">
                 Add Profile Info
               </button>
+              
             </div>
             <div className="flex items-center space-x-6 text-black hover:text-gray-700 transition-colors duration-200 ease-in-out">
               <HiOutlineMail className="h-10 w-6 cursor-pointer" />

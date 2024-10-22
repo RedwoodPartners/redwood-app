@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 
 const Documents: React.FC = () => {
@@ -46,7 +47,7 @@ const Documents: React.FC = () => {
             <li key={index}>
               <a
                 href="#"
-                className={`block py-2 w-screen -ml-4 transition-colors ${
+                className={`block py-2 px-2 w-screen -ml-5 transition-colors ${
                   link === "Document Checklist" ? "bg-white text-black" : "text-white"
                 } hover:bg-white hover:text-black`}
               >

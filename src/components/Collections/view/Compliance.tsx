@@ -51,7 +51,7 @@ const Compliance: React.FC = () => {
             <li key={index}>
               <a
                 href="#"
-                className={`block py-2 w-screen -ml-4 transition-colors ${
+                className={`block py-2 px-2 w-screen -ml-5 transition-colors ${
                   link === "Income Tax Compliances" ? "bg-white text-black" : "text-white"
                 } hover:bg-white hover:text-black`}
               >
