@@ -8,8 +8,6 @@ import Sidebar from '@/components/menu';
 const Startup: React.FC = () => {
   return (
     <div>
-      <Sidebar />
-      <Navbar />
       <ProjectsPage />
     </div>
   );

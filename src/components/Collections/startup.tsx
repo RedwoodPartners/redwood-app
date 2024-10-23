@@ -11,6 +11,7 @@ import { FaEye } from 'react-icons/fa';
 
 import { Client, Databases, ID } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Button } from "@/components/ui/button";
 
 type Startup = {
   id: string;
@@ -217,21 +218,11 @@ const StartupsPage: React.FC = () => {
 
 
   return (
-    <div className="container mx-auto p-16 -mt-10">
+    <div className="container mx-auto mt-10 p-3">
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
-      <button
-        onClick={handleAddStartup}
-        className="bg-gray-100 text-gray-800 text-sm py-2 px-4 mb-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-      >
-        Add Startup
-      </button>
-      <button
-        onClick={handleRemoveSelected}
-        className="bg-gray-100 text-gray-800 text-sm py-2 px-2 mb-3 ml-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-      >
-        Remove Selected
-      </button>
-      <div className="ag-theme-quartz" style={{ height: 400, width: '100%' }}>
+      <Button onClick={handleAddStartup} className="mx-auto" variant="secondary">Add Startup</Button>
+      <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Startup</Button>
+      <div className="ag-theme-quartz mt-3" style={{ height: 400, width: '100%' }}>
         <AgGridReact
           ref={gridRef}
           rowData={startups}

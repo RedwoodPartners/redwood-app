@@ -24,7 +24,7 @@ const WelcomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="mt-10 text-center">
+    <div className="mx-auto p-60 ml-32  text-center">
       <h2 className="text-3xl font-semibold text-gray-900">
         {user ? `Welcome Back, ${user.name}!` : "Loading..."}
       </h2>

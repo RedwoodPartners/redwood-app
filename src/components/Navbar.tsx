@@ -5,7 +5,7 @@ import { Models } from "appwrite";
 import * as Popover from "@radix-ui/react-popover"; // Radix UI Popover for dropdown
 import Image from "next/image";
 
-const Navbar = () => {
+const Navbar1 = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
@@ -176,4 +176,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Navbar1;

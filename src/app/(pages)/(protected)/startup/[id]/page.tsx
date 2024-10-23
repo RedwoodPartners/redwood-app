@@ -1,21 +1,22 @@
 "use client";
 
 import React from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import StartupDetailsPage from "@/components/Collections/view/StartupDetailsPage";
-import Sidebar from "@/components/menu";
-import Navbar from "@/components/Navbar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const View: React.FC<{ params: { id: string } }> = ({ params }) => {
     const { id } = params; 
 
     return (
-        <div>
-            <Sidebar />
-            <Navbar />
-            
-            {/* Pass the 'id' as a prop to the StartupDetailsPage component */}
-            <StartupDetailsPage startupId={id} />
-        </div>
+        <SidebarProvider>
+      <AppSidebar />
+      <main>
+        <SidebarTrigger />
+      </main>
+      <StartupDetailsPage startupId={id} />
+    </SidebarProvider>
+        
     );
 };
 
