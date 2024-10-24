@@ -2,7 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Home, Inbox, Search, Settings, User2, ChevronUp, ChevronDown, Grid } from "lucide-react";
+import {
+  Home,
+  Inbox,
+  Search,
+  Settings,
+  User2,
+  ChevronUp,
+  ChevronDown,
+  Grid,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +24,7 @@ import {
   SidebarFooter,
   SidebarMenuSub,
   SidebarMenuSubItem,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -27,8 +37,8 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import appwriteService from "@/appwrite/config"; // Import your appwrite service
-import { Models } from "appwrite"; // Import Models from appwrite
+import appwriteService from "@/appwrite/config";
+import { Models } from "appwrite";
 
 // Menu items.
 const items = [
@@ -61,11 +71,11 @@ export function AppSidebar() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await appwriteService.getCurrentUser(); // Fetch current user
+        const userData = await appwriteService.getCurrentUser();
         setUser(userData);
       } catch (error) {
         console.error("Error fetching user:", error);
-        setUser(null); // Handle error case
+        setUser(null);
       }
     };
 
@@ -75,7 +85,7 @@ export function AppSidebar() {
   const handleLogout = async () => {
     try {
       await appwriteService.logout();
-      router.push("/"); // Redirect to login on logout
+      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -83,9 +93,51 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  {/* SVG workplace icon */}
+                  <div className="flex aspect-square -ml-2 size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-gallery-vertical-end size-4"
+                    >
+                      <path d="M7 2h10"></path>
+                      <path d="M5 6h14"></path>
+                      <rect width="18" height="12" x="3" y="10" rx="2"></rect>
+                    </svg>
+                  </div>
+                  <span className="ml-1">Redwood Partners</span>
+                  <ChevronDown className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
+                <DropdownMenuItem>
+                  <span>Acme Inc</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Acme Corp.</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Redwood Partners</SidebarGroupLabel>
+          <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -134,22 +186,19 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> {user ? user.name : "Loading..."} {/* Fetch current user name */}
+                  <User2 /> {user ? user.name : "Loading..."}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
+              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
-                  <a href="/profile">Profile</a> {/* Link to profile */}
+                  <a href="/profile">Profile</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <span>Billing</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span onClick={handleLogout}>Sign out</span> {/* Logout function */}
+                  <span onClick={handleLogout}>Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

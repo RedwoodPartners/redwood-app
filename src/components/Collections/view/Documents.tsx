@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+
 import DocumentChecklist from "./Documentstabs/DocumentsChecklist";
 import Patents from "./Documentstabs/Patents";
 import Incubation from "./Documentstabs/Incubation";
-import RightSidebar from "./RightSidebar";
+
 
 const Documents: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Document Checklist");
@@ -32,12 +33,7 @@ const Documents: React.FC = () => {
         {renderActiveSection()}
       </div>
 
-      {/* Render the RightSidebar */}
-      <RightSidebar
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabClick={setActiveTab}
-      />
+      
     </div>
   );
 };

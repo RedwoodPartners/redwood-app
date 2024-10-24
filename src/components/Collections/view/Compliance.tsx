@@ -1,17 +1,17 @@
 "use client";
 import React, { useState } from "react";
+
 import IncomeTaxCompliance from "./Compliancetabs/IncomeTax";
 import RocCompliance from "./Compliancetabs/ROCcompliance";
 import GstCompliance from "./Compliancetabs/GSTcompliance";
 import GstrCompliance from "./Compliancetabs/GSTR1";
 import Audits from "./Compliancetabs/Audit";
-import RightSidebar from "./RightSidebar";
+
 
 const Compliance: React.FC = () => {
-  // State to track the active sidebar tab
+
   const [activeTab, setActiveTab] = useState("ROC Compliance");
 
-  // Tabs data
   const tabs = [
     "ROC Compliance",
     "GST Compliances",
@@ -20,7 +20,6 @@ const Compliance: React.FC = () => {
     "Audits",
   ];
 
-  // Function to render content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case "Income Tax Compliances":
@@ -47,12 +46,7 @@ const Compliance: React.FC = () => {
         {renderTabContent()}
       </div>
 
-      {/* Render the RightSidebar */}
-      <RightSidebar
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabClick={setActiveTab}
-      />
+      
     </div>
   );
 };

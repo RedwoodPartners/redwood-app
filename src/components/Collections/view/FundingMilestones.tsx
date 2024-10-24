@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+
 import FundRaisedSoFar from "./FundingMilestonestabs/FundRaised";
 import Shareholders from "./FundingMilestonestabs/Shareholders";
 import CapTable from "./FundingMilestonestabs/CapTable";
 import FundAsk from "./FundingMilestonestabs/FundAsk";
 import TranchesMilestones from "./FundingMilestonestabs/Milestones";
-import RightSidebar from "./RightSidebar";
+
 
 const FundingMilestones: React.FC = () => {
   // State to track the active sidebar tab
@@ -47,12 +48,7 @@ const FundingMilestones: React.FC = () => {
         {renderTabContent()}
       </div>
 
-      {/* Render the RightSidebar */}
-      <RightSidebar
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabClick={setActiveTab}
-      />
+      
     </div>
   );
 };

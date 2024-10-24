@@ -1,34 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import CompanyDetails from "./CompanyInfotabs/CompanyDetails";
 import RegulatoryInformation from "./CompanyInfotabs/RegulatoryInformation";
 import Contact from "./CompanyInfotabs/Contact";
 import AboutBusiness from "./CompanyInfotabs/AboutBusiness";
 import CustomerTestimonials from "./CompanyInfotabs/CustomerTestimonials";
-import RightSidebar from "./RightSidebar";
 
-const CompanyInformation: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("Company Details");
+interface CompanyInformationProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
 
-  const tabs = [
-    "Company Details",
-    "Regulatory Information",
-    "Contact",
-    "About Business",
-    "Customer Testimonials",
-  ];
-
+const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab }) => {
   const renderTabContent = () => {
     switch (activeTab) {
+      case "companyInfo":
       case "Company Details":
         return <CompanyDetails />;
+      case "regulatoryInfo":
       case "Regulatory Information":
         return <RegulatoryInformation />;
+      case "contact":
       case "Contact":
         return <Contact />;
+      case "aboutBusiness":
       case "About Business":
         return <AboutBusiness />;
+      case "customerTestimonials":
       case "Customer Testimonials":
         return <CustomerTestimonials />;
       default:
@@ -38,16 +37,9 @@ const CompanyInformation: React.FC = () => {
 
   return (
     <div className="flex">
-      <div className="bg-white p-4 rounded-lg shadow-md flex-grow mr-52">
+      <div className="bg-white mx-auto p-4 rounded-lg shadow-md flex-grow">
         {renderTabContent()}
       </div>
-
-      {/* Render the RightSidebar component */}
-      <RightSidebar
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabClick={setActiveTab}
-      />
     </div>
   );
 };
