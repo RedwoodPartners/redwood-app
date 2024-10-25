@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
-import { Mail, MessageCircle, Globe } from "lucide-react";
+
 import FundingMilestones from "@/components/Collections/view/FundingMilestones";
 import Compliance from "@/components/Collections/view/Compliance";
 import Documents from "@/components/Collections/view/Documents";
@@ -30,6 +30,8 @@ import DocumentChecklist from "@/components/Collections/view/Documentstabs/Docum
 import Patents from "@/components/Collections/view/Documentstabs/Patents";
 import Incubation from "@/components/Collections/view/Documentstabs/Incubation";
 
+
+import InfoBox from "./Infobox";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -122,13 +124,13 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   };
 
   return (
-    <div className="container w-screen p-3 mt-5 mx-auto">
+    <div className="container w-screen p-2 mr-5 mt-5 mx-auto">
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {startupData ? (
         <>
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <div className="bg-gray-200 rounded-full h-12 w-12 flex items-center justify-center text-gray-600">
                 <span className="font-bold text-lg">{startupData.name.charAt(0)}</span>
               </div>
@@ -136,30 +138,8 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
             </div>
           </div>
 
-          {/* Info Box */}
-          <div className="flex items-center justify-between p-2 mx-auto rounded-xl border border-gray-300">
-            <div className="flex flex-wrap items-center space-x-4">
-              <span className="font-semibold text-gray-700">₹2 Cr</span>
-              <span className="font-semibold text-gray-700">20 Jun 2024 - 12 Nov 2024</span>
-              <span className="flex items-center space-x-2">
-                <span className="bg-red-500 h-2 w-2 rounded-full"></span>
-                <span className="text-gray-700">TANSIM</span>
-              </span>
-              <span className="text-gray-700 border border-gray-300 px-3 rounded-full">Equity</span>
-              <span className="text-gray-700 border border-gray-300 px-3 rounded-full">Deep Dive</span>
-              <button className="border border-blue-500 text-blue-500 px-3 rounded-full hover:bg-blue-500 hover:text-white transition">
-                Pipeline
-              </button>
-              <button className="text-blue-500 underline hover:text-blue-700 transition">
-                Add Profile Info
-              </button>
-            </div>
-            <div className="flex items-center space-x-6 text-black hover:text-gray-700 transition-colors duration-200 ease-in-out">
-              <Mail className="icon-class" />
-              <MessageCircle className="icon-class" />
-              <Globe className="icon-class" />
-            </div>
-          </div>
+          {/* Render InfoBox directly */}
+          <InfoBox name={startupData.name} />
 
           {/* Tabs for Navigation */}
           <NavigationMenu>
@@ -312,7 +292,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem className="relative">
-                <NavigationMenuTrigger onMouseEnter={() => setActiveTab("documents")}>
+                <NavigationMenuTrigger className="space-x-2" onMouseEnter={() => setActiveTab("documents")}>
                   Documents
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 w-full bg-white shadow-lg rounded-lg mt-2 z-10">

@@ -218,7 +218,7 @@ const StartupsPage: React.FC = () => {
 
 
   return (
-    <div className="container mx-auto mt-10 p-3">
+    <div className="container mx-auto mt-10 p-2 mr-5">
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
       <Button onClick={handleAddStartup} className="mx-auto" variant="secondary">Add Startup</Button>
       <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Startup</Button>
