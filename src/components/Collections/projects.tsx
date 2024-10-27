@@ -8,6 +8,8 @@ import "ag-grid-community/styles/ag-theme-quartz.css";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
 
+import { Button } from "@/components/ui/button";
+
 type Project = {
   id: string;
   name: string;
@@ -194,21 +196,11 @@ const ProjectsPage: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto p-16 -mt-10">
+    <div className="container mx-auto mt-10 p-2 mr-5">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
-      <button
-        onClick={handleAddProject}
-        className="bg-gray-100 text-gray-800 text-sm py-2 px-4 mb-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-      >
-        Add Project
-      </button>
-      <button
-        onClick={handleRemoveSelected}
-        className="bg-gray-100 text-gray-800 text-sm py-2 px-2 mb-3 ml-3 rounded hover:bg-gray-200 transition duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-      >
-        Remove Selected
-      </button>
-      <div className="ag-theme-quartz" style={{ height: 400, width: '100%' }}>
+      <Button onClick={handleAddProject} className="mx-auto" variant="secondary">Add Project</Button>
+      <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Selected</Button>
+      <div className="ag-theme-quartz mt-3" style={{ height: 400, width: '100%' }}>
         <AgGridReact
           ref={gridRef}
           rowData={projects}
@@ -218,7 +210,6 @@ const ProjectsPage: React.FC = () => {
           paginationPageSize={10}
           domLayout='autoHeight'
           editType='fullRow'
-          rowSelection="multiple"
           onRowEditingStopped={onRowEditingStopped}
         />
       </div>

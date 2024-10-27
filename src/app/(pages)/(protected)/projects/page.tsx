@@ -1,16 +1,16 @@
 "use client";
 
-import React from 'react';
-import ProjectsPage from '@/components/Collections/projects';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/menu';
-
-const Startup: React.FC = () => {
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+import ProjectsPage from "@/components/Collections/projects";
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
+    <SidebarProvider>
+      <AppSidebar />
+      <main>
+        <SidebarTrigger />
+      </main>
       <ProjectsPage />
-    </div>
-  );
+    </SidebarProvider> 
+  )
 }
-
-export default Startup;

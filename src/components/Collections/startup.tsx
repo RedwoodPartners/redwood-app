@@ -232,7 +232,6 @@ const StartupsPage: React.FC = () => {
           paginationPageSize={10}
           domLayout='autoHeight'
           editType='fullRow'
-          rowSelection="multiple"
           onRowEditingStopped={onRowEditingStopped}
         />
       </div>
