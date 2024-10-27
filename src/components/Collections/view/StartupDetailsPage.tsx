@@ -138,17 +138,17 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
             </div>
           </div>
 
-          {/* Render InfoBox directly */}
+          {/* Render InfoBox */}
           <InfoBox name={startupData.name} />
 
           {/* Tabs for Navigation */}
-          <NavigationMenu>
+          <NavigationMenu className="">
             <NavigationMenuList className="flex space-x-2 mt-4">
-              <NavigationMenuItem className="relative">
-                <NavigationMenuTrigger onMouseEnter={() => setActiveTab("companyInfo")}>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("companyInfo")}>
                   Company Info
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2 z-50">
+                <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2">
                   <ul>
                     <li>
                       <button
@@ -193,11 +193,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem className="relative">
-                <NavigationMenuTrigger onMouseEnter={() => setActiveTab("fundingMilestones")}>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("fundingMilestones")}>
                   Funding and Milestones
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
+                <NavigationMenuContent className="absolute left-36 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
                   <ul>
                     <li>
                       <button
@@ -242,11 +242,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem className="relative">
-                <NavigationMenuTrigger onMouseEnter={() => setActiveTab("incometax")}>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("incometax")}>
                   Compliance
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
+                <NavigationMenuContent className="absolute left-80 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
                   <ul>
                     <li>
                       <button
@@ -291,16 +291,16 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem className="relative">
-                <NavigationMenuTrigger className="space-x-2" onMouseEnter={() => setActiveTab("documents")}>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger  className="font-bold" onMouseEnter={() => setActiveTab("documents")}>
                   Documents
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
+                <NavigationMenuContent className="absolute left-96 w-full bg-white shadow-lg rounded-lg mt-2">
                   <ul>
                     <li>
                       <button
                         onClick={() => setActiveTab("documentchecklist")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         Document Checklist
                       </button>
@@ -308,7 +308,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     <li>
                       <button
                         onClick={() => setActiveTab("patents")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         Patents
                       </button>
@@ -316,7 +316,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     <li>
                       <button
                         onClick={() => setActiveTab("incubation")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         Incubation
                       </button>
