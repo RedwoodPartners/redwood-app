@@ -142,11 +142,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           <InfoBox name={startupData.name} />
 
           {/* Tabs for Navigation */}
-          <NavigationMenu className="">
+          <NavigationMenu>
             <NavigationMenuList className="flex space-x-2 mt-4">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("companyInfo")}>
-                  Company Info
+                <NavigationMenuTrigger className="font-bold">
+                  Company Information
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2">
                   <ul>
@@ -194,7 +194,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("fundingMilestones")}>
+                <NavigationMenuTrigger className="font-bold">
                   Funding and Milestones
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-36 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
@@ -243,7 +243,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold" onMouseEnter={() => setActiveTab("incometax")}>
+                <NavigationMenuTrigger className="font-bold">
                   Compliance
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-80 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
@@ -292,7 +292,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger  className="font-bold" onMouseEnter={() => setActiveTab("documents")}>
+                <NavigationMenuTrigger  className="font-bold">
                   Documents
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-96 w-full bg-white shadow-lg rounded-lg mt-2">
