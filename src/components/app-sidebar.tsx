@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/collapsible";
 import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
+import { Input } from "@/components/ui/input";
 
 // Menu items.
 const items = [
@@ -134,6 +135,16 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
+      {/* Input Search Bar */}
+      <div className="relative p-1">
+        <Input type="search" placeholder="Search..." 
+          className="w-full rounded-md border border-input px-1 py-1 pl-8 text-sm focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        />
+      {/* Search Icon */}
+      <Search className="absolute -ml-1 h-5 w-4 left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+      </div>
+
 
       <SidebarContent>
         <SidebarGroup>
