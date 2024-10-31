@@ -30,7 +30,7 @@ const Navbar1 = () => {
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
 
   const handleLogout = async () => {
     try {

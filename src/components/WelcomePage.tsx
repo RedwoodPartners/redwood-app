@@ -29,7 +29,7 @@ const WelcomePage: React.FC = () => {
         {user ? `Welcome Back, ${user.name}!` : "Loading..."}
       </h2>
       <p className="mt-4 text-gray-700">
-        We're glad to see you again. Explore the links above to continue.
+        We&apos;re glad to see you again. Explore the links above to continue.
       </p>
     </div>
   );
