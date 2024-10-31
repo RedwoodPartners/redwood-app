@@ -124,7 +124,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   };
 
   return (
-    <div className="container w-screen p-2 mr-5 mt-5 mx-auto">
+    <div className="p-2 mt-1">
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {startupData ? (
         <>

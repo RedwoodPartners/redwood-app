@@ -180,7 +180,7 @@ const StartupsPage: React.FC = () => {
   
 
   const columnDefs: ColDef<Startup>[] = [
-    { headerCheckboxSelection: true, checkboxSelection: true },
+    { headerCheckboxSelection: true, checkboxSelection: true, width: 50 },
     {
       headerName: "View",
       cellRenderer: (params: ICellRendererParams<Startup>) => (
@@ -218,7 +218,7 @@ const StartupsPage: React.FC = () => {
 
 
   return (
-    <div className="container mx-auto mt-10 p-2 mr-5">
+    <div className="w-[1230px] p-2">
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
       <Button onClick={handleAddStartup} className="mx-auto" variant="secondary">Add Startup</Button>
       <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Startup</Button>
