@@ -2,8 +2,9 @@
 import appwriteService from "@/appwrite/config"; 
 import { Models } from "appwrite";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Updated import for next/navigation
+import { useRouter } from "next/navigation"; 
 import BUCKET_ID from "@/appwrite/config"; 
+import Image from "next/image";
 
 const ProfileCard = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
@@ -93,7 +94,7 @@ const ProfileCard = () => {
         <div className="border-2 border-gray-200 rounded-lg p-6 mt-16 w-full max-w-5xl min-h-[70vh] shadow-md">
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg cursor-pointer">
-              <img
+              <Image
                 src={profilePic || "/default-profile.png"}
                 alt="Profile Pic"
                 className="w-full h-full object-cover"
