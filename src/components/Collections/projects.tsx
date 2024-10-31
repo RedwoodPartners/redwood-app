@@ -172,7 +172,7 @@ const ProjectsPage: React.FC = () => {
   };
 
   const columnDefs: ColDef<Project>[] = [
-    { headerCheckboxSelection: true, checkboxSelection: true },
+    { headerCheckboxSelection: true, checkboxSelection: true, width: 50 },
     { field: "id", headerName: "ID", sortable: true, filter: true },
     { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
     { field: "manager", headerName: "Manager", sortable: true, filter: true, editable: true },
@@ -196,7 +196,7 @@ const ProjectsPage: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto mt-10 p-2 mr-5">
+    <div className="w-[1230px] p-2">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
       <Button onClick={handleAddProject} className="mx-auto" variant="secondary">Add Project</Button>
       <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Selected</Button>

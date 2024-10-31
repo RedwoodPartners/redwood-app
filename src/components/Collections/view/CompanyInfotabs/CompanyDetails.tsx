@@ -20,7 +20,7 @@ const CompanyDetails: React.FC = () => {
             {columnData.map(([label, value]) => (
               <div key={label} className="flex flex-col space-y-1.5">
                 <Label className="font-semibold text-gray-700">{label}</Label>
-                <Input className="text-gray-600" disabled defaultValue={value} />
+                <Input className="text-gray-600" defaultValue={value} />
               </div>
             ))}
           </div>

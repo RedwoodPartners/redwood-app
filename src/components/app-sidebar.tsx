@@ -137,7 +137,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       {/* Input Search Bar */}
-      <div className="relative p-1">
+      <div className="relative p-2">
         <Input type="search" placeholder="Search..." 
           className="w-full rounded-md border border-input px-1 py-1 pl-8 text-sm focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         />

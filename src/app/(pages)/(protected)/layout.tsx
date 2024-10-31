@@ -1,24 +1,36 @@
-"use client"
-import useAuth from "@/context/useAuth"
-import { useRouter } from "next/navigation"
+"use client";
 
-import React from "react"
+import { useRouter } from "next/navigation";
+import React from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import useAuth from "@/context/useAuth";
 
-const ProtectedLayout = ({
-    children,
-  }: {
-    children: React.ReactNode
-  }) => {
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+  const { authStatus } = useAuth();
 
-    const router = useRouter();
-    const { authStatus } = useAuth();
+  if (!authStatus) {
+    router.replace("/login");
+    return null;
+  }
 
-    if (!authStatus) {
-        router.replace("/login");
-        return <></>;
-    }
-    return children
+  return (
+    <SidebarProvider>
+      <div className="flex">
+        {/* Sidebar */}
+        <AppSidebar />
 
-}
+        {/* Main content area with SidebarTrigger */}
+        <main className="w-[1230px] p-4">
+          {/*<SidebarTrigger/>*/}
+          <div className="p-">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+};
 
 export default ProtectedLayout;

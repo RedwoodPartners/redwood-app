@@ -1,11 +1,10 @@
 "use client";
-import ProfileCard from "@/components/ProfileCard";
+
 import React from "react";
+import ProfileCard from "@/components/ProfileCard";
 
 const ProfilePage = () => {
-    return (  
-        <ProfileCard />
-    );
-}
+  return <ProfileCard />;
+};
 
 export default ProfilePage;
