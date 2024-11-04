@@ -10,14 +10,15 @@ import CustomerTestimonials from "./CompanyInfotabs/CustomerTestimonials";
 interface CompanyInformationProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  startupId: string | undefined;
 }
 
-const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab }) => {
+const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab, startupId }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
       case "Company Details":
-        return <CompanyDetails />;
+        return <CompanyDetails startupId={startupId} />;
       case "regulatoryInfo":
       case "Regulatory Information":
         return <RegulatoryInformation />;
