@@ -16,8 +16,16 @@ import { Button } from "@/components/ui/button";
 type Startup = {
   id: string;
   name: string;
-  status: string;
-  founded: string;
+  brandName: string;
+  businessType: string;
+  natureOfCompany: string;
+  subDomain: string;
+  dateOfIncorporation: string;
+  registeredCompanyName: string;
+  registeredState: string;
+  registeredCountry: string;
+  companyStage: string;
+  employees: string;
   description: string;
 };
 
@@ -33,7 +41,6 @@ const StartupsPage: React.FC = () => {
   const gridRef = useRef<AgGridReact<Startup>>(null);
   const router = useRouter();
   
-
   // Initialize Appwrite client and fetch startups only on the client side
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -45,8 +52,16 @@ const StartupsPage: React.FC = () => {
         const startupData = response.documents.map((doc: Document) => ({
           id: doc.$id,
           name: doc.name || "",
-          status: doc.status || "",
-          founded: doc.founded || "",
+          brandName: doc.brandName || "",
+          businessType: doc.businessType || "",
+          natureOfCompany: doc.natureOfCompany || "",
+          subDomain: doc.subDomain || "",
+          dateOfIncorporation: doc.dateOfIncorporation || "",
+          registeredCompanyName: doc.registeredCompanyName || "",
+          registeredState: doc.registeredState || "",
+          registeredCountry: doc.registeredCountry || "",
+          companyStage: doc.companyStage || "",
+          employees: doc.employees || "",
           description: doc.description || "",
         }));
         setStartups(startupData);
@@ -64,21 +79,36 @@ const StartupsPage: React.FC = () => {
 
     const newStartup: Partial<Startup> = {
       name: "New Startup",
-      status: "Active",
-      founded: new Date().toISOString().split("T")[0],
+      brandName: "Brand",
+      businessType: "Type",
+      natureOfCompany: "Nature",
+      subDomain: "Sub Domain",
+      dateOfIncorporation: new Date().toISOString().split("T")[0],
+      registeredCompanyName: "Registered Name",
+      registeredState: "State",
+      registeredCountry: "India",
+      companyStage: "Stage",
+      employees: "10",
       description: "Description",
     };
     try {
       const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, "unique()", newStartup);
       setStartups((prev) => [
         ...prev,
-        {
+        { 
           id: createdStartup.$id,
           name: createdStartup.name || "",
-          status: createdStartup.status || "",
-          founded: createdStartup.founded || "",
-          description: createdStartup.description || "",
-        },
+          brandName: createdStartup.brandName || "",
+          businessType: createdStartup.businessType || "",
+          natureOfCompany: createdStartup.natureOfCompany || "",
+          subDomain: createdStartup.subDomain || "",
+          dateOfIncorporation: createdStartup.dateOfIncorporation || "",
+          registeredCompanyName: createdStartup.registeredCompanyName || "",
+          registeredState: createdStartup.registeredState || "",
+          registeredCountry: createdStartup.registeredCountry || "",
+          companyStage: createdStartup.companyStage || "",
+          employees: createdStartup.employees || "",
+          description: createdStartup.description || "", },
       ]);
     } catch (error) {
       console.error("Error adding startup:", error);
@@ -93,7 +123,7 @@ const StartupsPage: React.FC = () => {
     if (gridApi) {
       const selectedNodes = gridApi.getSelectedNodes();
       const selectedIds = selectedNodes
-        .map((node) => node.data?.id) 
+        .map((node) => node.data?.id)
         .filter((id): id is string => id !== undefined);
   
       try {
@@ -106,8 +136,6 @@ const StartupsPage: React.FC = () => {
       }
     }
   };
-  
-  
   
   const onGridReady = (params: GridReadyEvent) => {
     params.api.sizeColumnsToFit();
@@ -125,22 +153,28 @@ const StartupsPage: React.FC = () => {
       const databases = new Databases(client);
   
       try {
-        // Update the edited startup in Appwrite
-        await databases.updateDocument(DATABASE_ID, STARTUP_ID, editedRow.id, {
+        //Update the edited startup in Appwrite
+        await databases.updateDocument(DATABASE_ID, STARTUP_ID, editedRow.id,{
           name: editedRow.name,
-          status: editedRow.status,
-          founded: editedRow.founded,
+          brandName: editedRow.brandName,
+          businessType: editedRow.businessType,
+          natureOfCompany:editedRow.natureOfCompany,
+          subDomain: editedRow.subDomain,
+          dateOfIncorporation: editedRow.dateOfIncorporation,
+          registeredCompanyName: editedRow.registeredCompanyName,
+          registeredState: editedRow.registeredState,
+          registeredCountry: editedRow.registeredCountry,
+          companyStage: editedRow.companyStage,
+          employees: editedRow.employees,
           description: editedRow.description,
+
         });
-  
-        // Reflect the updated data in the UI
+        //reflect the updated data
         setStartups((prev) =>
           prev.map((startup) =>
             startup.id === editedRow.id ? editedRow : startup
           )
         );
-  
-        // Clear edited row state
         setEditedRow(null);
         setShowModal(false);
       } catch (error) {
@@ -148,36 +182,44 @@ const StartupsPage: React.FC = () => {
       }
     }
   };
-  
+
   const handleDiscardChanges = async () => {
     setEditedRow(null);
     setShowModal(false);
-    
-    // Re-fetch data from the database to revert changes
+
+    //Re-fetch data from the database to revert changes
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-  
-    try {
+
+    try{
       const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
       const startupData = response.documents.map((doc: Document) => ({
-        id: doc.$id,
+        id:doc.$id,
         name: doc.name || "",
-        status: doc.status || "",
-        founded: doc.founded || "",
+        brandName: doc.brandName || "",
+        businessType: doc.businessType || "",
+        natureOfCompany: doc.natureOfCompany || "",
+        subDomain: doc.subDomain || "",
+        dateOfIncorporation: doc.dateOfIncorporation || "",
+        registeredCompanyName: doc.registeredCompanyName || "",
+        registeredState: doc.registeredState || "",
+        registeredCountry: doc.registeredCountry || "",
+        companyStage: doc.companyStage || "",
+        employees: doc.employees || "",
         description: doc.description || "",
+        
       }));
       setStartups(startupData);
-    } catch (error) {
-      console.error("Error fetching startups:", error);
+    }catch(error){
+      console.error("Error fetching Startups:",error);
     }
+
   };
 
   const handleViewStartup = (id: string) => {
-  console.log("View Startup ID:", id);
-  router.push(`/startup/${id}`);
+    console.log("View Startup ID:", id);
+    router.push(`/startup/${id}`);
   };
-
-  
 
   const columnDefs: ColDef<Startup>[] = [
     { headerCheckboxSelection: true, checkboxSelection: true, width: 50 },
@@ -189,33 +231,30 @@ const StartupsPage: React.FC = () => {
               handleViewStartup(params.data.id);
             }
           }}
-          className="bg-transparent text-gray-600 hover:text-blue-700 
-               px-2 py-1 border border-transparent transition-colors 
-               duration-200 ease-in-out disabled:opacity-50"
+          className="bg-transparent text-gray-600 hover:text-blue-700 px-2 py-1 border border-transparent transition-colors duration-200 ease-in-out disabled:opacity-50"
           title="View Startup"
           disabled={!params.data}
         >
          <FaEye size={18} />
         </button>
       ),
-      width: 100,
+      width: 70,
       cellClass: "justify-center",
     },
-    { field: "id", headerName: "ID", sortable: true, filter: true },
-    { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
-    { field: "status", headerName: "Status", sortable: true, filter: true, editable: true },
-    {
-      field: "founded",
-      headerName: "Founded",
-      sortable: true,
-      filter: true,
-      editable: true,
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
-    },
-    { field: "description", headerName: "Description", sortable: true, filter: true, editable: true },
-    
+    { field: "id", headerName: "ID", sortable: true, filter: true, width: 100},
+    { field: "name", headerName: "Startup Name", sortable: true, filter: true, editable: true, width: 145 },
+    { field: "brandName", headerName: "Brand Name", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "natureOfCompany", headerName: "Nature of Company", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "subDomain", headerName: "Sub Domain", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "dateOfIncorporation", headerName: "Date of Incorporation", sortable: true, filter: true, editable: true, valueFormatter: (params) => new Date(params.value).toLocaleDateString(), width: 150 },
+    { field: "registeredCompanyName", headerName: "Registered Company Name", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "registeredState", headerName: "Registered State", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "registeredCountry", headerName: "Registered Country", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "companyStage", headerName: "Company Stage", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "employees", headerName: "Employees", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "description", headerName: "Description", sortable: true, filter: true, editable: true, width: 150 },
   ];
-
 
   return (
     <div className="w-[1230px] p-2">
@@ -231,7 +270,7 @@ const StartupsPage: React.FC = () => {
           pagination={true}
           paginationPageSize={10}
           domLayout='autoHeight'
-          editType='fullRow'
+          editType="fullRow"
           onRowEditingStopped={onRowEditingStopped}
         />
       </div>
@@ -260,5 +299,5 @@ const StartupsPage: React.FC = () => {
     </div>
   );
 };
-   
+
 export default StartupsPage;
