@@ -88,7 +88,7 @@ export class AppwriteService {
 
   async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
     try {
-      await account.createOAuth2Session(OAuthProvider.Google, "http://localhost:3000/home", "http://localhost:3000/");
+      await account.createOAuth2Session(OAuthProvider.Google, "https://redwood-app.vercel.app/home", "https://redwood-app.vercel.app/");
     } catch (error: any) {
       console.error("Error during Google login:", error.message);
       throw new Error(error.message || "Google login failed.");
