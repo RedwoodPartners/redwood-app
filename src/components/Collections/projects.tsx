@@ -196,7 +196,7 @@ const ProjectsPage: React.FC = () => {
   ];
 
   return (
-    <div className="w-[1230px] p-2">
+    <div className="p-2">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
       <Button onClick={handleAddProject} className="mx-auto" variant="secondary">Add Project</Button>
       <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Selected</Button>
