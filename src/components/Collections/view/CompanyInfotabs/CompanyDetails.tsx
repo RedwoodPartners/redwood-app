@@ -85,7 +85,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             {columnData.map(([label, value]) => (
               <div key={label} className="flex flex-col space-y-1.5">
                 <Label className="font-semibold text-gray-700">{label}</Label>
-                <Input className="text-gray-600" defaultValue={value} readOnly />
+                <Input className="text-black" disabled defaultValue={value} readOnly />
               </div>
             ))}
           </div>

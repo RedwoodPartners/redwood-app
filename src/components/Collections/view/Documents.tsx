@@ -28,7 +28,7 @@ const Documents: React.FC = () => {
   return (
     <div className="flex">
       {/* Main Content */}
-      <div className="bg-white p-4 rounded-lg shadow-md flex-grow mr-52">
+      <div className="bg-white p-4 rounded-lg shadow-md flex-grow">
         <h2 className="text-xl font-bold mb-4">{activeTab}</h2>
         {renderActiveSection()}
       </div>

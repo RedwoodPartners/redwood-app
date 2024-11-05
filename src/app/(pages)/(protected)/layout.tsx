@@ -17,14 +17,14 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex">
+      <div className="container flex">
         {/* Sidebar */}
         <AppSidebar />
 
         {/* Main content area with SidebarTrigger */}
-        <main className="w-[1230px] p-4">
-          {/*<SidebarTrigger/>*/}
-          <div className="p-">
+        <main className="w-full p-1">
+          <SidebarTrigger/>
+          <div >
             {children}
           </div>
         </main>
