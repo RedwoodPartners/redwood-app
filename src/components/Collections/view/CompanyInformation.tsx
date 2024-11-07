@@ -24,7 +24,7 @@ const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setA
         return <RegulatoryInformation />;
       case "contact":
       case "Contact":
-        return <Contact />;
+        return <Contact startupId={startupId} />;
       case "aboutBusiness":
       case "About Business":
         return <AboutBusiness />;

@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import Startup from "@/components/Collections/startup";
+import ContactsPage from "@/components/Collections/contacts";
 
 const StartupPage = () => {
   return (
     <>
-      <Startup />
+      <ContactsPage />
     </>
   );
 };

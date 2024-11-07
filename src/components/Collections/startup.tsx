@@ -261,15 +261,15 @@ const StartupsPage: React.FC = () => {
       <h1 className="text-2xl font-semibold mb-4">Startups</h1>
       <Button onClick={handleAddStartup} className="mx-auto" variant="secondary">Add Startup</Button>
       <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Startup</Button>
-      <div className="ag-theme-quartz mt-3" style={{ height: 400, width: '100%' }}>
+      <div className="ag-theme-quartz mt-3" style={{ height: 500, width: '100%'}}>
         <AgGridReact
           ref={gridRef}
           rowData={startups}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
           pagination={true}
-          paginationPageSize={10}
-          domLayout='autoHeight'
+          paginationPageSize={20}
+          domLayout='normal'
           editType="fullRow"
           onRowEditingStopped={onRowEditingStopped}
         />
