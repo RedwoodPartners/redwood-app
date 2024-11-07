@@ -179,6 +179,9 @@ export function AppSidebar() {
                           <a href="/startup">Startups</a>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
+                          <a href="/contact">Contacts</a>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
                           <a href="/projects">Projects</a>
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>
