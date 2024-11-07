@@ -10,7 +10,7 @@ import CustomerTestimonials from "./CompanyInfotabs/CustomerTestimonials";
 interface CompanyInformationProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  startupId: string | undefined;
+  startupId: string;
 }
 
 const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab, startupId }) => {

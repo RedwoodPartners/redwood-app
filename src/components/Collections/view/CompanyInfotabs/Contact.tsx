@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { CONTACT_ID } from "../../contacts";
+import { CONTACT_ID } from "@/components/Collections/contacts";
 
 interface ContactInfo {
   website: string;
@@ -20,12 +20,13 @@ interface ContactInfo {
   lastName: string;
 }
 
-interface ContactProps {
-  startupId?: string; // Optional prop
+interface ContactPageProps {
+  startupId: string;
 }
 
-const Contact: React.FC<ContactProps> = ({ startupId }) => {
+const Contact: React.FC<ContactPageProps> = ({ startupId }) => {
   const [contactData, setContactData] = useState<ContactInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch contact data based on the startupId
   useEffect(() => {
@@ -35,17 +36,17 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
     const fetchContactData = async () => {
       if (startupId) {
         try {
-          const response = await databases.getDocument(CONTACT_ID, DATABASE_ID, startupId);
+          const data = await databases.getDocument(CONTACT_ID, DATABASE_ID, startupId);
           setContactData({
-            website: response.companyWebsite || "",
-            email: response.email || "",
-            address1: response.addressLine1 || "",
-            address2: response.addressLine2 || "",
-            city: response.city || "",
-            state: response.state || "",
-            phone: response.phone || "",
-            firstName: response.firstName || "",
-            lastName: response.lastName || ""
+            website: data.companyWebsite || "",
+            email: data.email || "",
+            address1: data.addressLine1 || "",
+            address2: data.addressLine2 || "",
+            city: data.city || "",
+            state: data.state || "",
+            phone: data.phone || "",
+            firstName: data.firstName || "",
+            lastName: data.lastName || ""
           });
         } catch (error) {
           console.error("Error fetching contact data: ", error);

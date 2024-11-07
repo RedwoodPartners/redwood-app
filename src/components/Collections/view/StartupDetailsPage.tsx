@@ -42,12 +42,13 @@ import {
 } from "@/components/ui/navigation-menu";
 
 interface StartupDetailsPageProps {
-  startupId: string | undefined;
+  startupId: string;
 }
 
 interface StartupData {
   name: string;
 }
+
 
 const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
