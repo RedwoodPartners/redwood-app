@@ -1,114 +1,149 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
 import { CONTACT_ID } from "@/components/Collections/contacts";
+import { Query } from "appwrite";
+import { Label } from "@/components/ui/label"; 
+import { Input } from "@/components/ui/input"; 
 
-interface ContactInfo {
-  website: string;
-  email: string;
-  address1: string;
-  address2: string;
-  city: string;
-  state: string;
-  phone: string;
+type Startup = {
+  id: string;
+  name: string;
+};
+
+type Contact = {
+  id: string;
   firstName: string;
   lastName: string;
-}
+  email: string;
+  phone: string;
+  companyWebsite: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  companyName: string;
+};
 
-interface ContactPageProps {
+interface ContactProps {
   startupId: string;
 }
 
-const Contact: React.FC<ContactPageProps> = ({ startupId }) => {
-  const [contactData, setContactData] = useState<ContactInfo | null>(null);
+const Contact: React.FC<ContactProps> = ({ startupId }) => {
+  const [startup, setStartup] = useState<Startup | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch contact data based on the startupId
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
+    const fetchStartupAndContacts = async () => {
+      try {
+        // Fetch startup details from the Startups table
+        const startupResponse = await databases.getDocument(DATABASE_ID, STARTUP_ID, startupId);
+        const startupName = startupResponse.name;
 
-    const fetchContactData = async () => {
-      if (startupId) {
-        try {
-          const data = await databases.getDocument(CONTACT_ID, DATABASE_ID, startupId);
-          setContactData({
-            website: data.companyWebsite || "",
-            email: data.email || "",
-            address1: data.addressLine1 || "",
-            address2: data.addressLine2 || "",
-            city: data.city || "",
-            state: data.state || "",
-            phone: data.phone || "",
-            firstName: data.firstName || "",
-            lastName: data.lastName || ""
-          });
-        } catch (error) {
-          console.error("Error fetching contact data: ", error);
-        }
+        setStartup({
+          id: startupResponse.$id,
+          name: startupName,
+        });
+
+        // Fetch contacts where the startup ID matches
+        const contactsResponse = await databases.listDocuments(DATABASE_ID, CONTACT_ID, [
+          Query.equal("startup", startupId),
+        ]);
+
+        const matchedContacts = contactsResponse.documents
+          .filter((doc: any) => doc.startup === startupId)
+          .map((doc: any) => ({
+            id: doc.$id,
+            firstName: doc.firstName,
+            lastName: doc.lastName,
+            email: doc.email,
+            phone: doc.phone,
+            companyWebsite: doc.companyWebsite,
+            addressLine1: doc.addressLine1,
+            addressLine2: doc.addressLine2,
+            city: doc.city,
+            state: doc.state,
+            companyName: doc.companyName,
+          }));
+
+        setContacts(matchedContacts);
+      } catch (err) {
+        console.error("Error fetching startup or contact details:", err);
+        setError("Failed to load details. Please try again.");
       }
     };
 
-    fetchContactData();
+    if (startupId) {
+      fetchStartupAndContacts();
+    }
   }, [startupId]);
 
-  // If no data is found, show loading or error message
-  if (!contactData) {
-    return <div>Loading contact details...</div>;
+  if (error) {
+    return <p className="text-red-500">{error}</p>;
   }
 
   return (
-    <div>
+    <div className="contact-info">
       <h2 className="container text-xl font-bold mb-4 -mt-6">Contact</h2>
       <div className="grid grid-cols-2 gap-8">
+        
         {/* Combined Box for Website, Email, Primary and Secondary Phone Numbers */}
-        <div className="space-y-4 border border-gray-300 p-4 rounded-md shadow-sm">
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="website" className="font-semibold text-gray-700">Company Website</Label>
-            <Input id="website" placeholder="Website URL" value={contactData.website} readOnly />
-          </div>
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="email" className="font-semibold text-gray-700">Email</Label>
-            <Input id="email" placeholder="Email" value={contactData.email} readOnly />
-          </div>
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="primaryPhone" className="font-semibold text-gray-700">Primary Phone Number</Label>
-            <Input id="primaryPhone" placeholder="Primary Phone" value={contactData.phone} readOnly />
-          </div>
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="secondaryPhone" className="font-semibold text-gray-700">Secondary Phone Number</Label>
-            <Input id="secondaryPhone" placeholder="Secondary Phone" readOnly />
-          </div>
-        </div>
+        {contacts.length > 0 ? (
+          contacts.map((contact) => (
+            <div key={contact.id} className="space-y-4 border border-gray-300 p-4 rounded-md shadow-sm">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="website" className="font-semibold text-gray-700">Company Website</Label>
+                <Input id="website" value={contact.companyWebsite} readOnly />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="email" className="font-semibold text-gray-700">Email</Label>
+                <Input id="email" value={contact.email} readOnly />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="primaryPhone" className="font-semibold text-gray-700">Primary Phone Number</Label>
+                <Input id="primaryPhone" value={contact.phone} readOnly />
+              </div>
+              {/* Secondary phone field */}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="secondaryPhone" className="font-semibold text-gray-700">Secondary Phone Number</Label>
+                <Input id="secondaryPhone" value={"N/A"} readOnly />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No contact information available for this startup.</p>
+        )}
 
         {/* Box for Registered Address */}
-        <div className="space-y-4 border border-gray-300 p-4 rounded-md shadow-sm">
-          <h3 className="font-bold text-lg">Registered Address</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="address1" className="font-semibold text-gray-700">Address line 1</Label>
-              <Input id="address1" placeholder="Address line 1" value={contactData.address1} readOnly />
+        {contacts.length > 0 ? (
+          contacts.map((contact) => (
+            <div key={contact.id} className="space-y-4 border border-gray-300 p-4 rounded-md shadow-sm">
+              <h3 className="font-bold text-lg">Registered Address</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="address1" className="font-semibold text-gray-700">Address line 1</Label>
+                  <Input id="address1" value={contact.addressLine1} readOnly />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="address2" className="font-semibold text-gray-700">Address line 2</Label>
+                  <Input id="address2" value={contact.addressLine2} readOnly />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="city" className="font-semibold text-gray-700">City</Label>
+                  <Input id="city" value={contact.city} readOnly />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="state" className="font-semibold text-gray-700">State</Label>
+                  <Input id="state" value={contact.state} readOnly />
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="address2" className="font-semibold text-gray-700">Address line 2</Label>
-              <Input id="address2" placeholder="Address line 2" value={contactData.address2} readOnly />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="city" className="font-semibold text-gray-700">City</Label>
-              <Input id="city" placeholder="City" value={contactData.city} readOnly />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="state" className="font-semibold text-gray-700">State</Label>
-              <Input id="state" placeholder="State" value={contactData.state} readOnly />
-            </div>
-          </div>
-        </div>
-
+          ))
+        ) : (
+          <p>No registered address available for this startup.</p>
+        )}
       </div>
     </div>
   );
