@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+
 import React, { useState, useEffect } from "react";
 import {
   Accordion,
@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon } from "lucide-react";
-import { Client, Databases } from "appwrite";
+import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 
-export const ABOUT_ID = "67207029001de651f13d";
+export const ABOUT_COLLECTION_ID = "67207029001de651f13d";
 
 const client = new Client()
   .setEndpoint(API_ENDPOINT)
@@ -20,30 +20,40 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const AboutBusiness: React.FC = () => {
+interface AboutBusinessProps {
+  startupId: string; 
+}
+
+const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [documentId, setDocumentId] = useState<string | null>(null); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await databases.getDocument(DATABASE_ID, ABOUT_ID, ABOUT_ID);
-        setData(response);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error("Error fetching data:", error.message);
+        
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          ABOUT_COLLECTION_ID,
+          [Query.equal("startupId", startupId)] 
+        );
 
-          if (error.message.includes("Document with the requested ID could not be found.")) {
-            setData({});
-          }
+        if (response.documents.length > 0) {
+          setData(response.documents[0]);
+          setDocumentId(response.documents[0].$id); 
         } else {
-          console.error("Error fetching data:", error);
+          setData({}); 
         }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     };
-    
-    fetchData();
-  }, []);
+
+    if (startupId) {
+      fetchData();
+    }
+  }, [startupId]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -51,13 +61,18 @@ const AboutBusiness: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      if (data.$id) {
-        // Update existing document
-        await databases.updateDocument(DATABASE_ID, ABOUT_ID, data.$id, data);
+      const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
+  
+      if (documentId) {
+        // Update existing document with only user-defined fields
+        await databases.updateDocument(DATABASE_ID, ABOUT_COLLECTION_ID, documentId, userDefinedData);
       } else {
-        // Create a new document if it doesn't exist
-        const response = await databases.createDocument(DATABASE_ID, ABOUT_ID, "unique()", data);
-        setData(response); // Update state with the new document data including the ID
+        // Create a new document for this startup with only user-defined fields
+        const response = await databases.createDocument(DATABASE_ID, ABOUT_COLLECTION_ID, "unique()", {
+          ...userDefinedData,
+          startupId: startupId,
+        });
+        setDocumentId(response.$id);
       }
       setIsEditing(false);
     } catch (error) {
@@ -75,20 +90,12 @@ const AboutBusiness: React.FC = () => {
         <h2 className="container text-xl font-bold mb-4 -mt-6">About Business</h2>
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
-          <div
-            onClick={handleSave}
-            className="-mt-6 ml-5 cursor-pointer"
-          >
+          <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
             <SaveIcon size={25} />
           </div>
         )}
       </div>
-      <AccordionDemo
-        data={data}
-        isEditing={isEditing}
-        onChange={handleChange}
-        onSave={handleSave}
-      />
+      <AccordionDemo data={data} isEditing={isEditing} onChange={handleChange} />
     </div>
   );
 };
@@ -99,14 +106,12 @@ interface AccordionDemoProps {
   data: { [key: string]: string | null };
   isEditing: boolean;
   onChange: (field: string, value: string) => void;
-  onSave: () => void;
 }
 
 const AccordionDemo: React.FC<AccordionDemoProps> = ({
   data,
   isEditing,
   onChange,
-  onSave,
 }) => {
   const fields = [
     { id: "problemStatement", label: "Problem Statement" },
@@ -132,14 +137,13 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
           </AccordionTrigger>
           <AccordionContent className="mt-2 text-gray-700">
             <Textarea
-              value={data[field.id] || ""} // Handle null value
+              value={data[field.id] || ""} 
               onChange={(e) => onChange(field.id, e.target.value)}
-              disabled={!isEditing} // Disable if not editing
+              disabled={!isEditing} 
             />
           </AccordionContent>
         </AccordionItem>
       ))}
-      
     </Accordion>
   );
 };
