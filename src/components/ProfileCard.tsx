@@ -95,7 +95,7 @@ const ProfileCard = () => {
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg cursor-pointer">
               <Image
-                src={profilePic || "/default-profile.png"}
+                src={profilePic || ""}
                 alt="Profile Pic"
                 className="w-full h-full object-cover"
               />

@@ -79,7 +79,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "contact":
         return <Contact startupId={startupId} />;
       case "aboutBusiness":
-        return <AboutBusiness />;
+        return <AboutBusiness startupId={startupId} />;
       case "customerTestimonials":
         return <CustomerTestimonials />;
 

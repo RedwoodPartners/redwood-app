@@ -113,7 +113,7 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
             </div>
           ))
         ) : (
-          <p>No contact information available for this startup.</p>
+          <span>Loading...</span>
         )}
 
         {/* Box for Registered Address */}
@@ -142,7 +142,7 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
             </div>
           ))
         ) : (
-          <p>No registered address available for this startup.</p>
+          <span>Loading...</span>
         )}
       </div>
     </div>
