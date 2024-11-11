@@ -6,6 +6,7 @@ import { CONTACT_ID } from "@/components/Collections/contacts";
 import { Query } from "appwrite";
 import { Label } from "@/components/ui/label"; 
 import { Input } from "@/components/ui/input"; 
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Startup = {
   id: string;
@@ -113,7 +114,16 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
             </div>
           ))
         ) : (
-          <span>Loading...</span>
+          /*loading*/
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-4 w-[150px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </div>
+          </div>
         )}
 
         {/* Box for Registered Address */}
@@ -142,7 +152,15 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
             </div>
           ))
         ) : (
-          <span>Loading...</span>
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-4 w-[150px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </div>
+          </div>
         )}
       </div>
     </div>

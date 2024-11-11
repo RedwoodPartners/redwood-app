@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
@@ -67,7 +69,17 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   }, [startupId]);
 
   if (!startupData) {
-    return <div>{error || "Loading..."}</div>;
+    return <div>{error || /*loading*/
+      <div className="flex items-center space-x-4">
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[250px]" />
+          <Skeleton className="h-4 w-[200px]" />
+          <Skeleton className="h-4 w-[150px]" />
+          <Skeleton className="h-4 w-[100px]" />
+        </div>
+      </div>
+    }</div>;
   }
 
   return (

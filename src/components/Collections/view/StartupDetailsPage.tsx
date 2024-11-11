@@ -75,7 +75,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "companyInfo":
         return <CompanyInformation startupId={startupId} activeTab={activeTab} setActiveTab={setActiveTab} />;
       case "regulatoryInfo":
-        return <RegulatoryInformation />;
+        return <RegulatoryInformation startupId={startupId} />;
       case "contact":
         return <Contact startupId={startupId} />;
       case "aboutBusiness":
