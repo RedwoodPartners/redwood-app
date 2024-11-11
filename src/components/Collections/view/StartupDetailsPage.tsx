@@ -81,7 +81,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "aboutBusiness":
         return <AboutBusiness startupId={startupId} />;
       case "customerTestimonials":
-        return <CustomerTestimonials />;
+        return <CustomerTestimonials startupId={startupId} />;
 
       case "fundingMilestones":
         return <FundingMilestones />;
@@ -333,7 +333,16 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           <div className="mt-10">{renderTabContent()}</div>
         </>
       ) : (
-        <p className="text-center text-gray-500">Loading...</p>
+        /*Loading*/
+        <div className="flex justify-center mt-56">
+          <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-labelledby="title" role="img">
+          <title id="title">Loading...</title>
+          <circle cx="50" cy="50" r="35" stroke="gray" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="55 35">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite"/>
+          </circle>
+          </svg>
+        </div>
+
       )}
     </div>
   );
