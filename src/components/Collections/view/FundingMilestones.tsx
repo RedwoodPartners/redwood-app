@@ -8,24 +8,17 @@ import CapTable from "./FundingMilestonestabs/CapTable";
 import FundAsk from "./FundingMilestonestabs/FundAsk";
 import TranchesMilestones from "./FundingMilestonestabs/Milestones";
 
+interface FundingMilestonesProps {
+  startupId: string;
+  activeTab: string;
+}
 
-const FundingMilestones: React.FC = () => {
-  // State to track the active sidebar tab
-  const [activeTab, setActiveTab] = useState("Fund Raised So Far");
-
-  const tabs = [
-    "Fund Raised So Far",
-    "Shareholders",
-    "Cap Table",
-    "Fund Ask",
-    "Tranches & Milestones",
-  ];
-
+const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startupId }) => {
   // Function to render content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case "Fund Raised So Far":
-        return <FundRaisedSoFar />;
+        return <FundRaisedSoFar startupId={startupId} />;
       case "Shareholders":
         return <Shareholders />;
       case "Cap Table":
@@ -42,13 +35,10 @@ const FundingMilestones: React.FC = () => {
   return (
     <div className="flex">
       {/* Main Content */}
-      <div className="bg-white p-4 rounded-lg shadow-md flex-grow">
-        <h2 className="text-xl font-bold mb-4">Funding & Milestones</h2>
+      <div className="bg-white mx-auto p-4 rounded-lg shadow-md flex-grow">
         {/* Render the content for the active tab */}
         {renderTabContent()}
       </div>
-
-      
     </div>
   );
 };

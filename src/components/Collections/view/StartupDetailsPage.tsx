@@ -84,9 +84,9 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         return <CustomerTestimonials startupId={startupId} />;
 
       case "fundingMilestones":
-        return <FundingMilestones />;
+        return <FundingMilestones startupId={startupId} activeTab={activeTab} />;
       case "fundraisedsofar":
-        return <FundRaisedSoFar />;
+        return <FundRaisedSoFar startupId={startupId} />;
       case "shareholders":
         return <Shareholders />;
       case "captable":
