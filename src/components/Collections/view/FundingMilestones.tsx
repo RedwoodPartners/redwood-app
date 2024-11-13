@@ -24,9 +24,9 @@ const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startu
       case "Cap Table":
         return <CapTable startupId={startupId} />;
       case "Fund Ask":
-        return <FundAsk />;
+        return <FundAsk startupId={startupId} />;
       case "Tranches & Milestones":
-        return <TranchesMilestones />;
+        return <TranchesMilestones startupId={startupId} />;
       default:
         return null;
     }

@@ -1,73 +1,199 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import { PlusCircle, SaveIcon } from "lucide-react";
+import { Client, Databases } from "appwrite";
+import { Query } from "appwrite";
+import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
-const TranchesMilestones: React.FC = () => {
-  const [tranches, setTranches] = useState([
-    {
-      type: "Initial",
-      status: "Completed",
-      amount: 500000,
-      milestones: "Product Launch",
-    },
-  ]);
+export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 
-  const addTranche = () => {
-    const newTranche = {
-      type: "New Tranche",
-      status: "Pending",
-      amount: 0,
-      milestones: "New milestone",
+interface TranchesMilestonesProps {
+  startupId: string;
+}
+
+const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) => {
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [newMilestone, setNewMilestone] = useState({
+    trancheType: "",
+    status: "",
+    amount: "",
+    milestones: "",
+  });
+
+  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+  const databases = new Databases(client);
+
+  useEffect(() => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+  
+    const fetchMilestones = async () => {
+      try {
+        const response = await databases.listDocuments(DATABASE_ID, TRANCHES_MILESTONES_ID, [
+          Query.equal("startupId", startupId),
+        ]);
+        setMilestones(response.documents);
+      } catch (error) {
+        console.error("Error fetching investments:", error);
+      }
     };
-    setTranches([...tranches, newTranche]);
+  
+    fetchMilestones();
+  }, [startupId]);
+
+  const handleEditChange = (index: number, field: string, value: string) => {
+    const updatedMilestones = [...milestones];
+    updatedMilestones[index][field] = value;
+    setMilestones(updatedMilestones);
+    setEditingIndex(index); // row in edit mode
   };
 
+  const handleSaveInvestment = async (index: number) => {
+    const investment = milestones[index];
+    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = investment;
+    try {
+      await databases.updateDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, $id!, dataToUpdate);
+      console.log("Saved successfully");
+      setEditingIndex(null); // Remove edit mode after saving
+    } catch (error) {
+      console.error("Error saving investment:", error);
+    }
+  };
 
-  const totalAmount = tranches.reduce((sum, tranche) => sum + tranche.amount, 0);
+  const handleAddInvestment = async () => {
+    try {
+      const response = await databases.createDocument(
+        DATABASE_ID,
+        TRANCHES_MILESTONES_ID,
+        "unique()",
+        { ...newMilestone, startupId }
+      );
+      setMilestones([...milestones, response]);
+      setNewMilestone({
+        trancheType: "",
+        status: "",
+        amount: "",
+        milestones: "",
+      });
+    } catch (error) {
+      console.error("Error adding investment:", error);
+    }
+  };
+
+  const totalAmount = milestones.reduce((sum, investment) => {
+    const amount = parseFloat(investment.amount.replace(/₹|,/g, ""));
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
 
   return (
     <div>
       <h3 className="container text-xl font-bold mb-4 -mt-6">
         Tranches & Milestones
-        <button 
-          onClick={addTranche} 
-          className="ml-2 text-black rounded-full transition">
-          <PlusCircle size={20} />
-        </button>
       </h3>
       <Table>
-        <TableCaption>A list of tranches and milestones.</TableCaption>
+        <TableCaption>A list of recent Tranches & Milestones.</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-50">
             <TableHead>Tranche Type</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Amount (As per SHA)</TableHead>
+            <TableHead>Amount (As Per SHA)</TableHead>
             <TableHead>Milestones</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tranches.map((tranche, index) => (
-            <TableRow key={index}>
-              <TableCell className="font-medium">{tranche.type}</TableCell>
-              <TableCell>{tranche.status}</TableCell>
-              <TableCell className="text-right">₹{tranche.amount.toLocaleString()}</TableCell>
-              <TableCell>{tranche.milestones}</TableCell>
+          {milestones.map((investment, index) => (
+            <TableRow key={investment.$id}>
+              <TableCell>
+                <input
+                  type="text"
+                  value={investment.trancheType}
+                  onChange={(e) => handleEditChange(index, "trancheType", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={investment.status}
+                  onChange={(e) => handleEditChange(index, "status", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={investment.amount}
+                  onChange={(e) => handleEditChange(index, "amount", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={investment.milestones}
+                  onChange={(e) => handleEditChange(index, "milestones", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                {editingIndex === index && (
+                  <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
+                    <SaveIcon size={20} />
+                  </button>
+                )}
+              </TableCell>
             </TableRow>
           ))}
+          <TableRow>
+            <TableCell>
+              <input
+                type="text"
+                value={newMilestone.trancheType}
+                onChange={(e) => setNewMilestone({ ...newMilestone, trancheType: e.target.value })}
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Tranches Type"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newMilestone.status}
+                onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Status"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newMilestone.amount}
+                onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Amount"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newMilestone.milestones}
+                onChange={(e) => setNewMilestone({ ...newMilestone, milestones: e.target.value })}
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Milestones"
+              />
+            </TableCell>
+            <TableCell>
+              <button onClick={handleAddInvestment} className="text-black rounded-full transition">
+                <PlusCircle size={20} />
+              </button>
+            </TableCell>
+          </TableRow>
           <TableRow className="font-semibold bg-gray-100">
-            <TableCell colSpan={2} className="text-right">Total:</TableCell>
+            <TableCell colSpan={4} className="text-right">Total:</TableCell>
             <TableCell className="text-right">₹{totalAmount.toLocaleString()}</TableCell>
-            <TableCell />
           </TableRow>
         </TableBody>
       </Table>
