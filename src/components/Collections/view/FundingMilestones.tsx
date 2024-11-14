@@ -20,7 +20,7 @@ const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startu
       case "Fund Raised So Far":
         return <FundRaisedSoFar startupId={startupId} />;
       case "Shareholders":
-        return <Shareholders />;
+        return <Shareholders startupId={startupId} />;
       case "Cap Table":
         return <CapTable startupId={startupId} />;
       case "Fund Ask":
