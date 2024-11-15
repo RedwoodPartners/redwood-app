@@ -7,23 +7,17 @@ import GstCompliance from "./Compliancetabs/GSTcompliance";
 import GstrCompliance from "./Compliancetabs/GSTR1";
 import Audits from "./Compliancetabs/Audit";
 
+interface ComplianceProps {
+  startupId: string;
+  activeTab: string;
+}
 
-const Compliance: React.FC = () => {
-
-  const [activeTab, setActiveTab] = useState("ROC Compliance");
-
-  const tabs = [
-    "ROC Compliance",
-    "GST Compliances",
-    "Income Tax Compliances",
-    "GSTR-1 & GSTR-3B",
-    "Audits",
-  ];
+const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "Income Tax Compliances":
-        return <IncomeTaxCompliance />;
+        return <IncomeTaxCompliance startupId={startupId} />;
       case "ROC Compliance":
         return <RocCompliance />;
       case "GST Compliances":

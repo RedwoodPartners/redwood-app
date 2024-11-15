@@ -97,10 +97,10 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         return <TranchesMilestones startupId={startupId} />;
 
       case "compliance":
-        return <Compliance />;
+        return <Compliance startupId={startupId} activeTab={activeTab} />;
 
       case "incometax":
-        return <IncomeTaxCompliance />;
+        return <IncomeTaxCompliance startupId={startupId} />;
       case "roccompliance":
         return <RocCompliance />;
       case "gstcompliance":
