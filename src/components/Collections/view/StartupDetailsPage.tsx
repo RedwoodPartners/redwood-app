@@ -106,9 +106,9 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "gstcompliance":
         return <GstCompliance startupId={startupId} />;
       case "gstrcompliance":
-        return <GstrCompliance />;
+        return <GstrCompliance startupId={startupId} />;
       case "audits":
-        return <Audits />;
+        return <Audits startupId={startupId} />;
 
 
       case "documents":

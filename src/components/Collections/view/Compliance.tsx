@@ -23,9 +23,9 @@ const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId }) => {
       case "GST Compliances":
         return <GstCompliance startupId={startupId} />;
       case "GSTR-1 & GSTR-3B":
-        return <GstrCompliance />;
+        return <GstrCompliance startupId={startupId} />;
       case "Audits":
-        return <Audits />;
+        return <Audits startupId={startupId} />;
       default:
         return null;
     }
