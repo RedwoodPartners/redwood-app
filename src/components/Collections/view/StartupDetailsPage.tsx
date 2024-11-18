@@ -102,9 +102,9 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "incometax":
         return <IncomeTaxCompliance startupId={startupId} />;
       case "roccompliance":
-        return <RocCompliance />;
+        return <RocCompliance startupId={startupId} />;
       case "gstcompliance":
-        return <GstCompliance />;
+        return <GstCompliance startupId={startupId} />;
       case "gstrcompliance":
         return <GstrCompliance />;
       case "audits":
@@ -112,11 +112,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
 
 
       case "documents":
-        return <Documents />;
+        return <Documents startupId={startupId} activeTab={activeTab} />;
         case "documentchecklist":
         return <DocumentChecklist />;
         case "patents":
-        return <Patents />;
+        return <Patents startupId={startupId} />;
         case "incubation":
         return <Incubation />;
       default:

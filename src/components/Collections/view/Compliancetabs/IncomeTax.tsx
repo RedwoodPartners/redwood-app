@@ -106,17 +106,17 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
           {complianceData.map((row, index) => (
             <TableRow key={row.$id}>
               <TableCell>
-                <Input
+                <input
                   type="text"
                   value={row.query}
                   onChange={(e) => handleEditChange(index, "query", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
-              <TableCell className="text-center">
-                <div className="flex items-center justify-center space-x-4">
-                  <Label className="flex items-center space-x-1">
-                    <Input
+              <TableCell>
+                <div className="flex items-center space-x-4">
+                  <Label className=" space-x-1">
+                    <input
                       type="radio"
                       name={`yesNo-${index}`}
                       value="yes"
@@ -125,8 +125,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                     />
                     <span>Yes</span>
                   </Label>
-                  <Label className="flex items-center space-x-1">
-                    <Input
+                  <Label className="space-x-1">
+                    <input
                       type="radio"
                       name={`yesNo-${index}`}
                       value="no"
@@ -137,16 +137,16 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                   </Label>
                 </div>
               </TableCell>
-              <TableCell className="text-center">
-                <Input
+              <TableCell>
+                <input
                   type="date"
                   value={row.date}
                   onChange={(e) => handleEditChange(index, "date", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
+                  className=" h-5 border-none"
                 />
               </TableCell>
               <TableCell>
-                <Input
+                <input
                   type="text"
                   value={row.description}
                   onChange={(e) => handleEditChange(index, "description", e.target.value)}
@@ -164,7 +164,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
           ))}
           <TableRow>
             <TableCell>
-              <Input
+              <input
                 type="text"
                 value={newCompliance.query}
                 onChange={(e) => setNewCompliance({ ...newCompliance, query: e.target.value })}
@@ -172,10 +172,10 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                 className="w-full h-5 border-none focus:outline-none"
               />
             </TableCell>
-            <TableCell className="text-center">
-              <div className="flex items-center justify-center space-x-4">
+            <TableCell>
+              <div className="flex space-x-4">
                 <Label className="flex items-center space-x-1">
-                  <Input
+                  <input
                     type="radio"
                     name="new-yesNo"
                     value="yes"
@@ -185,7 +185,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                   <span>Yes</span>
                 </Label>
                 <Label className="flex items-center space-x-1">
-                  <Input
+                  <input
                     type="radio"
                     name="new-yesNo"
                     value="no"
@@ -196,16 +196,16 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                 </Label>
               </div>
             </TableCell>
-            <TableCell className="text-center">
-              <Input
+            <TableCell>
+              <input
                 type="date"
                 value={newCompliance.date}
                 onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
+                className="h-5 border-none focus:outline-none"
               />
             </TableCell>
             <TableCell>
-              <Input
+              <input
                 type="text"
                 value={newCompliance.description}
                 onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
