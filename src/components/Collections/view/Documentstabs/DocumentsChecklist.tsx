@@ -1,157 +1,205 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
+  TableHead,
 } from "@/components/ui/table";
-import { EditIcon, SaveIcon, PlusCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { PlusCircle, SaveIcon } from "lucide-react";
+import { Query } from "appwrite";
+import { Client, Databases } from "appwrite";
+import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
-const DocumentChecklist: React.FC = () => {
-  const [documents, setDocuments] = useState([
-    {
-      name: "Bank Statements",
-      type: "Financial",
-      status: "Pending",
-      description: "Mention any important information or deadline for submission.",
-      isEditing: false,
-    },
-  ]);
+const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 
-  // Handle adding a new document row
-  const addDocument = () => {
-    const newDocument = {
-      name: "New Document",
-      type: "General",
-      status: "Pending",
-      description: "Enter details here.",
-      isEditing: true, // New document starts in edit mode
+interface DocChecklistProps {
+  startupId: string;
+}
+
+const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
+  const [docData, setdocData] = useState<any[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [newDoc, setNewDoc] = useState({
+    docName: "",
+    docType: "",
+    status: "",
+    description: "",
+  });
+
+  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+  const databases = new Databases(client);
+
+  useEffect(() => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+    const fetchPatentsData = async () => {
+      try {
+        const response = await databases.listDocuments(DATABASE_ID, DOC_CHECKLIST_ID, [
+          Query.equal("startupId", startupId),
+        ]);
+        setdocData(response.documents);
+      } catch (error) {
+        console.error("Error fetching compliance data:", error);
+      }
     };
-    setDocuments([...documents, newDocument]);
+
+    fetchPatentsData();
+  }, [startupId]);
+
+  const handleEditChange = (index: number, field: string, value: string) => {
+    const updatedData = [...docData];
+    updatedData[index][field] = value;
+    setdocData(updatedData);
+    setEditingIndex(index);
   };
 
-  // Toggle edit mode for a document row
-  const toggleEdit = (index: number) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments[index].isEditing = !updatedDocuments[index].isEditing;
-    setDocuments(updatedDocuments);
+  const handleSavePatents = async (index: number) => {
+    const dataToUpdate = docData[index];
+    const fieldsToUpdate = {
+      docName: dataToUpdate.docName,
+      docType: dataToUpdate.docType,
+      status: dataToUpdate.status,
+      description: dataToUpdate.description,
+    };
+  
+    try {
+      await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, dataToUpdate.$id, fieldsToUpdate);
+      console.log("Saved successfully");
+      setEditingIndex(null);
+    } catch (error) {
+      console.error("Error saving patents data:", error);
+    }
   };
+  
 
-  // Save changes to the document
-  const saveDocument = (index: number) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments[index].isEditing = false;
-    setDocuments(updatedDocuments);
-  };
-
-  // Update document field values
-  const handleFieldChange = (index: number, field: string, value: string) => {
-    const updatedDocuments = [...documents];
-    (updatedDocuments[index] as any)[field] = value;
-    setDocuments(updatedDocuments);
+  const handleAddPatentsData = async () => {
+    try {
+      const response = await databases.createDocument(
+        DATABASE_ID,
+        DOC_CHECKLIST_ID,
+        "unique()",
+        { ...newDoc, startupId }
+      );
+      setdocData([...docData, response]);
+      setNewDoc({ docName: "", docType: "", status: "", description: "" });
+    } catch (error) {
+      console.error("Error adding compliance data:", error);
+    }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold">Document Checklist</h3>
-        <button
-          onClick={addDocument}
-          className="flex items-center text-blue-600 hover:text-blue-800 transition"
-        >
-          <PlusCircle size={20} className="mr-1" />
-          Add Document
-        </button>
-      </div>
-
-      <div className="overflow-x-auto">
-        <Table className="min-w-full bg-white border border-gray-300">
-          <TableCaption>Document checklist for submission and review</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="py-2 px-4 font-semibold text-gray-700">Document Name</TableHead>
-              <TableHead className="py-2 px-4 font-semibold text-gray-700">Document Type</TableHead>
-              <TableHead className="py-2 px-4 font-semibold text-gray-700">Status</TableHead>
-              <TableHead className="py-2 px-4 font-semibold text-gray-700">Description</TableHead>
-              <TableHead className="py-2 px-4 font-semibold text-gray-700">Action</TableHead>
+      <h3 className="container text-xl font-bold mb-4 -mt-6">Document Checklist</h3>
+      <Table>
+        <TableCaption>Document checklist for submission and review</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Document Name</TableHead>
+            <TableHead>Document Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {docData.map((row, index) => (
+            <TableRow key={row.$id}>
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.docName}
+                  onChange={(e) => handleEditChange(index, "docName", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.docType}
+                  onChange={(e) => handleEditChange(index, "docType", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+  
+              
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.status}
+                  onChange={(e) => handleEditChange(index, "status", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.description}
+                  onChange={(e) => handleEditChange(index, "description", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                {editingIndex === index && (
+                  <button onClick={() => handleSavePatents(index)} className="text-black rounded-full transition">
+                    <SaveIcon size={20} />
+                  </button>
+                )}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.map((doc, index) => (
-              <TableRow key={index}>
-                <TableCell className="py-2 px-4 text-gray-600">
-                  {doc.isEditing ? (
-                    <input
-                      value={doc.name}
-                      onChange={(e) => handleFieldChange(index, "name", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  ) : (
-                    doc.name
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-4 text-center">
-                  {doc.isEditing ? (
-                    <input
-                      value={doc.type}
-                      onChange={(e) => handleFieldChange(index, "type", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  ) : (
-                    <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full">
-                      {doc.type}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-4 text-center">
-                  {doc.isEditing ? (
-                    <input
-                      value={doc.status}
-                      onChange={(e) => handleFieldChange(index, "status", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  ) : (
-                    <span className="bg-orange-100 text-orange-800 py-1 px-3 rounded-full">
-                      {doc.status}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-4 text-gray-600">
-                  {doc.isEditing ? (
-                    <input
-                      value={doc.description}
-                      onChange={(e) => handleFieldChange(index, "description", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  ) : (
-                    doc.description
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-4 flex items-center justify-center">
-                  {doc.isEditing ? (
-                    <SaveIcon
-                      size={20}
-                      className="text-green-500 cursor-pointer"
-                      onClick={() => saveDocument(index)}
-                    />
-                  ) : (
-                    <EditIcon
-                      size={20}
-                      className="text-blue-500 cursor-pointer"
-                      onClick={() => toggleEdit(index)}
-                    />
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+          <TableRow>
+            <TableCell>
+              <input
+                type="text"
+                value={newDoc.docName}
+                onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })}
+                placeholder="Document Name"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newDoc.docType}
+                onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })}
+                placeholder="Document Type"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            
+            <TableCell>
+              <input
+                type="text"
+                value={newDoc.status}
+                onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })}
+                placeholder="Status"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newDoc.description}
+                onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
+                placeholder="Description"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            <TableCell>
+              <button onClick={handleAddPatentsData} className="text-black rounded-full transition">
+                <PlusCircle size={20} />
+              </button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 };
