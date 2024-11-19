@@ -16,13 +16,13 @@ const Documents: React.FC<DocumentsProps> = ({ activeTab, startupId }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "Document Checklist":
-        return <DocumentChecklist />;
+        return <DocumentChecklist startupId={startupId} />;
       case "Patents":
         return <Patents startupId={startupId} />;
       case "Incubation":
-        return <Incubation />;
+        return <Incubation startupId={startupId} />;
       default:
-        return <DocumentChecklist />;
+        return <DocumentChecklist startupId={startupId} />;
     }
   };
 

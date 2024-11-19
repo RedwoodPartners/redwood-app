@@ -114,11 +114,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       case "documents":
         return <Documents startupId={startupId} activeTab={activeTab} />;
         case "documentchecklist":
-        return <DocumentChecklist />;
+        return <DocumentChecklist startupId={startupId} />;
         case "patents":
         return <Patents startupId={startupId} />;
         case "incubation":
-        return <Incubation />;
+        return <Incubation startupId={startupId} />;
       default:
         return null;
     }

@@ -27,10 +27,11 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newCompliance, setNewCompliance] = useState({
-    query: "",
-    yesNo: "",
+    action: "",
     date: "",
-    description: "",
+    prvStatus: "",
+    curStatus: "",
+    founderName: "",
   });
 
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -64,6 +65,7 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
     const dataToUpdate = complianceData[index];
     const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...fieldsToUpdate } = dataToUpdate;
 
+
     try {
       await databases.updateDocument(DATABASE_ID, AUDITS_ID, $id, fieldsToUpdate);
       console.log("Saved successfully");
@@ -82,7 +84,7 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
         { ...newCompliance, startupId }
       );
       setComplianceData([...complianceData, response]);
-      setNewCompliance({ query: "", yesNo: "", date: "", description: "" });
+      setNewCompliance({ action: "", date: "", prvStatus: "", curStatus: "", founderName: "" });
     } catch (error) {
       console.error("Error adding compliance data:", error);
     }
@@ -95,10 +97,11 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
         <TableCaption>Audits Information</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Form Queries</TableHead>
-            <TableHead>Yes/No</TableHead>
-            <TableHead>Choose Date</TableHead>
-            <TableHead>Description</TableHead>
+            <TableHead>Action</TableHead>
+            <TableHead>Date of Action</TableHead>
+            <TableHead>Previous Status</TableHead>
+            <TableHead>Current Status</TableHead>
+            <TableHead>Application Founder Name</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -108,35 +111,12 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
-                  value={row.query}
-                  onChange={(e) => handleEditChange(index, "query", e.target.value)}
+                  value={row.action}
+                  onChange={(e) => handleEditChange(index, "action", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-4">
-                  <Label className=" space-x-1">
-                    <input
-                      type="radio"
-                      name={`yesNo-${index}`}
-                      value="yes"
-                      checked={row.yesNo === "yes"}
-                      onChange={(e) => handleEditChange(index, "yesNo", e.target.value)}
-                    />
-                    <span>Yes</span>
-                  </Label>
-                  <Label className="space-x-1">
-                    <input
-                      type="radio"
-                      name={`yesNo-${index}`}
-                      value="no"
-                      checked={row.yesNo === "no"}
-                      onChange={(e) => handleEditChange(index, "yesNo", e.target.value)}
-                    />
-                    <span>No</span>
-                  </Label>
-                </div>
-              </TableCell>
+              
               <TableCell>
                 <input
                   type="date"
@@ -148,8 +128,24 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
-                  value={row.description}
-                  onChange={(e) => handleEditChange(index, "description", e.target.value)}
+                  value={row.prvStatus}
+                  onChange={(e) => handleEditChange(index, "prvStatus", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.curStatus}
+                  onChange={(e) => handleEditChange(index, "curStatus", e.target.value)}
+                  className="w-full h-5 border-none focus:outline-none"
+                />
+              </TableCell>
+              <TableCell>
+                <input
+                  type="text"
+                  value={row.founderName}
+                  onChange={(e) => handleEditChange(index, "founderName", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
@@ -166,36 +162,13 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
-                value={newCompliance.query}
-                onChange={(e) => setNewCompliance({ ...newCompliance, query: e.target.value })}
-                placeholder="Form Query"
+                value={newCompliance.action}
+                onChange={(e) => setNewCompliance({ ...newCompliance, action: e.target.value })}
+                placeholder="Action"
                 className="w-full h-5 border-none focus:outline-none"
               />
             </TableCell>
-            <TableCell>
-              <div className="flex space-x-4">
-                <Label className="flex items-center space-x-1">
-                  <input
-                    type="radio"
-                    name="new-yesNo"
-                    value="yes"
-                    checked={newCompliance.yesNo === "yes"}
-                    onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
-                  />
-                  <span>Yes</span>
-                </Label>
-                <Label className="flex items-center space-x-1">
-                  <input
-                    type="radio"
-                    name="new-yesNo"
-                    value="no"
-                    checked={newCompliance.yesNo === "no"}
-                    onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
-                  />
-                  <span>No</span>
-                </Label>
-              </div>
-            </TableCell>
+            
             <TableCell>
               <input
                 type="date"
@@ -207,8 +180,26 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
-                value={newCompliance.description}
-                onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
+                value={newCompliance.prvStatus}
+                onChange={(e) => setNewCompliance({ ...newCompliance, prvStatus: e.target.value })}
+                placeholder="Previous Status"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newCompliance.curStatus}
+                onChange={(e) => setNewCompliance({ ...newCompliance, curStatus: e.target.value })}
+                placeholder="Current Status"
+                className="w-full h-5 border-none focus:outline-none"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newCompliance.founderName}
+                onChange={(e) => setNewCompliance({ ...newCompliance, founderName: e.target.value })}
                 placeholder="Description"
                 className="w-full h-5 border-none focus:outline-none"
               />
