@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+
 import { DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
 
 import FundingMilestones from "@/components/Collections/view/FundingMilestones";
@@ -135,7 +137,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
               <div className="bg-gray-200 rounded-full h-12 w-12 flex items-center justify-center text-gray-600">
                 <span className="font-bold text-lg">{startupData.name.charAt(0)}</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-800">{startupData.name}</h1>
+              <Label className="text-2xl font-bold text-gray-800">{startupData.name}</Label>
             </div>
           </div>
 
@@ -143,14 +145,14 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           <InfoBox name={startupData.name} />
 
           {/* Tabs for Navigation */}
-          <NavigationMenu>
-            <NavigationMenuList className="flex space-x-2 mt-4">
+          <NavigationMenu className="-ml-2">
+            <NavigationMenuList className="flex flex-wrap space-x-2 mt-2">
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="font-bold">
                   Company Information
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2">
-                  <ul>
+                <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2 w-full sm:w-64 z-20">
+                  <ul className="flex flex-col">
                     <li>
                       <button
                         onClick={() => setActiveTab("companyInfo")}
@@ -198,8 +200,8 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <NavigationMenuTrigger className="font-bold">
                   Funding and Milestones
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-36 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
-                  <ul>
+                <NavigationMenuContent className="absolute left-0 sm:left-48 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
+                  <ul className="flex flex-col">
                     <li>
                       <button
                         onClick={() => setActiveTab("fundraisedsofar")}
@@ -247,8 +249,8 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <NavigationMenuTrigger className="font-bold">
                   Compliance
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-80 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
-                  <ul>
+                <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
+                  <ul className="flex flex-col">
                     <li>
                       <button
                         onClick={() => setActiveTab("incometax")}
@@ -296,8 +298,8 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <NavigationMenuTrigger  className="font-bold">
                   Documents
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-96 w-full bg-white shadow-lg rounded-lg mt-2">
-                  <ul>
+                <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2">
+                  <ul className="flex flex-col">
                     <li>
                       <button
                         onClick={() => setActiveTab("documentchecklist")}
@@ -330,7 +332,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           </NavigationMenu>
 
           {/* Render the active tab content */}
-          <div className="mt-10">{renderTabContent()}</div>
+          <div className="mt-5">{renderTabContent()}</div>
         </>
       ) : (
         /*Loading*/

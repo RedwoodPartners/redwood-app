@@ -122,7 +122,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   return (
     <>
       <div className="flex items-center">
-        <h2 className="container text-xl font-bold mb-4 -mt-6">Regulatory Information</h2>
+        <h2 className="container text-lg font-bold mb-3 -mt-4 p-2">Regulatory Information</h2>
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">

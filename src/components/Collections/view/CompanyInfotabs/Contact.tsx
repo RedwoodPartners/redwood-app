@@ -86,8 +86,8 @@ const Contact: React.FC<ContactProps> = ({ startupId }) => {
   }
 
   return (
-    <div className="contact-info">
-      <h2 className="container text-xl font-bold mb-4 -mt-6">Contact</h2>
+    <div>
+      <h2 className="text-lg font-bold p-2 -mt-4">Contact</h2>
       <div className="grid grid-cols-2 gap-8">
         
         {/* Combined Box for Website, Email, Primary and Secondary Phone Numbers */}

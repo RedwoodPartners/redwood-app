@@ -84,7 +84,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   return (
     <div className="p-4 -mt-6 bg-white shadow-md rounded-lg">
       <div className="flex items-center">
-        <h2 className="container text-xl font-bold mb-4">Shareholders</h2>
+        <h2 className="container text-lg font-bold mb-4">Shareholders</h2>
         <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="ml-5 cursor-pointer">
