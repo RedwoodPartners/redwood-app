@@ -38,7 +38,7 @@ const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setA
 
   return (
     <div className="flex">
-      <div className="bg-white mx-auto p-4 rounded-lg shadow-md flex-grow">
+      <div className="flex-grow">
         {renderTabContent()}
       </div>
     </div>

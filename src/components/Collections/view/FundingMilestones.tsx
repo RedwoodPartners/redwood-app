@@ -35,7 +35,7 @@ const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startu
   return (
     <div className="flex">
       {/* Main Content */}
-      <div className="bg-white mx-auto p-4 rounded-lg shadow-md flex-grow">
+      <div className="flex-grow">
         {/* Render the content for the active tab */}
         {renderTabContent()}
       </div>
