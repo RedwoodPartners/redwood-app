@@ -90,11 +90,11 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">GSTR-1 & GSTR-3B</h3>
-      <Table>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">GSTR-1 & GSTR-3B</h3>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>GSTR Compliance Information</TableCaption>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-100">
             <TableHead>Month</TableHead>
             <TableHead>GST R1</TableHead>
             <TableHead>GST 3B</TableHead>

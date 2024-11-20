@@ -95,13 +95,13 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">
+      <h3 className="container text-lg font-medium mb-2 -mt-4">
         Fund Raised So Far
       </h3>
-      <Table>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>A list of recent investments.</TableCaption>
         <TableHeader>
-          <TableRow className="bg-gray-50">
+          <TableRow className="bg-gray-100">
             <TableHead>Investment Stage</TableHead>
             <TableHead>Round Name</TableHead>
             <TableHead>Mode of Investment</TableHead>

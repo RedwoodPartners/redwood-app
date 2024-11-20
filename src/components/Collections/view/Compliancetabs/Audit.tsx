@@ -92,11 +92,11 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">Audits</h3>
-      <Table>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Audits</h3>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>Audits Information</TableCaption>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-100">
             <TableHead>Action</TableHead>
             <TableHead>Date of Action</TableHead>
             <TableHead>Previous Status</TableHead>
