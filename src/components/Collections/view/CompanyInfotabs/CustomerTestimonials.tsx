@@ -87,7 +87,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   return (
     <div>
       <div className="flex items-center">
-        <h2 className="container text-lg font-bold mb-2 -mt-4 p-2">Customer Testimonials</h2>
+        <h2 className="container text-lg font-medium mb-2 -mt-4">Customer Testimonials</h2>
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">

@@ -96,11 +96,11 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">Patents</h3>
-      <Table>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Patents</h3>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>Patents Information</TableCaption>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-100">
             <TableHead>Patent Name</TableHead>
             <TableHead>Filed Date</TableHead>
             <TableHead>Status</TableHead>

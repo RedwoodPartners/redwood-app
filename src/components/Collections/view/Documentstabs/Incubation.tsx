@@ -90,11 +90,11 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">Incubation</h3>
-      <Table>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Incubation</h3>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>Incubation Program Information</TableCaption>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-100">
             <TableHead>Incubation Program</TableHead>
             <TableHead>Start Date</TableHead>
             <TableHead>Status</TableHead>

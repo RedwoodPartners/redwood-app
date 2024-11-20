@@ -332,7 +332,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           </NavigationMenu>
 
           {/* Render the active tab content */}
-          <div className="mt-5">{renderTabContent()}</div>
+          <div className="mt-3 p-2">{renderTabContent()}</div>
         </>
       ) : (
         /*Loading*/

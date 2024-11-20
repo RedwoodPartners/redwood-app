@@ -91,8 +91,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-bold mb-2 -mt-4 p-2">Capital Table</h3>
-      <Table>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Capital Table</h3>
+      <Table className="border border-gray-300 shadow-lg">
         <TableCaption>A list of capital contributions.</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-50">
