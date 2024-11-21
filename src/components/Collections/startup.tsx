@@ -8,6 +8,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ICellRendererParams } from 'ag-grid-community';
 import { FaEye } from 'react-icons/fa';
+import { PlusCircle, Trash } from "lucide-react";
 
 import { Client, Databases, ID } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -20,11 +21,16 @@ type Startup = {
   businessType: string;
   natureOfCompany: string;
   subDomain: string;
+  patents: string;
   dateOfIncorporation: string;
   registeredCompanyName: string;
   registeredState: string;
+  incubated: string;
   registeredCountry: string;
   companyStage: string;
+  domain: string;
+  communityCertificate: string;
+  revenue: string;
   employees: string;
   description: string;
 };
@@ -56,11 +62,16 @@ const StartupsPage: React.FC = () => {
           businessType: doc.businessType || "",
           natureOfCompany: doc.natureOfCompany || "",
           subDomain: doc.subDomain || "",
+          patents: doc.patents || "",
           dateOfIncorporation: doc.dateOfIncorporation || "",
           registeredCompanyName: doc.registeredCompanyName || "",
           registeredState: doc.registeredState || "",
+          incubated: doc.incubated || "",
           registeredCountry: doc.registeredCountry || "",
           companyStage: doc.companyStage || "",
+          domain: doc.domain || "",
+          communityCertificate: doc.communityCertificate || "",
+          revenue: doc.revenue || "",
           employees: doc.employees || "",
           description: doc.description || "",
         }));
@@ -83,11 +94,16 @@ const StartupsPage: React.FC = () => {
       businessType: "Type",
       natureOfCompany: "Nature",
       subDomain: "Sub Domain",
+      patents: "Patents",
       dateOfIncorporation: new Date().toISOString().split("T")[0],
       registeredCompanyName: "Registered Name",
       registeredState: "State",
+      incubated: "Incubated?",
       registeredCountry: "India",
       companyStage: "Stage",
+      domain: "Domain",
+      communityCertificate: "Community Certificate",
+      revenue: "Revenue(last FY)",
       employees: "10",
       description: "Description",
     };
@@ -102,11 +118,16 @@ const StartupsPage: React.FC = () => {
           businessType: createdStartup.businessType || "",
           natureOfCompany: createdStartup.natureOfCompany || "",
           subDomain: createdStartup.subDomain || "",
+          patents: createdStartup.patents || "",
           dateOfIncorporation: createdStartup.dateOfIncorporation || "",
           registeredCompanyName: createdStartup.registeredCompanyName || "",
           registeredState: createdStartup.registeredState || "",
+          incubated: createdStartup.incubated || "",
           registeredCountry: createdStartup.registeredCountry || "",
           companyStage: createdStartup.companyStage || "",
+          domain: createdStartup.domain || "",
+          communityCertificate: createdStartup.communityCertificate || "",
+          revenue: createdStartup.revenue || "",
           employees: createdStartup.employees || "",
           description: createdStartup.description || "", },
       ]);
@@ -160,11 +181,16 @@ const StartupsPage: React.FC = () => {
           businessType: editedRow.businessType,
           natureOfCompany:editedRow.natureOfCompany,
           subDomain: editedRow.subDomain,
+          patents: editedRow.patents,
           dateOfIncorporation: editedRow.dateOfIncorporation,
           registeredCompanyName: editedRow.registeredCompanyName,
           registeredState: editedRow.registeredState,
+          incubated: editedRow.incubated,
           registeredCountry: editedRow.registeredCountry,
           companyStage: editedRow.companyStage,
+          domain: editedRow.domain,
+          communityCertificate: editedRow.communityCertificate,
+          revenue: editedRow.revenue,
           employees: editedRow.employees,
           description: editedRow.description,
 
@@ -200,11 +226,16 @@ const StartupsPage: React.FC = () => {
         businessType: doc.businessType || "",
         natureOfCompany: doc.natureOfCompany || "",
         subDomain: doc.subDomain || "",
+        patents: doc.patents || "",
         dateOfIncorporation: doc.dateOfIncorporation || "",
         registeredCompanyName: doc.registeredCompanyName || "",
         registeredState: doc.registeredState || "",
+        incubated: doc.incubated || "",
         registeredCountry: doc.registeredCountry || "",
         companyStage: doc.companyStage || "",
+        domain: doc.domain || "",
+        communityCertificate: doc.communityCertificate || "",
+        revenue: doc.revenue || "",
         employees: doc.employees || "",
         description: doc.description || "",
         
@@ -247,22 +278,30 @@ const StartupsPage: React.FC = () => {
     { field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
     { field: "natureOfCompany", headerName: "Nature of Company", sortable: true, filter: true, editable: true, width: 150 },
     { field: "subDomain", headerName: "Sub Domain", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "patents", headerName: "Patents & Certifications", sortable: true, filter: true, editable: true, width: 150 },
     { field: "dateOfIncorporation", headerName: "Date of Incorporation", sortable: true, filter: true, editable: true, valueFormatter: (params) => new Date(params.value).toLocaleDateString(), width: 150 },
     { field: "registeredCompanyName", headerName: "Registered Company Name", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "incubated", headerName: "Incubated?", sortable: true, filter: true, editable: true, width: 150 },
     { field: "registeredState", headerName: "Registered State", sortable: true, filter: true, editable: true, width: 150 },
     { field: "registeredCountry", headerName: "Registered Country", sortable: true, filter: true, editable: true, width: 150 },
     { field: "companyStage", headerName: "Company Stage", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "domain", headerName: "Domain", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "communityCertificate", headerName: "Community Certificate?", sortable: true, filter: true, editable: true, width: 150 },
     { field: "employees", headerName: "Employees", sortable: true, filter: true, editable: true, width: 150 },
+    { field: "revenue", headerName: "Revenue(last FY)", sortable: true, filter: true, editable: true, width: 150 },
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true, width: 150 },
   ];
 
   return (
-    <div className="p-2">
-      <h1 className="text-2xl font-semibold mb-4">Startups</h1>
-      <Button onClick={handleAddStartup} className="mx-auto" variant="secondary">Add Startup</Button>
-      <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Startup</Button>
-      <div className="ag-theme-quartz mt-3" style={{ height: 500, width: '100%'}}>
-        <AgGridReact
+    <div className="p-2 mx-auto">
+      <div className="flex space-x-3">
+        <h1 className="text-2xl font-semibold">Startups</h1>
+        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"><PlusCircle size={20} /></button>
+        <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" ><Trash size={20}/></button>
+      </div>
+
+      <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
+        <AgGridReact headerHeight={40}
           ref={gridRef}
           rowData={startups}
           columnDefs={columnDefs}

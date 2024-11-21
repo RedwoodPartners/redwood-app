@@ -84,7 +84,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   return (
     <>
-    <h2 className="text-lg font-medium -mt-4">Company Details</h2>
+    <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
       <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg shadow-lg border border-gray-300">
         {[
           [["Brand Name", startupData.brandName], ["Date of Incorporation", startupData.dateOfIncorporation], ["Company Stage", startupData.companyStage]],
