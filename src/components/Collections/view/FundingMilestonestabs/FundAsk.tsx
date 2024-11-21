@@ -127,7 +127,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 
   return (
     <div className="container mx-auto space-y-2">
-      <h3 className="container text-lg font-medium -mt-4">Fund Ask</h3>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Ask</h3>
 
       {/* Proposed Fund Ask Box */}
       <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-gray-300">
