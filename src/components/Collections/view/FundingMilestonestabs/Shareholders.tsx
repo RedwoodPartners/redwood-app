@@ -82,9 +82,9 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   };
 
   return (
-    <div className="p-4 -mt-3 bg-white shadow-md rounded-lg border border-gray-300">
+    <div>
       <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-4">Shareholders</h2>
+        <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
         <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="ml-5 cursor-pointer">
@@ -92,6 +92,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           </div>
         )}
       </div>
+    <div className="p-3 bg-white shadow-md rounded-lg border border-gray-300">
       <form>
         <div className="grid grid-cols-4 gap-4">
           <div>
@@ -194,6 +195,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
         isEditing={isEditing}
         onChange={handleChange}
       />
+    </div>
     </div>
   );
 };

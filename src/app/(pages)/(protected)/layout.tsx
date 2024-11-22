@@ -22,7 +22,7 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
         <AppSidebar />
 
         {/* Main content area with SidebarTrigger */}
-        <main className="w-full p-1">
+        <main className="w-full">
           <SidebarTrigger/>
           <div >
             {children}
