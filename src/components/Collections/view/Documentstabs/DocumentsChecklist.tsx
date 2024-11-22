@@ -174,7 +174,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <div className="flex items-center justify-start space-x-2">
                 {row.fileId ? (
                   <a
-                    href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/download?project=${PROJECT_ID}`}
+                    href={`https://drive.google.com/viewerng/viewer?embedded=false&url=${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/download?project=${PROJECT_ID}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
