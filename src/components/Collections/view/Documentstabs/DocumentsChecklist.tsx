@@ -10,22 +10,20 @@ import {
   TableRow,
   TableHead,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, SaveIcon } from "lucide-react";
-import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
+import { PlusCircle, SaveIcon, UploadCloud, Download } from "lucide-react";
+import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
+const BUCKET_ID = "66eb0cfc000e821db4d9";
 
 interface DocChecklistProps {
   startupId: string;
 }
 
 const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
-  const [docData, setdocData] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [docData, setDocData] = useState<any[]>([]);
+  const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
   const [newDoc, setNewDoc] = useState({
     docName: "",
     docType: "",
@@ -35,32 +33,36 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
   const databases = new Databases(client);
+  const storage = new Storage(client);
 
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    const fetchPatentsData = async () => {
+  const databases = new Databases(client);
+    const fetchDocuments = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, DOC_CHECKLIST_ID, [
           Query.equal("startupId", startupId),
         ]);
-        setdocData(response.documents);
+        setDocData(response.documents);
       } catch (error) {
-        console.error("Error fetching compliance data:", error);
+        console.error("Error fetching document data:", error);
       }
     };
 
-    fetchPatentsData();
+    fetchDocuments();
   }, [startupId]);
 
   const handleEditChange = (index: number, field: string, value: string) => {
     const updatedData = [...docData];
     updatedData[index][field] = value;
-    setdocData(updatedData);
-    setEditingIndex(index);
+    setDocData(updatedData);
+
+    const updatedChangedRows = new Set(changedRows);
+    updatedChangedRows.add(index);
+    setChangedRows(updatedChangedRows);
   };
 
-  const handleSavePatents = async (index: number) => {
+  const handleSaveDocument = async (index: number) => {
     const dataToUpdate = docData[index];
     const fieldsToUpdate = {
       docName: dataToUpdate.docName,
@@ -68,29 +70,54 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       status: dataToUpdate.status,
       description: dataToUpdate.description,
     };
-  
+
     try {
       await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, dataToUpdate.$id, fieldsToUpdate);
       console.log("Saved successfully");
-      setEditingIndex(null);
+
+      // Remove the index from changed rows after saving
+      const updatedChangedRows = new Set(changedRows);
+      updatedChangedRows.delete(index);
+      setChangedRows(updatedChangedRows);
     } catch (error) {
-      console.error("Error saving patents data:", error);
+      console.error("Error saving document data:", error);
     }
   };
-  
 
-  const handleAddPatentsData = async () => {
+  const handleUploadFile = async (index: number, file: File) => {
+    const documentId = docData[index].$id;
+
     try {
-      const response = await databases.createDocument(
-        DATABASE_ID,
-        DOC_CHECKLIST_ID,
-        "unique()",
-        { ...newDoc, startupId }
-      );
-      setdocData([...docData, response]);
+      const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), file);
+      console.log("File uploaded successfully:", uploadResponse);
+      alert("File uploaded successfully");
+
+      await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
+        fileId: uploadResponse.$id,
+      });
+
+      const updatedData = [...docData];
+      updatedData[index] = {
+        ...updatedData[index],
+        fileId: uploadResponse.$id,
+      };
+      setDocData(updatedData);
+      console.log("File link updated in database");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
+
+  const handleAddDocument = async () => {
+    try {
+      const response = await databases.createDocument(DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
+        ...newDoc,
+        startupId,
+      });
+      setDocData([...docData, response]);
       setNewDoc({ docName: "", docType: "", status: "", description: "" });
     } catch (error) {
-      console.error("Error adding compliance data:", error);
+      console.error("Error adding document data:", error);
     }
   };
 
@@ -127,8 +154,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
-  
-              
               <TableCell>
                 <input
                   type="text"
@@ -146,11 +171,37 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSavePatents(index)} className="text-black rounded-full transition">
+              <div className="flex items-center justify-start space-x-2">
+                {row.fileId ? (
+                  <a
+                    href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/download?project=${PROJECT_ID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    <Download size={20} className="inline" />
+                  </a>
+                ) : null}
+                {changedRows.has(index) ? (
+                  <button
+                    onClick={() => handleSaveDocument(index)}
+                    className="text-black rounded-full transition ml-2"
+                  >
                     <SaveIcon size={20} />
                   </button>
-                )}
+                ) : null}
+                <label className="ml-2">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadFile(index, file);
+                    }}
+                  />
+                  <UploadCloud size={20} className="cursor-pointer" />
+                </label>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -173,7 +224,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 className="w-full h-5 border-none focus:outline-none"
               />
             </TableCell>
-            
             <TableCell>
               <input
                 type="text"
@@ -193,7 +243,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               />
             </TableCell>
             <TableCell>
-              <button onClick={handleAddPatentsData} className="text-black rounded-full transition">
+              <button onClick={handleAddDocument} className="text-black rounded-full transition">
                 <PlusCircle size={20} />
               </button>
             </TableCell>

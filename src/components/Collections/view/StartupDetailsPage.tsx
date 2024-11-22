@@ -127,7 +127,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   };
 
   return (
-    <div className="p-2 ">
+    <div className="p-2">
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {startupData ? (
         <>
@@ -137,7 +137,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
               <div className="bg-gray-200 rounded-full h-12 w-12 flex items-center justify-center text-gray-600">
                 <span className="font-bold text-lg">{startupData.name.charAt(0)}</span>
               </div>
-              <Label className="text-2xl font-bold text-gray-800">{startupData.name}</Label>
+              <Label className="text-2xl font-semibold text-gray-800">{startupData.name}</Label>
             </div>
           </div>
 
