@@ -5,6 +5,9 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; 
 import BUCKET_ID from "@/appwrite/config"; 
 import Image from "next/image";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 const ProfileCard = () => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
@@ -84,14 +87,14 @@ const ProfileCard = () => {
   return (
     user && (
       <div className="flex flex-col items-center relative">
-        <button
+        <Button
           onClick={handleLogout}
           className="absolute top-4 right-4 bg-gray-100 text-gray-600 py-2 px-4 rounded hover:bg-gray-200 transition duration-300"
         >
           Logout
-        </button>
+        </Button>
         
-        <div className="border-2 border-gray-200 rounded-lg p-6 mt-16 w-full max-w-5xl min-h-[70vh] shadow-md">
+        <div className="border-2 border-gray-200 rounded-lg p-3 mt-4 w-full max-w-5xl min-h-[70vh] shadow-md">
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg cursor-pointer">
               <Image
@@ -99,7 +102,7 @@ const ProfileCard = () => {
                 alt="Profile Pic"
                 className="w-full h-full object-cover"
               />
-              <input
+              <Input
                 id="fileInput"
                 type="file"
                 accept="image/*"
@@ -117,8 +120,8 @@ const ProfileCard = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Name</p>
-              <input
+              <Label className="text-sm text-gray-500" >Name</Label>
+              <Input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -128,8 +131,8 @@ const ProfileCard = () => {
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <input
+            <Label className="text-sm text-gray-500" >Email</Label>
+              <Input
                 type="email"
                 value={user.email} 
                 className="w-full p-2 border rounded focus:ring focus:ring-blue-200 transition duration-300"
@@ -138,12 +141,12 @@ const ProfileCard = () => {
             </div>
           </div>
 
-          <h2 className="text-lg font-semibold mt-6">Change Password</h2>
+          <Label className="text-lg font-semibold mt-6" >Change Password</Label>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Current Password</p>
-              <input
+              <Label className="text-sm text-gray-500">Current Password</Label>
+              <Input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -152,8 +155,8 @@ const ProfileCard = () => {
               />
             </div>
             <div>
-              <p className="text-sm text-gray-500">New Password</p>
-              <input
+              <Label className="text-sm text-gray-500">New Password</Label>
+              <Input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -162,8 +165,8 @@ const ProfileCard = () => {
               />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Confirm Password</p>
-              <input
+              <Label className="text-sm text-gray-500">Confirm Password</Label>
+              <Input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -174,18 +177,18 @@ const ProfileCard = () => {
           </div>
 
           <div className="flex justify-center mt-6 gap-4">
-            <button
+            <Button
               className="bg-blue-500 text-white py-2 px-6 rounded-lg transition-transform duration-300 hover:scale-105"
               onClick={handlePasswordUpdate}
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               className="bg-gray-300 text-gray-600 py-2 px-6 rounded-lg transition-transform duration-300 hover:scale-105"
               onClick={handleGoHome}
             >
               Home
-            </button>
+            </Button>
           </div>
 
           {message && <p className="mt-4 text-red-500">{message}</p>}
