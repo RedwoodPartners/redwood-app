@@ -54,11 +54,6 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
     title: "Settings",
     url: "#",
     icon: Settings,
@@ -212,7 +207,7 @@ export function AppSidebar() {
                   <span>Billing</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span onClick={handleLogout}>Sign out</span>
+                  <span className="cursor-pointer" onClick={handleLogout}>Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
