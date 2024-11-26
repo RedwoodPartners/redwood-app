@@ -87,6 +87,11 @@ const StartupsPage: React.FC = () => {
   const handleAddStartup = async () => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
+    
+    //generating 12 digit Id for Startups
+    const generate12DigitId = () => {
+      return Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    };
 
     const newStartup: Partial<Startup> = {
       name: "New Startup",
@@ -107,8 +112,9 @@ const StartupsPage: React.FC = () => {
       employees: "10",
       description: "Description",
     };
+    const customId = generate12DigitId();
     try {
-      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, "unique()", newStartup);
+      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, newStartup);
       setStartups((prev) => [
         ...prev,
         { 
