@@ -120,10 +120,10 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
-                  <span>Acme Inc</span>
+                  <a href="/rbac">Admin</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>Acme Corp.</span>
+                  <span>##</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
