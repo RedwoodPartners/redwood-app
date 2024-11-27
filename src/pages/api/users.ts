@@ -16,8 +16,9 @@ interface AppwriteSession {
   userId: string;
   expire: string;
   createdAt?: string;
-  [key: string]: any; 
+  [key: string]: any;
 }
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -25,19 +26,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Fetching all users directly from Appwrite
+    // Fetch all users directly from Appwrite
     const allUsers = await users.list();
 
-    // Enrich users with session and activity data
     const enrichedUsers = await Promise.all(
       allUsers.users.map(async (user: any) => {
         try {
           // Fetch user sessions for the latest session data
           const sessions = await users.listSessions(user.$id);
           const latestSession = sessions.sessions[0] as AppwriteSession | undefined;
-
+    
+          // Fetch labels directly from the user object
+          const labels = user.labels || [];
+    
           return {
             ...user,
+            labels, // Include labels from the user object
             currentSession: latestSession
               ? `Session active since ${new Date(latestSession.expire).toLocaleString()}`
               : 'No active session',
@@ -46,15 +50,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               : 'No recent activity',
           };
         } catch (err) {
-          console.error(`Error fetching sessions for user ${user.$id}:`, err);
+          console.error(`Error fetching sessions or labels for user ${user.$id}:`, err);
           return {
             ...user,
+            labels: [],
             currentSession: 'Error fetching session',
             latestActivity: 'Error fetching activity',
           };
         }
       })
     );
+    
 
     res.status(200).json({ users: enrichedUsers });
   } catch (error) {
@@ -62,4 +68,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Failed to fetch users. Please try again later.' });
   }
 }
-

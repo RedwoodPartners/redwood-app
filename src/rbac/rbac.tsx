@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 const UsersList: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -31,6 +31,7 @@ const UsersList: React.FC = () => {
                 <th className="px-6 py-3 border border-gray-300">Name</th>
                 <th className="px-6 py-3 border border-gray-300">Email</th>
                 <th className="px-6 py-3 border border-gray-300">Last Activity</th>
+                <th className="px-6 py-3 border border-gray-300">Labels</th>
               </tr>
             </thead>
             <tbody>
@@ -40,10 +41,17 @@ const UsersList: React.FC = () => {
                   className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
                 >
                   <td className="px-6 py-4 border border-gray-300">{index + 1}</td>
-                  <td className="px-6 py-4 border border-gray-300">{user.name}</td>
-                  <td className="px-6 py-4 border border-gray-300">{user.email}</td>
+                  <td className="px-6 py-4 border border-gray-300">
+                    {user.name || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 border border-gray-300">
+                    {user.email || 'N/A'}
+                  </td>
                   <td className="px-6 py-4 border border-gray-300">
                     {user.latestActivity || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 border border-gray-300">
+                  {user.labels.length > 0 ? user.labels.join(', ') : 'No Labels'}
                   </td>
                 </tr>
               ))}
