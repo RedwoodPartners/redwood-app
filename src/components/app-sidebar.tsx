@@ -123,7 +123,7 @@ export function AppSidebar() {
                   <a href="/rbac">Admin</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>##</span>
+                  <span></span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

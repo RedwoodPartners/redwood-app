@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
           return {
             ...user,
-            labels, // Include labels from the user object
+            labels,
             currentSession: latestSession
               ? `Session active since ${new Date(latestSession.expire).toLocaleString()}`
               : 'No active session',
