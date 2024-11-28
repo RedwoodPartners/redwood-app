@@ -7,8 +7,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
+import { PlusCircle, Trash } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 
 type Project = {
   id: string;
@@ -197,11 +197,16 @@ const ProjectsPage: React.FC = () => {
 
   return (
     <div className="p-2">
-      <h1 className="text-2xl font-semibold mb-4">Projects</h1>
-      <Button onClick={handleAddProject} className="mx-auto" variant="secondary">Add Project</Button>
-      <Button onClick={handleRemoveSelected} className="mx-auto ml-3" variant="secondary">Remove Selected</Button>
-      <div className="ag-theme-quartz mt-3" style={{ height: 500, width: '100%'}}>
+      <div className="flex space-x-3">
+      <h1 className="text-2xl font-semibold">Projects</h1>
+      <button onClick={handleAddProject} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"><PlusCircle size={20} /></button>
+      <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" ><Trash size={20}/></button>
+      </div>
+      
+
+      <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
         <AgGridReact
+          headerHeight={40}
           ref={gridRef}
           rowData={projects}
           columnDefs={columnDefs}

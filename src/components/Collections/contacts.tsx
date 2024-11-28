@@ -7,7 +7,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, STARTUP_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 export const CONTACT_ID = "672bac4a0017528d75ae";
 
@@ -229,12 +229,14 @@ const ContactsPage: React.FC = () => {
 
   return (
     <div className="p-2">
-      <h1 className="text-2xl font-semibold mb-4">Contacts</h1>
-      <Button onClick={handleAddContact} className="mx-auto mb-3" variant="secondary">
-        Add Contact
-      </Button>
-      <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
+      <div className="flex space-x-3">
+      <h1 className="text-2xl font-semibold">Contacts</h1>
+      <button onClick={handleAddContact} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"><PlusCircle size={20} /></button>
+      </div>
+      
+      <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
         <AgGridReact
+          headerHeight={40}
           ref={gridRef}
           rowData={contacts}
           columnDefs={columnDefs}
