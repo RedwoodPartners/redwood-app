@@ -40,6 +40,7 @@ import {
 import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
 import { Input } from "@/components/ui/input";
+import { Button } from "./ui/button";
 
 // Menu items.
 const items = [
@@ -120,10 +121,9 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
-                  <a href="/rbac">Admin</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span></span>
+                <Button className="w-full h-8">
+                  <a className="cursor-pointer" href="/rbac">Admin</a>
+                </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
