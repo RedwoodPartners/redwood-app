@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { EditIcon, SaveIcon } from "lucide-react";
 
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -32,6 +34,8 @@ interface CompanyDetailsProps {
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,7 +46,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       if (startupId) {
         try {
           const data = await databases.getDocument(DATABASE_ID, STARTUP_ID, startupId);
-          setStartupData({
+          const parsedData = {
             brandName: data.brandName,
             dateOfIncorporation: data.dateOfIncorporation,
             companyStage: data.companyStage,
@@ -58,50 +62,112 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             patentsCertifications: data.patentsCertifications ? "Yes" : "No",
             revenue: data.revenue,
             employees: data.employees,
-          });
+          };
+          setStartupData(parsedData);
+          setUpdatedData(parsedData);
         } catch (error) {
           console.error("Error fetching startup details:", error);
           setError("Failed to fetch startup details. Please try again later.");
         }
       }
     };
+
     fetchStartupDetails();
   }, [startupId]);
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveClick = async () => {
+    if (!updatedData || !startupId) return;
+
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+
+    try {
+      await databases.updateDocument(DATABASE_ID, STARTUP_ID, startupId, updatedData);
+      setStartupData(updatedData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving updated data:", error);
+      setError("Failed to save changes. Please try again later.");
+    }
+  };
+
+  const handleChange = (key: keyof StartupData, value: string) => {
+    if (updatedData) {
+      setUpdatedData({ ...updatedData, [key]: value });
+    }
+  };
+
+  const fieldLabels: { [key in keyof StartupData]: string } = {
+    brandName: "Brand Name",
+    dateOfIncorporation: "Date of Incorporation",
+    companyStage: "Company Stage",
+    businessType: "Business Type",
+    registeredCompanyName: "Registered Company Name",
+    registeredCountry: "Registered Country",
+    natureOfCompany: "Nature of Company",
+    registeredState: "Registered State",
+    domain: "Domain",
+    subDomain: "Sub-Domain",
+    incubated: "Incubated",
+    communityCertificate: "Community Certificate",
+    patentsCertifications: "Patents & Certifications",
+    revenue: "Revenue",
+    employees: "Number of Employees",
+  };
+  
+
   if (!startupData) {
-    return <div>{error || /*loading*/
-      <div className="flex items-center space-x-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-[250px]" />
-          <Skeleton className="h-4 w-[200px]" />
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-4 w-[100px]" />
-        </div>
+    return (
+      <div>
+        {error || (
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-4 w-[150px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </div>
+          </div>
+        )}
       </div>
-    }</div>;
+    );
   }
 
   return (
     <>
-    <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
+        {isEditing ? (
+          
+          <SaveIcon size={25} className="cursor-pointer" onClick={handleSaveClick} />
+          
+        ) : (
+          <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />
+        )}
+      </div>
+
       <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg shadow-lg border border-gray-300">
-        {[
-          [["Brand Name", startupData.brandName], ["Date of Incorporation", startupData.dateOfIncorporation], ["Company Stage", startupData.companyStage]],
-          [["Business Type", startupData.businessType], ["Registered Company Name", startupData.registeredCompanyName], ["Registered Country", startupData.registeredCountry]],
-          [["Nature of the Company", startupData.natureOfCompany], ["Registered State", startupData.registeredState], ["Domain", startupData.domain]],
-          [["Sub Domain", startupData.subDomain], ["Incubated?", startupData.incubated], ["Community Certificate?", startupData.communityCertificate]],
-          [["Patents & Certifications?", startupData.patentsCertifications], ["Revenue (last FY)", startupData.revenue], ["Employees (last FY)", startupData.employees]],
-        ].map((columnData, columnIndex) => (
-          <div key={columnIndex} className="space-y-4 border-r border-dotted border-gray-300 pr-4">
-            {columnData.map(([label, value]) => (
-              <div key={label} className="flex flex-col space-y-1.5">
-                <Label className="font-semibold text-gray-700">{label}</Label>
-                <Input className="text-black" disabled defaultValue={value} readOnly />
-              </div>
-            ))}
-          </div>
-        ))}
+      {Object.entries(startupData).map(([key, value]) => (
+        <div key={key} className="space-y-4">
+        <div className="flex flex-col space-y-1.5">
+          <Label className="font-semibold text-gray-700">
+            {fieldLabels[key as keyof StartupData] || key}
+          </Label>
+          <Input
+            className="text-black"
+            disabled={!isEditing}
+            value={updatedData?.[key as keyof StartupData] || ""}
+            onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
+          />
+        </div>
+       </div>
+      ))}
+
       </div>
     </>
   );
