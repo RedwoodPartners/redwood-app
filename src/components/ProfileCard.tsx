@@ -1,9 +1,8 @@
 "use client";
-import appwriteService from "@/appwrite/config"; 
+import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; 
-import BUCKET_ID from "@/appwrite/config"; 
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -16,7 +15,6 @@ const ProfileCard = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [profilePic, setProfilePic] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const router = useRouter();
 
@@ -27,15 +25,20 @@ const ProfileCard = () => {
         if (userData) {
           setUser(userData);
           setName(userData.name);
+
+          // Fetch the user image from Google OAuth provider
+          if (userData.prefs?.google_profile) {
+            setProfilePic(userData.prefs.google_profile);
+          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
+
     fetchUserData();
   }, []);
 
-  // Handle password update only
   const handlePasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match!");
@@ -50,30 +53,11 @@ const ProfileCard = () => {
     }
   };
 
-  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const fileUrl = URL.createObjectURL(file);
-      setProfilePic(fileUrl);
-      try {
-        const fileUpload = await appwriteService.uploadFile(file);
-        const fileId = fileUpload.$id;
-        const profilePicUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${fileId}/view`;
-        await appwriteService.updateUserProfilePicture(user?.$id || '', profilePicUrl);
-        setMessage("Profile picture updated successfully!");
-      } catch (error) {
-        console.error("Error uploading profile picture:", error);
-        setMessage("Failed to upload profile picture.");
-      }
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await appwriteService.logout();
       setMessage("Logged out successfully!");
-      window.location.href = "/login"; 
+      window.location.href = "/login";
     } catch (error) {
       console.error("Error logging out:", error);
       setMessage("Error logging out. Please try again.");
@@ -81,7 +65,7 @@ const ProfileCard = () => {
   };
 
   const handleGoHome = () => {
-    router.push("/home"); 
+    router.push("/home");
   };
 
   return (
@@ -93,22 +77,23 @@ const ProfileCard = () => {
         >
           Logout
         </Button>
-        
+
         <div className="border-2 border-gray-200 rounded-lg p-3 mt-4 w-full max-w-5xl min-h-[70vh] shadow-md">
           <div className="flex items-center gap-6 mb-6">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg cursor-pointer">
-              <Image
-                src={profilePic || ""}
-                alt="Profile Pic"
-                className="w-full h-full object-cover"
-              />
-              <Input
-                id="fileInput"
-                type="file"
-                accept="image/*"
-                onChange={handleProfilePicChange}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
+            <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg">
+              {profilePic ? (
+                <Image
+                  src={profilePic}
+                  alt="Profile Pic"
+                  className="w-full h-full object-cover"
+                  width={96}
+                  height={96}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                  <span className="text-gray-500">No Image</span>
+                </div>
+              )}
             </div>
             <div>
               <p className="text-3xl font-bold text-gray-800">{user.name}</p>
@@ -120,28 +105,27 @@ const ProfileCard = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm text-gray-500" >Name</Label>
+              <Label className="text-sm text-gray-500">Name</Label>
               <Input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
                 className="w-full p-2 border rounded focus:ring focus:ring-blue-200 transition duration-300"
                 disabled
               />
             </div>
 
             <div>
-            <Label className="text-sm text-gray-500" >Email</Label>
+              <Label className="text-sm text-gray-500">Email</Label>
               <Input
                 type="email"
-                value={user.email} 
+                value={user.email}
                 className="w-full p-2 border rounded focus:ring focus:ring-blue-200 transition duration-300"
                 disabled
               />
             </div>
           </div>
 
-          <Label className="text-lg font-semibold mt-6" >Change Password</Label>
+          <Label className="text-lg font-semibold mt-6">Change Password</Label>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
