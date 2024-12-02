@@ -32,6 +32,9 @@ import DocumentChecklist from "@/components/Collections/view/Documentstabs/Docum
 import Patents from "@/components/Collections/view/Documentstabs/Patents";
 import Incubation from "@/components/Collections/view/Documentstabs/Incubation";
 
+import { Download } from "lucide-react";
+import GenerateReport from '@/components/generate';
+
 
 import InfoBox from "./Infobox";
 import {
@@ -50,6 +53,8 @@ interface StartupDetailsPageProps {
 interface StartupData {
   name: string;
 }
+
+
 
 
 const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) => {
@@ -138,6 +143,13 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <span className="font-bold text-lg">{startupData.name.charAt(0)}</span>
               </div>
               <Label className="text-2xl font-semibold text-gray-800">{startupData.name}</Label>
+            </div>
+            {/* Download Button to generate report */}
+            <div className="p-4 flex justify-start items-center">
+              <GenerateReport startupId={startupId} />
+              <button onClick={() => document.getElementById("generateReportBtn")?.click()}>
+                <Download className="" />
+              </button>
             </div>
           </div>
 
