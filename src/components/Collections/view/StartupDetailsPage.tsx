@@ -310,7 +310,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 <NavigationMenuTrigger  className="font-bold">
                   Documents
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2">
+                <NavigationMenuContent className="absolute left-0 ml-36 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2">
                   <ul className="flex flex-col">
                     <li>
                       <button
