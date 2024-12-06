@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { useToast } from "@/hooks/use-toast";
 
 export const CUSTOMER_COLLECTION_ID = "6731d3a0001a04a8f849";
 
@@ -28,6 +29,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null); 
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +93,14 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} />
+            <SaveIcon size={25} className="cursor-pointer"
+               onClick={() => {
+               handleSave();
+               toast({
+              title: "Customer Testimonials saved!!",
+            })
+          }}
+          />
           </div>
         )}
       </div>

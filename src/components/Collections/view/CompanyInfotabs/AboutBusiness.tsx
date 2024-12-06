@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { useToast } from "@/hooks/use-toast";
 
 export const ABOUT_COLLECTION_ID = "67207029001de651f13d";
 
@@ -28,6 +29,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null); 
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +93,15 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} />
+            <SaveIcon size={25} 
+            className="cursor-pointer"
+             onClick={() => {
+            handleSave();
+            toast({
+              title: "About Business saved!!",
+            })
+          }}
+          />
           </div>
         )}
       </div>

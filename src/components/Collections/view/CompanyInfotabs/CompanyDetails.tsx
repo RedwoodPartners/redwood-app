@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { EditIcon, SaveIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -37,6 +38,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -144,7 +146,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
         <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
         {isEditing ? (
           
-          <SaveIcon size={25} className="cursor-pointer" onClick={handleSaveClick} />
+          <SaveIcon size={25} className="cursor-pointer"
+          onClick={() => {
+            handleSaveClick();
+            toast({
+              title: "Company Details saved!!",
+            })
+          }}
+          />
           
         ) : (
           <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />

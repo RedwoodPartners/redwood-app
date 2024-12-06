@@ -7,6 +7,7 @@ import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { Client, Databases, Query } from "appwrite";
 
 import { EditIcon, SaveIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 
 type RegulatoryData = {
@@ -37,6 +38,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   });
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,7 +128,14 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} />
+            <SaveIcon size={25} className="cursor-pointer"
+          onClick={() => {
+            handleSave();
+            toast({
+              title: "Regulatory Information saved!!",
+            })
+          }}
+          />
           </div>
         )}
       </div>

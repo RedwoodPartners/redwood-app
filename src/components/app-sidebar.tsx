@@ -51,7 +51,7 @@ const items = [
   },
   {
     title: "Inbox",
-    url: "#",
+    url: "/message",
     icon: Inbox,
   },
   {
