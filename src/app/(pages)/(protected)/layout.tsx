@@ -5,6 +5,7 @@ import React from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import useAuth from "@/context/useAuth";
+import { Toaster } from "@/components/ui/toaster"
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -28,6 +29,7 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
             {children}
           </div>
         </main>
+        <Toaster />
       </div>
     </SidebarProvider>
   );

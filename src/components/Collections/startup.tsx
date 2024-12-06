@@ -14,6 +14,9 @@ import { Client, Databases, ID } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Button } from "@/components/ui/button";
 
+import { useToast } from "@/hooks/use-toast"
+
+
 type Startup = {
   id: string;
   name: string;
@@ -46,6 +49,7 @@ const StartupsPage: React.FC = () => {
   const [editedRow, setEditedRow] = useState<Startup | null>(null);
   const gridRef = useRef<AgGridReact<Startup>>(null);
   const router = useRouter();
+  const { toast } = useToast();
   
   // Initialize Appwrite client and fetch startups only on the client side
   useEffect(() => {
@@ -281,7 +285,7 @@ const StartupsPage: React.FC = () => {
     { field: "id", headerName: "ID", sortable: true, filter: true, width: 130},
     { field: "name", headerName: "Startup Name", sortable: true, filter: true, editable: true, width: 200 },
     { field: "brandName", headerName: "Brand Name", sortable: true, filter: true, editable: true, width: 200 },
-    { field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 200 },
+    { field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "natureOfCompany", headerName: "Nature of Company", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "subDomain", headerName: "Sub Domain", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "patents", headerName: "Patents & Certifications", sortable: true, filter: true, editable: true, width: 150 },
@@ -302,8 +306,24 @@ const StartupsPage: React.FC = () => {
     <div className="p-2 mx-auto">
       <div className="flex space-x-3">
         <h1 className="text-2xl font-semibold">Startups</h1>
-        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"><PlusCircle size={20} /></button>
-        <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" ><Trash size={20}/></button>
+        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"
+        ><PlusCircle size={20} 
+          onClick={() => {
+          toast({
+            title: "Startup added Sucessfully!",
+            description: "12 Digit ID generated",
+          })
+        }} />
+        </button>
+        <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" >
+          <Trash size={20} 
+          onClick={() => {
+            toast({
+              variant: "destructive",
+              title: "Startup Removed",
+            })
+          }} 
+          /></button>
       </div>
 
       <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
@@ -312,7 +332,7 @@ const StartupsPage: React.FC = () => {
           rowData={startups}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
-          pagination={true}
+          pagination={false}
           paginationPageSize={20}
           domLayout='normal'
           editType="fullRow"

@@ -35,6 +35,13 @@ import Incubation from "@/components/Collections/view/Documentstabs/Incubation";
 import { Download } from "lucide-react";
 import GenerateReport from '@/components/generate';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 import InfoBox from "./Infobox";
 import {
@@ -145,12 +152,22 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
               <Label className="text-2xl font-semibold text-gray-800">{startupData.name}</Label>
             </div>
             {/* Download Button to generate report */}
-            <div className="p-4 flex justify-start items-center">
-              <GenerateReport startupId={startupId} />
-              <button onClick={() => document.getElementById("generateReportBtn")?.click()}>
-                <Download className="" />
-              </button>
+            <div className="mr-5 border border-gray-100 rounded-2xl ">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                  <GenerateReport startupId={startupId} />
+                  <button onClick={() => document.getElementById("generateReportBtn")?.click()} className="hover:text-red-500 transition-colors duration-300">
+                    <Download className="" />
+                  </button>
+                  </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Generate First Connect Report</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
+            
           </div>
 
           {/* Render InfoBox */}
