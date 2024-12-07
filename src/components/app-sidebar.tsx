@@ -122,7 +122,7 @@ export function AppSidebar() {
               <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
                 <Button className="w-full h-8">
-                  <a className="cursor-pointer" href="/rbac">Admin</a>
+                  <a className="cursor-pointer" href="/admin">Admin</a>
                 </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -13,6 +13,7 @@ import {
 import { PlusCircle, SaveIcon, UploadCloud, Download } from "lucide-react";
 import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { useToast } from "@/hooks/use-toast";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -34,6 +35,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
   const databases = new Databases(client);
   const storage = new Storage(client);
+  const { toast } = useToast();
 
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -90,7 +92,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     try {
       const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), file);
       console.log("File uploaded successfully:", uploadResponse);
-      alert("File uploaded successfully");
 
       await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
         fileId: uploadResponse.$id,
@@ -102,6 +103,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         fileId: uploadResponse.$id,
       };
       setDocData(updatedData);
+      toast({
+        title: "Document upload successful",
+        description: "Your document has been uploaded successfully!",
+      });
       console.log("File link updated in database");
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -174,13 +179,14 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <div className="flex items-center justify-start space-x-2">
                 {row.fileId ? (
                   <a
-                    href={`https://drive.google.com/viewerng/viewer?embedded=false&url=${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/download?project=${PROJECT_ID}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    <Download size={20} className="inline" />
-                  </a>
+                  href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/view?project=${PROJECT_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  <Download size={20} className="inline" />
+                </a>
+                
                 ) : null}
                 {changedRows.has(index) ? (
                   <button

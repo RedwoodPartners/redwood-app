@@ -100,12 +100,12 @@ const StartupStats: React.FC = () => {
 
 const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon }) => {
   return (
-    <div className="bg-white rounded-xl p-2 w-64 shadow-lg mb-2">
+    <div className="bg-white rounded-xl p-2 w-72 mt-2 shadow-sm border border-gray-200">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm text-gray-600 font-medium">{title}</h3>
         <span className="text-gray-600">{icon}</span>
       </div>
-      <h2 className="text-2xl font-bold mb-1">{mainValue}</h2>
+      <h2 className="text-xl font-semibold mb-1">{mainValue}</h2>
       <p className="text-xs text-gray-500">{subValue}</p>
     </div>
   );

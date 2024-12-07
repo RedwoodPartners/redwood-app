@@ -92,7 +92,7 @@ export function NoUsers() {
 
   return (
     <div className="flex">
-      <Card className="flex flex-col shadow-none w-[400px]">
+      <Card className="flex flex-col shadow-none w-[300px]">
         <CardHeader className="items-center">
           <CardTitle>Registered Users</CardTitle>
           <CardDescription>Current Statistics</CardDescription>
@@ -105,7 +105,7 @@ export function NoUsers() {
                 data={chartData}
                 dataKey="visitors"
                 nameKey="browser"
-                innerRadius={50}
+                innerRadius={40}
                 strokeWidth={5}
               >
                 <Label
