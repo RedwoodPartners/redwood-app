@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React from "react";
+import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import useAuth from "@/context/useAuth";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
+import BreadcrumbWithDynamicPath from "@/components/breadcrumblink";
+import { Separator } from "@/components/ui/separator";
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -18,19 +20,29 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="container flex">
+      <div className="flex w-full">
         {/* Sidebar */}
         <AppSidebar />
 
-        {/* Main content area with SidebarTrigger */}
-        <main className="w-full">
-          <SidebarTrigger/>
-          <div >
-            {children}
+        <div className="flex-1 flex flex-col">
+          {/* Top Row: SidebarTrigger and Breadcrumb */}
+          <div className="flex items-center justify-between p-1">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="ml-1 -mr-2 h-4" />
+            <div className="ml-4 flex-1">
+              <BreadcrumbWithDynamicPath />
+            </div>
           </div>
-        </main>
-        <Toaster />
+
+          {/* Main Content */}
+          <main>
+            {children}
+          </main>
+        </div>
       </div>
+
+      {/* Toaster Notifications */}
+      <Toaster />
     </SidebarProvider>
   );
 };
