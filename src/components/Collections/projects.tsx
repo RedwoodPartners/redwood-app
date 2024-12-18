@@ -211,8 +211,8 @@ const ProjectsPage: React.FC = () => {
           rowData={projects}
           columnDefs={columnDefs}
           onGridReady={onGridReady}
-          pagination={true}
-          paginationPageSize={20}
+          //pagination={true}
+          //paginationPageSize={20}
           domLayout='normal'
           editType='fullRow'
           onRowEditingStopped={onRowEditingStopped}

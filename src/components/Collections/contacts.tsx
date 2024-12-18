@@ -240,8 +240,8 @@ const ContactsPage: React.FC = () => {
           ref={gridRef}
           rowData={contacts}
           columnDefs={columnDefs}
-          pagination={true}
-          paginationPageSize={20}
+          //pagination={true}
+          //paginationPageSize={20}
           domLayout="normal"
           editType="fullRow"
           onRowEditingStopped={onRowEditingStopped}
