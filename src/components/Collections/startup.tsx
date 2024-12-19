@@ -35,6 +35,7 @@ type Startup = {
   communityCertificate: string;
   revenue: string;
   employees: string;
+  year: string;
   description: string;
 };
 
@@ -77,6 +78,7 @@ const StartupsPage: React.FC = () => {
           communityCertificate: doc.communityCertificate || "",
           revenue: doc.revenue || "",
           employees: doc.employees || "",
+          year: doc.year || "",
           description: doc.description || "",
         }));
         setStartups(startupData);
@@ -103,17 +105,18 @@ const StartupsPage: React.FC = () => {
       businessType: "",
       natureOfCompany: "",
       subDomain: "",
-      patents: "",
+      patents: "Yes/No",
       dateOfIncorporation: "",
       registeredCompanyName: "",
       registeredState: "",
-      incubated: "",
+      incubated: "Yes/No",
       registeredCountry: "",
       companyStage: "",
       domain: "",
-      communityCertificate: "",
+      communityCertificate: "Yes/No",
       revenue: "",
       employees: "",
+      year: "",
       description: "",
     };
     const customId = generate12DigitId();
@@ -139,6 +142,7 @@ const StartupsPage: React.FC = () => {
           communityCertificate: createdStartup.communityCertificate || "",
           revenue: createdStartup.revenue || "",
           employees: createdStartup.employees || "",
+          year: createdStartup.year || "",
           description: createdStartup.description || "", },
       ]);
     } catch (error) {
@@ -202,6 +206,7 @@ const StartupsPage: React.FC = () => {
           communityCertificate: editedRow.communityCertificate,
           revenue: editedRow.revenue,
           employees: editedRow.employees,
+          year: editedRow.year,
           description: editedRow.description,
 
         });
@@ -247,6 +252,7 @@ const StartupsPage: React.FC = () => {
         communityCertificate: doc.communityCertificate || "",
         revenue: doc.revenue || "",
         employees: doc.employees || "",
+        year: doc.year || "",
         description: doc.description || "",
         
       }));
@@ -299,6 +305,7 @@ const StartupsPage: React.FC = () => {
     //{ field: "communityCertificate", headerName: "Community Certificate?", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "employees", headerName: "Employees", sortable: true, filter: true, editable: true, width: 150 },
     { field: "revenue", headerName: "Revenue(last FY)", sortable: true, filter: true, editable: true, width: 200 },
+    { field: "year", headerName: "Year", sortable: true, filter: true, editable: true, width: 150 },
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true, width: 200 },
   ];
 

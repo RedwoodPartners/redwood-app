@@ -129,13 +129,18 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <select
                   value={row.status}
                   onChange={(e) => handleEditChange(index, "status", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
-                />
+                >
+                <option value="Filed">select</option>
+                <option value="Published">Published</option>
+                <option value="Granted">Granted</option>
+                <option value="Refused">Refused</option>
+                </select>
               </TableCell>
+
               <TableCell>
                 <input
                   type="text"

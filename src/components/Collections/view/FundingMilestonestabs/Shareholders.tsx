@@ -118,16 +118,23 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
             />
           </div>
           <div>
-            <Label>Gender</Label>
-            <Input
-              id="gender"
-              type="text"
-              placeholder="Gender"
-              value={data["gender"] || ""}
-              onChange={(e) => handleChange("gender", e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
+  <Label>Gender</Label>
+  <select
+    id="gender"
+    value={data["gender"] || ""}
+    onChange={(e) => handleChange("gender", e.target.value)}
+    disabled={!isEditing}
+    className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+  >
+    <option value="" disabled>
+      Select Gender
+    </option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
+
           <div>
             <Label>LinkedIn Profile</Label>
             <Input

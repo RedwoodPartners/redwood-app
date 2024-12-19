@@ -116,13 +116,17 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <select
                   value={investment.status}
                   onChange={(e) => handleEditChange(index, "status", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
+                  className="w-full h-5 border-none focus:outline-none bg-transparent"
+                 >
+                  <option value="">Select Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Released">Released</option>
+                </select>
               </TableCell>
+
               <TableCell>
                 <input
                   type="text"

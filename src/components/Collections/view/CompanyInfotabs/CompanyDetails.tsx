@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -59,9 +58,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             registeredState: data.registeredState,
             domain: data.domain,
             subDomain: data.subDomain,
-            incubated: data.incubated ? "Yes" : "No",
-            communityCertificate: data.communityCertificate ? "Yes" : "No",
-            patentsCertifications: data.patentsCertifications ? "Yes" : "No",
+            incubated: data.incubated,
+            communityCertificate: data.communityCertificate,
+            patentsCertifications: data.patentsCertifications,
             revenue: data.revenue,
             employees: data.employees,
           };
@@ -103,6 +102,120 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     }
   };
 
+  const dropdownOptions: { [key: string]: string[] } = {
+    companyStage: [
+      "Pre First Connect",
+      "First Connect",
+      "SME",
+      "Deep Dive",
+      "PSC",
+      "IC"
+    ],
+    businessType: [
+      "Business Model Trading",
+      "Services",
+      "Product Manufacturing",
+      "Subcontract",
+      "Product+Services",
+      "Both",
+      "Product",
+      "Service",
+    ],
+    natureOfCompany: [
+      "Pvt Ltd",
+      "LLP",
+      "Partnership",
+      "Proprietorship",
+      "One Person Company",
+      "Entity Not Incorporated",
+    ],
+    domain: [
+      "IOT",
+      "Space Tech",
+      "Sustainability",
+      "Aggregator; Jewellery",
+      "Tech(IT products/services)",
+      "HealthTech",
+      "Agriculture",
+      "Proptech",
+      "Drones",
+      "Supply Chain",
+      "Green Tech",
+      "Edtech;Textile",
+      "Pharma",
+      "Biotech",
+      "Finetech",
+      "Agriculture;AgriTech",
+      "Aggregator;Tech(IT products/services);Sports Tech",
+      "Tribal Products",
+      "Entertaiment&Media",
+      "Clean Energy Technology",
+      "Logistics",
+      "Electronic Manufacturing Service",
+      "EdTech",
+      "Music",
+      "HealthCare",
+      "Service Provider",
+      "FMCG",
+      "Animal Husbandry Tech",
+      "EV",
+      "Manufacturing",
+      "Agriculture;Electronic",
+      "Manufacturing Service",
+      "Aggregator",
+      "Marketing Tech",
+      "Water Managment",
+      "Clothing",
+      "Service Provider;Cleantech",
+      "Healthcare;Naturopathy",
+      "Renewable Energy",
+      "Animal Training",
+      "Textiles",
+      "Automation",
+      "Housing;smart home automation",
+      "Biotech;Healthcare",
+      "Electric and electronic service",
+      "Electric and electronic service",
+      "Marine tech",
+      "FMCG;ESG",
+      "Housing;Infrastructure;Real Estate",
+      "Agritech",
+      "Agritech;Animal husbandry tech;Biotech",
+      "Water Management;Water Management",
+      "Sanitary Napkin",
+      "Artisanal Cheese;Artisanal Cheese",
+      "Sanitary Napkin;Sanitary Napkin",
+      "Tech (IT products/services);Drones",
+      "Robotics",
+      "Tech (AI)",
+      "FoodTech",
+      "renovation of restrooms",
+      "Agritech;drones",
+      "Agriculture;Tribal Products",
+      "Electronic Manufacturing Service;IOT Automation",
+      "ESG",
+      "Tech (IT products/services);AI",
+      "Waste Management",
+      "Printing service",
+    ],
+  };
+
+  const renderDropdown = (key: keyof StartupData) => (
+    <select
+      disabled={!isEditing}
+      value={updatedData?.[key] || ""}
+      onChange={(e) => handleChange(key, e.target.value)}
+      className="py-2 border rounded-md text-sm"
+    >
+      <option value="">Select</option>
+      {dropdownOptions[key]?.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+
   const fieldLabels: { [key in keyof StartupData]: string } = {
     brandName: "Brand Name",
     dateOfIncorporation: "Date of Incorporation",
@@ -120,7 +233,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     revenue: "Revenue",
     employees: "Number of Employees",
   };
-  
 
   if (!startupData) {
     return (
@@ -145,38 +257,39 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
         {isEditing ? (
-          
-          <SaveIcon size={25} className="cursor-pointer"
-          onClick={() => {
-            handleSaveClick();
-            toast({
-              title: "Company Details saved!!",
-            })
-          }}
+          <SaveIcon
+            size={25}
+            className="cursor-pointer"
+            onClick={() => {
+              handleSaveClick();
+              toast({ title: "Company Details saved!!" });
+            }}
           />
-          
         ) : (
           <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />
         )}
       </div>
 
       <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg shadow-lg border border-gray-300">
-      {Object.entries(startupData).map(([key, value]) => (
-        <div key={key} className="space-y-4">
-        <div className="flex flex-col space-y-1.5">
-          <Label className="font-semibold text-gray-700">
-            {fieldLabels[key as keyof StartupData] || key}
-          </Label>
-          <Input
-            className="text-black"
-            disabled={!isEditing}
-            value={updatedData?.[key as keyof StartupData] || ""}
-            onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
-          />
-        </div>
-       </div>
-      ))}
-
+        {Object.entries(startupData).map(([key, value]) => (
+          <div key={key} className="space-y-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label className="font-semibold text-gray-700">
+                {fieldLabels[key as keyof StartupData] || key}
+              </Label>
+              {["companyStage", "businessType", "natureOfCompany", "domain"].includes(key) ? (
+                renderDropdown(key as keyof StartupData)
+              ) : (
+                <Input
+                  className="text-black"
+                  disabled={!isEditing}
+                  value={updatedData?.[key as keyof StartupData] || ""}
+                  onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
+                />
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

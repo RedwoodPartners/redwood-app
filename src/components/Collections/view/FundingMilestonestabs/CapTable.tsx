@@ -25,6 +25,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
   const databases = new Databases(client);
+
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
@@ -89,6 +90,29 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
     }, 0);
   };
 
+  const roleOptions = [
+    "Founder",
+    "Co-Founder",
+    "Employee",
+    "Advisor",
+    "Angel Investor",
+    "Venture Capitalist",
+    "Board Member",
+    "Institutional Investor",
+    "Seed Investor",
+    "Series A Investor",
+    "Series B Investor",
+    "Series C and Beyond Investors",
+    "Convertible Note Holder",
+    "Preferred Stock Holder",
+    "Common Stock Holder",
+    "Employee Stock Option Plan (ESOP) Holder",
+    "Strategic Investor",
+    "Lead Investor",
+    "Syndicate Member",
+    "Secondary Market Investor",
+  ];
+
   return (
     <div>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Capital Table</h3>
@@ -123,12 +147,16 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <select
                   value={row.role}
                   onChange={(e) => handleEditChange(index, "role", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
+                  className=" h-5 border-none border-gray-300 rounded focus:outline-none"
+                >
+                  <option value="" disabled>Select Role</option>
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
               </TableCell>
               <TableCell>
                 <input
@@ -168,12 +196,12 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <input
-                type="text"
                 value={newInvestment.role}
                 onChange={(e) => setNewInvestment({ ...newInvestment, role: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Role"
+                className="w-full h-5 border-none rounded focus:outline-none"
+                placeholder="select"
               />
+                
             </TableCell>
             <TableCell>
               <input
