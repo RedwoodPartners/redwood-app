@@ -1,19 +1,48 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
+import { Client, Databases } from 'appwrite';
+import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from '@/appwrite/config';
+
 
 interface StatCardProps {
   title: string;
-  mainValue: string;
+  mainValue: string | number;
   subValue: string;
   icon: React.ReactNode;
 }
 
 const StartupStats: React.FC = () => {
+  const [startupCount, setStartupCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchStartupCount = async () => {
+      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+      const database = new Databases(client);
+
+      try {
+        const response = await database.listDocuments(DATABASE_ID, STARTUP_ID);
+        setStartupCount(response.total);
+      } catch(error){
+        console.error("Error fetching startups count:", error);
+      }
+    };
+
+    fetchStartupCount();
+  }, []);
+  
+  const calculatePercentageChange = (currentCount: number, previousCount: number): string => {
+    if (previousCount === 0) return "+0%"; // Prevent division by zero
+    const percentageChange = ((currentCount - previousCount) / previousCount) * 100;
+    return `${percentageChange > 0 ? "+" : ""}${percentageChange.toFixed(1)}% from last month`;
+  };
+  
+
   return (
     <div className="flex flex-wrap justify-around p-1">
       <StatCard
         title="Total Startups"
-        mainValue="+600"
-        subValue="+20.1% from last month"
+        mainValue={startupCount}
+        subValue="+1% from last month"
         icon={
           <svg
             className="w-5 h-5"
@@ -33,8 +62,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Pipeline Startups"
-        mainValue="+50"
-        subValue="+180.1% from last month"
+        mainValue="0"
+        subValue="+0% from last month"
         icon={
           <svg
             className="w-5 h-5 text-blue-500"
@@ -54,8 +83,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Rejected Startups"
-        mainValue="+350"
-        subValue="+19% from last year"
+        mainValue="0"
+        subValue="+0% from last year"
         icon={
           <svg
             className="w-5 h-5 text-red-500"
@@ -75,8 +104,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Completed Startups"
-        mainValue="+200"
-        subValue="+100 since last year"
+        mainValue="0"
+        subValue="+0 since last year"
         icon={
           <svg
             className="w-5 h-5 text-green-500"
@@ -105,7 +134,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon })
         <h3 className="text-sm text-gray-600 font-medium">{title}</h3>
         <span className="text-gray-600">{icon}</span>
       </div>
-      <h2 className="text-xl font-semibold mb-1">{mainValue}</h2>
+      <h2 className="text-xl font-semibold mb-1">+{mainValue}</h2>
       <p className="text-xs text-gray-500">{subValue}</p>
     </div>
   );

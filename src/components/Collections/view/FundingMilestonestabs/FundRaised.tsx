@@ -131,12 +131,19 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+              <select
                   value={investment.mode}
                   onChange={(e) => handleEditChange(index, "mode", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
-                />
+                >
+                  <option value="">Select</option>
+                  <option value="Equity">Equity</option>
+                  <option value="CCPS">CCPS</option>
+                  <option value="CCD">CCD</option>
+                  <option value="OCD">OCD</option>
+                  <option value="SAFE Notes">SAFE Notes</option>
+                  <option value="Grant">Grant</option>
+                </select>
               </TableCell>
               <TableCell>
                 <input

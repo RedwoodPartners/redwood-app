@@ -123,12 +123,16 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <select
                   value={row.status}
                   onChange={(e) => handleEditChange(index, "status", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
-                />
+                >
+                  <option value="">Select Status</option>
+                  <option value="Applied">Applied</option>
+                  <option value="Incubated">Incubated</option>
+                  <option value="Exited">Exited</option>
+                </select>
               </TableCell>
               <TableCell>
                 <input
@@ -168,11 +172,10 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <input
-                type="text"
                 value={newIncubation.status}
                 onChange={(e) => setNewIncubation({ ...newIncubation, status: e.target.value })}
-                placeholder="Status"
                 className="w-full h-5 border-none focus:outline-none"
+                placeholder="select"
               />
             </TableCell>
             <TableCell>

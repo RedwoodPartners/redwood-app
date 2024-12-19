@@ -152,13 +152,24 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <select
                   value={row.docType}
                   onChange={(e) => handleEditChange(index, "docType", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
+                  className="h-6 border-none rounded focus:outline-none"
+                  >
+                  <option value="" disabled>Select Type</option>
+                  <option value="Regulatory and Registration">Regulatory and Registration</option>
+                  <option value="Legal">Legal</option>
+                  <option value="Financial">Financial</option>
+                  <option value="Technical">Technical</option>
+                  <option value="Compliance Forms">Compliance Forms</option>
+                  <option value="Director and Promotor Documents">Director and Promotor Documents</option>
+                  <option value="Portal Credentials">Portal Credentials</option>
+                  <option value="RP Workings">RP Workings</option>
+                  <option value="Received Document">Received Document</option>
+                </select>
               </TableCell>
+
               <TableCell>
                 <input
                   type="text"
