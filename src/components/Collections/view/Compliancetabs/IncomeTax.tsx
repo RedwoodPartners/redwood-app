@@ -166,6 +166,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newCompliance.query}
                 onChange={(e) => setNewCompliance({ ...newCompliance, query: e.target.value })}
                 placeholder="Form Query"
@@ -178,6 +179,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                   <input
                     type="radio"
                     name="new-yesNo"
+                    disabled
                     value="yes"
                     checked={newCompliance.yesNo === "yes"}
                     onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
@@ -188,6 +190,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                   <input
                     type="radio"
                     name="new-yesNo"
+                    disabled
                     value="no"
                     checked={newCompliance.yesNo === "no"}
                     onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
@@ -199,6 +202,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             <TableCell>
               <input
                 type="date"
+                disabled
                 value={newCompliance.date}
                 onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
                 className="h-5 border-none focus:outline-none"
@@ -207,6 +211,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newCompliance.description}
                 onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
                 placeholder="Description"

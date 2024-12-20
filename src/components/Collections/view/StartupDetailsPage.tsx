@@ -312,14 +312,15 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                         GSTR Compliance
                       </button>
                     </li>
-                    <li>
+                    {/*<li>
                       <button
                         onClick={() => setActiveTab("audits")}
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         Auidt
                       </button>
-                    </li>
+                    </li>*/}
+                    
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>

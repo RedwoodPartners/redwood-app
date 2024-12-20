@@ -162,6 +162,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newPatents.patent}
                 onChange={(e) => setNewPatents({ ...newPatents, patent: e.target.value })}
                 placeholder="Patent Name"
@@ -171,6 +172,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="date"
+                disabled
                 value={newPatents.date}
                 onChange={(e) => setNewPatents({ ...newPatents, date: e.target.value })}
                 className="h-5 border-none focus:outline-none"
@@ -179,6 +181,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newPatents.status}
                 onChange={(e) => setNewPatents({ ...newPatents, status: e.target.value })}
                 placeholder="Status"
@@ -188,6 +191,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newPatents.description}
                 onChange={(e) => setNewPatents({ ...newPatents, description: e.target.value })}
                 placeholder="Description"

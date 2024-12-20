@@ -179,6 +179,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.round}
                 onChange={(e) => setNewInvestment({ ...newInvestment, round: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -188,6 +189,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.shareholderName}
                 onChange={(e) => setNewInvestment({ ...newInvestment, shareholderName: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -196,6 +198,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <input
+                disabled
                 value={newInvestment.role}
                 onChange={(e) => setNewInvestment({ ...newInvestment, role: e.target.value })}
                 className="w-full h-5 border-none rounded focus:outline-none"
@@ -206,6 +209,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.capitalStructure}
                 onChange={(e) => setNewInvestment({ ...newInvestment, capitalStructure: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"

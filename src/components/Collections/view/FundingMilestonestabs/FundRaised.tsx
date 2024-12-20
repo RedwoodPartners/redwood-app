@@ -182,6 +182,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.stage}
                 onChange={(e) => setNewInvestment({ ...newInvestment, stage: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -191,6 +192,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.round}
                 onChange={(e) => setNewInvestment({ ...newInvestment, round: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -200,6 +202,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.mode}
                 onChange={(e) => setNewInvestment({ ...newInvestment, mode: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -209,6 +212,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="date"
+                disabled
                 value={newInvestment.date}
                 onChange={(e) => setNewInvestment({ ...newInvestment, date: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -217,6 +221,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.amount}
                 onChange={(e) => setNewInvestment({ ...newInvestment, amount: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -226,6 +231,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newInvestment.description}
                 onChange={(e) => setNewInvestment({ ...newInvestment, description: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"

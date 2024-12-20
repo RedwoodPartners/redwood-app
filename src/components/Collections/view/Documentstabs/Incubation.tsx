@@ -155,6 +155,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newIncubation.program}
                 onChange={(e) => setNewIncubation({ ...newIncubation, program: e.target.value })}
                 placeholder="Incubation Program"
@@ -165,6 +166,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="date"
+                disabled
                 value={newIncubation.date}
                 onChange={(e) => setNewIncubation({ ...newIncubation, date: e.target.value })}
                 className="h-5 border-none focus:outline-none"
@@ -172,6 +174,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <input
+              disabled
                 value={newIncubation.status}
                 onChange={(e) => setNewIncubation({ ...newIncubation, status: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -181,6 +184,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newIncubation.description}
                 onChange={(e) => setNewIncubation({ ...newIncubation, description: e.target.value })}
                 placeholder="Description"

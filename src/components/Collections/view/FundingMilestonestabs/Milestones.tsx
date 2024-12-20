@@ -156,6 +156,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newMilestone.trancheType}
                 onChange={(e) => setNewMilestone({ ...newMilestone, trancheType: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -165,6 +166,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newMilestone.status}
                 onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -174,6 +176,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newMilestone.amount}
                 onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
@@ -183,6 +186,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newMilestone.milestones}
                 onChange={(e) => setNewMilestone({ ...newMilestone, milestones: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
