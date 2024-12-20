@@ -104,12 +104,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const dropdownOptions: { [key: string]: string[] } = {
     companyStage: [
-      "Pre First Connect",
-      "First Connect",
-      "SME",
-      "Deep Dive",
-      "PSC",
-      "IC"
+      "Ideation",
+      "POC",
+      "MVP",
+      "Early Traction",
+      "Growth",
     ],
     businessType: [
       "Business Model Trading",
@@ -277,7 +276,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
               <Label className="font-semibold text-gray-700">
                 {fieldLabels[key as keyof StartupData] || key}
               </Label>
-              {["companyStage", "businessType", "natureOfCompany", "domain"].includes(key) ? (
+              {key === "dateOfIncorporation" ? (
+                <Input
+                  type="date"
+                  disabled={!isEditing}
+                  value={updatedData?.[key as keyof StartupData] || ""}
+                  onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
+                />
+              ) : ["companyStage", "businessType", "natureOfCompany", "domain"].includes(key) ? (
                 renderDropdown(key as keyof StartupData)
               ) : (
                 <Input
