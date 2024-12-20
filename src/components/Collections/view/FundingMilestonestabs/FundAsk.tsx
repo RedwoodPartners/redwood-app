@@ -131,7 +131,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 
       {/* Proposed Fund Ask Box */}
       <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-gray-300">
-        <h4 className="text-sm font-medium mb-4 w-80 p-3">Proposed Fund Ask
+        <h4 className="text-sm font-medium mb-4 w-80 p-3">Total Proposed Fund Ask
           <input disabled
             type="text"
             value={newFund.proposedFundAsk}
@@ -210,7 +210,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 
       {/* Validated Fund Ask Box */}
       <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-grey-300">
-        <h4 className="text-sm w-80 font-medium mb-4 p-3">Validated Fund Ask
+        <h4 className="text-sm w-80 font-medium mb-4 p-3">Total Validated Fund Ask
           <input disabled
             type="text"
             value={newFund.validatedFundAsk}

@@ -197,6 +197,18 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Waste Management",
       "Printing service",
     ],
+    incubated: [
+      "Yes",
+      "No",
+    ],
+    communityCertificate: [
+      "Yes",
+      "No",
+    ],
+    patentsCertifications: [
+      "Yes",
+      "No",
+    ],
   };
 
   const renderDropdown = (key: keyof StartupData) => (
@@ -279,11 +291,12 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
               {key === "dateOfIncorporation" ? (
                 <Input
                   type="date"
+                  className="text-black"
                   disabled={!isEditing}
                   value={updatedData?.[key as keyof StartupData] || ""}
                   onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
                 />
-              ) : ["companyStage", "businessType", "natureOfCompany", "domain"].includes(key) ? (
+              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications",].includes(key) ? (
                 renderDropdown(key as keyof StartupData)
               ) : (
                 <Input

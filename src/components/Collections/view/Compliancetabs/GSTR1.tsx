@@ -150,6 +150,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="date"
+                disabled
                 value={newCompliance.date}
                 onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
                 className="h-5 border-none focus:outline-none"
@@ -158,6 +159,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newCompliance.gstr1}
                 onChange={(e) => setNewCompliance({ ...newCompliance, gstr1: e.target.value })}
                 placeholder="GST R1"
@@ -167,6 +169,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newCompliance.gst3b}
                 onChange={(e) => setNewCompliance({ ...newCompliance, gst3b: e.target.value })}
                 placeholder="GST 3B"
@@ -176,6 +179,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newCompliance.difference}
                 onChange={(e) => setNewCompliance({ ...newCompliance, difference: e.target.value })}
                 placeholder="Description"

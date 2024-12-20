@@ -14,6 +14,7 @@ import { PlusCircle, SaveIcon, UploadCloud, Download } from "lucide-react";
 import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
+import { FaEye } from 'react-icons/fa';
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -195,7 +196,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
                 >
-                  <Download size={20} className="inline" />
+                  <FaEye size={20} className="inline" />
                 </a>
                 
                 ) : null}
@@ -226,6 +227,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.docName}
                 onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })}
                 placeholder="Document Name"
@@ -235,6 +237,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.docType}
                 onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })}
                 placeholder="Document Type"
@@ -244,6 +247,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.status}
                 onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })}
                 placeholder="Status"
@@ -253,6 +257,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.description}
                 onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
                 placeholder="Description"
