@@ -174,7 +174,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Housing;smart home automation",
       "Biotech;Healthcare",
       "Electric and electronic service",
-      "Electric and electronic service",
       "Marine tech",
       "FMCG;ESG",
       "Housing;Infrastructure;Real Estate",
