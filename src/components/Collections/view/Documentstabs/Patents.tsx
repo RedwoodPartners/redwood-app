@@ -16,6 +16,7 @@ import { PlusCircle, SaveIcon } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Textarea } from "@/components/ui/textarea";
 
 const PATENTS_ID = "673add4700120ef26d13";
 
@@ -142,8 +143,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
               </TableCell>
 
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
                   value={row.description}
                   onChange={(e) => handleEditChange(index, "description", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"

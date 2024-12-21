@@ -14,6 +14,7 @@ import { PlusCircle, SaveIcon } from "lucide-react";
 import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Textarea } from "@/components/ui/textarea";
 export const FUND_ASK_ID = "67358bc4000af32965f2";
 
 interface FundAskProps {
@@ -154,8 +155,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             {funds.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <input
-                    type="text"
+                  <Textarea
                     value={item.description1}
                     onChange={(e) => handleEditChange(index, "description1", e.target.value)}
                     className="w-full h-5 border-none focus:outline-none"
@@ -211,7 +211,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       {/* Validated Fund Ask Box */}
       <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-grey-300">
         <h4 className="text-sm w-80 font-medium mb-4 p-3">Total Validated Fund Ask
-          <input disabled
+          <input 
+            disabled
             type="text"
             value={newFund.validatedFundAsk}
             onChange={(e) => handleNewFundChange("validatedFundAsk", e.target.value)}
@@ -233,8 +234,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             {funds.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <input
-                    type="text"
+                  <Textarea
                     value={item.description2}
                     onChange={(e) => handleEditChange(index, "description2", e.target.value)}
                     className="w-full h-5 border-none focus:outline-none"

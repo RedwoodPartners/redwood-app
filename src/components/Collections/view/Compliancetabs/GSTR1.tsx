@@ -16,6 +16,7 @@ import { PlusCircle, SaveIcon } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Textarea } from "@/components/ui/textarea";
 
 const GSTR_ID = "673b1988001c3d93380e";
 
@@ -130,8 +131,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
                   value={row.difference}
                   onChange={(e) => handleEditChange(index, "difference", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"

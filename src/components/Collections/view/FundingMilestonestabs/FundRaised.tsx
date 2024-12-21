@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, SaveIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -162,8 +163,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
                   value={investment.description}
                   onChange={(e) => handleEditChange(index, "description", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"

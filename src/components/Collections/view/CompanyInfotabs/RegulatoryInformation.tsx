@@ -155,7 +155,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
                 value={regulatoryData[field as keyof RegulatoryData]}
                 onChange={(e) => handleInputChange(e, field as keyof RegulatoryData)}
                 disabled={!isEditing}
-                className="border border-gray-300 rounded px-2 py-1 text-gray-600"
+                className="border border-gray-300 rounded px-2 py-1 text-black"
                 placeholder={`Enter ${label}`}
               />
             </div>

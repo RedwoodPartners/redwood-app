@@ -16,6 +16,7 @@ import { PlusCircle, SaveIcon } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Textarea } from "@/components/ui/textarea";
 
 const GST_ID = "6739ce42002b5b5036a8";
 
@@ -106,8 +107,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
           {complianceData.map((row, index) => (
             <TableRow key={row.$id}>
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
                   value={row.query}
                   onChange={(e) => handleEditChange(index, "query", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -146,8 +146,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
                   value={row.description}
                   onChange={(e) => handleEditChange(index, "description", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"

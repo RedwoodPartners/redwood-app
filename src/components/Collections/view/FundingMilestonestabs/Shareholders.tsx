@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { PlusCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
@@ -190,9 +191,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <Label>Educational Qualifications</Label>
-                  <Input
+                  <Textarea
                     id="educationalQualifications"
-                    type="text"
                     placeholder="Educational Qualifications"
                     value={data["educationalQualifications"] || ""}
                     onChange={(e) => handleChange("educationalQualifications", e.target.value)}
@@ -200,9 +200,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 </div>
                 <div>
                   <Label>Work Experience</Label>
-                  <Input
+                  <Textarea
                     id="workExperience"
-                    type="text"
                     placeholder="Work Experience"
                     value={data["workExperience"] || ""}
                     onChange={(e) => handleChange("workExperience", e.target.value)}
@@ -210,9 +209,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 </div>
                 <div>
                   <Label>Associated Companies</Label>
-                  <Input
+                  <Textarea
                     id="associatedCompanies"
-                    type="text"
                     placeholder="Associated Companies"
                     value={data["associatedCompanies"] || ""}
                     onChange={(e) => handleChange("associatedCompanies", e.target.value)}

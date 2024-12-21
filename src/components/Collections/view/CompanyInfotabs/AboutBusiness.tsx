@@ -150,6 +150,7 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
               value={data[field.id] || ""} 
               onChange={(e) => onChange(field.id, e.target.value)}
               disabled={!isEditing} 
+              className="h-32"
             />
           </AccordionContent>
         </AccordionItem>
