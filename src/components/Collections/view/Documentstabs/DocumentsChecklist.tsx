@@ -15,6 +15,7 @@ import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
+import { Textarea } from "@/components/ui/textarea";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -180,11 +181,11 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                <input
-                  type="text"
+                <Textarea
+                  id="message-2"
                   value={row.description}
                   onChange={(e) => handleEditChange(index, "description", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
+                  className="w-full h-20 border-none focus:outline-none"
                 />
               </TableCell>
               <TableCell>
