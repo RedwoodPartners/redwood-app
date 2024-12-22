@@ -125,17 +125,29 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     <>
       <div className="flex items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Regulatory Information</h2>
-        <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
+          <div className="relative group">
+                  <EditIcon
+                    size={25}
+                    className="-mt-6 cursor-pointer"
+                    onClick={handleEdit}
+                  />
+                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                    Edit
+                  </span>
+          </div>
         {isEditing && (
-          <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
+          <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer relative group text-green-500">
             <SaveIcon size={25} className="cursor-pointer"
-          onClick={() => {
+            onClick={() => {
             handleSave();
             toast({
               title: "Regulatory Information saved!!",
             })
           }}
           />
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+              Save
+              </span>
           </div>
         )}
       </div>

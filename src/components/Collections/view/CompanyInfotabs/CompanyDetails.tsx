@@ -215,7 +215,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       disabled={!isEditing}
       value={updatedData?.[key] || ""}
       onChange={(e) => handleChange(key, e.target.value)}
-      className="py-2 border rounded-md text-sm"
+      className="py-2 border rounded-md text-sm opacity-100"
     >
       <option value="">Select</option>
       {dropdownOptions[key]?.map((option) => (
@@ -267,16 +267,30 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
         {isEditing ? (
+          <div className="relative group ml-3">
           <SaveIcon
             size={25}
-            className="cursor-pointer"
+            className="cursor-pointer text-green-500"
             onClick={() => {
               handleSaveClick();
               toast({ title: "Company Details saved!!" });
             }}
           />
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+              Save
+            </span>
+          </div>
         ) : (
-          <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />
+            <div className="relative group">
+              <EditIcon
+                  size={25}
+                  className="cursor-pointer"
+                  onClick={handleEditClick}
+              />
+              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                  Edit
+              </span>
+            </div>
         )}
       </div>
 
