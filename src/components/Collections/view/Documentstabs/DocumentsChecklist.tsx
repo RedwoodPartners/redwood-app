@@ -97,12 +97,14 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
       await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
         fileId: uploadResponse.$id,
+        fileName: file.name,
       });
 
       const updatedData = [...docData];
       updatedData[index] = {
         ...updatedData[index],
         fileId: uploadResponse.$id,
+        fileName: file.name,
       };
       setDocData(updatedData);
       toast({
@@ -234,6 +236,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                     </span>
                   </div>
                 </label>
+
+                {/*file Name*/}
+                <p className="text-xs">{row.fileName}</p>
                 </div>
               </TableCell>
             </TableRow>

@@ -313,24 +313,34 @@ const StartupsPage: React.FC = () => {
     <div className="p-2 mx-auto">
       <div className="flex space-x-3">
         <h1 className="text-2xl font-semibold">Startups</h1>
-        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"
-        ><PlusCircle size={20} 
+        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none">
+          <div className="relative group">
+          <PlusCircle size={20} 
           onClick={() => {
           toast({
             title: "Startup added Sucessfully!",
             description: "12 Digit ID generated",
           })
         }} />
+        <span className="absolute top-full left-1/2 transform -translate-y-1/2 -mt-8 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-1 w-36">
+            Add new Startup
+        </span>
+        </div>
         </button>
         <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" >
+          <div className="relative group">
           <Trash size={20} 
           onClick={() => {
             toast({
               variant: "destructive",
               title: "Startup Removed",
             })
-          }} 
-          /></button>
+          }}
+          />
+          <span className="absolute top-full left-1/2 transform -translate-y-1/2 -mt-8 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-1 w-36">
+            Remove selected Startup  
+          </span>
+          </div></button>
       </div>
 
       <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
