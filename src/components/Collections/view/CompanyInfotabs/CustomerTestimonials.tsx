@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { EditIcon, SaveIcon } from "lucide-react";
+import { EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
@@ -22,40 +22,39 @@ const client = new Client()
 const databases = new Databases(client);
 
 interface CustomerTestimonialsProps {
-  startupId: string; 
+  startupId: string;
 }
 
 const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [documentId, setDocumentId] = useState<string | null>(null); 
+  const [documentId, setDocumentId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        
-        const response = await databases.listDocuments(
-          DATABASE_ID,
-          CUSTOMER_COLLECTION_ID,
-          [Query.equal("startupId", startupId)] 
-        );
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        CUSTOMER_COLLECTION_ID,
+        [Query.equal("startupId", startupId)]
+      );
 
-        if (response.documents.length > 0) {
-          setData(response.documents[0]);
-          setDocumentId(response.documents[0].$id); 
-        } else {
-          setData({}); 
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (response.documents.length > 0) {
+        setData(response.documents[0]);
+        setDocumentId(response.documents[0].$id);
+      } else {
+        setData({});
       }
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, [startupId]);
 
+  useEffect(() => {
     if (startupId) {
       fetchData();
     }
-  }, [startupId]);
+  }, [startupId, fetchData]); // Added fetchData as a dependency
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -64,7 +63,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   const handleSave = async () => {
     try {
       const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
-  
+
       if (documentId) {
         // Update existing document with only user-defined fields
         await databases.updateDocument(DATABASE_ID, CUSTOMER_COLLECTION_ID, documentId, userDefinedData);
@@ -77,9 +76,17 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
         setDocumentId(response.$id);
       }
       setIsEditing(false);
+      toast({
+        title: "Customer Testimonials saved!",
+      });
     } catch (error) {
       console.error("Error saving data:", error);
     }
+  };
+
+  const handleCancel = () => {
+    fetchData(); // Re-fetch the data to discard changes
+    setIsEditing(false);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -90,18 +97,43 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
     <div>
       <div className="flex items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Customer Testimonials</h2>
-        <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
+        <div className="relative group">
+                  <EditIcon
+                    size={25}
+                    className="-mt-6 cursor-pointer"
+                    onClick={handleEdit}
+                  />
+                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                    Edit
+                  </span>
+                </div>
         {isEditing && (
-          <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} className="cursor-pointer"
-               onClick={() => {
-               handleSave();
-               toast({
-              title: "Customer Testimonials saved!!",
-            })
-          }}
-          />
-          </div>
+          <div className="flex -mt-6 ml-5">
+              <div className="relative group ml-3">
+                <SaveIcon size={25} 
+                            className="cursor-pointer text-green-500"
+                            onClick={() => {
+                            handleSave();
+                            toast({
+                                title: "Customer Testimonials saved!!",
+                            })
+                          }}
+                          />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                          Save
+                          </span>
+              </div>
+              <div className="relative group ml-3">
+                          <XIcon
+                            size={25}
+                            className="cursor-pointer text-red-500"
+                            onClick={handleCancel}
+                          />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                            Cancel
+                          </span>
+              </div>
+            </div>
         )}
       </div>
       <AccordionDemo data={data} isEditing={isEditing} onChange={handleChange} />
@@ -123,11 +155,10 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
   onChange,
 }) => {
   const fields = [
-    { id: "query1", label: "What services/products are using of the company? " },
-    { id: "query2", label: "Your View on Service Utilization-will the Service/product be benefical for your company/personal use." },
-    { id: "query3", label: "Unique selling proposition of the company- what you switch to using this company's service/product-how were you doing earlier?" },
-    { id: "query4", label: "Future of this Segment - in your view, what will be the future of this segement?" },
-
+    { id: "query1", label: "What services/products are using of the company?" },
+    { id: "query2", label: "Your View on Service Utilization—will the Service/product be beneficial for your company/personal use?" },
+    { id: "query3", label: "Unique selling proposition of the company—what made you switch to using this company's service/product—how were you doing earlier?" },
+    { id: "query4", label: "Future of this Segment—what do you think will be the future of this segment?" },
   ];
 
   return (
@@ -141,11 +172,11 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
           <AccordionTrigger className="text-sm font-semibold">
             {field.label}
           </AccordionTrigger>
-          <AccordionContent className="mt-2 text-gray-700">
+          <AccordionContent className="mt-2 text-black">
             <Textarea
-              value={data[field.id] || ""} 
+              value={data[field.id] || ""}
               onChange={(e) => onChange(field.id, e.target.value)}
-              disabled={!isEditing} 
+              disabled={!isEditing}
             />
           </AccordionContent>
         </AccordionItem>

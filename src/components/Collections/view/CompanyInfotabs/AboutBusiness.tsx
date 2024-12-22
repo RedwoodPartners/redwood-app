@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { EditIcon, SaveIcon } from "lucide-react";
+import { EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,7 @@ interface AboutBusinessProps {
 const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ [key: string]: string | null }>({});
   const [documentId, setDocumentId] = useState<string | null>(null); 
   const { toast } = useToast();
 
@@ -43,9 +44,11 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
 
         if (response.documents.length > 0) {
           setData(response.documents[0]);
+          setOriginalData(response.documents[0]);
           setDocumentId(response.documents[0].$id); 
         } else {
           setData({}); 
+          setOriginalData({});
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -59,6 +62,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
 
   const handleEdit = () => {
     setIsEditing(true);
+    setOriginalData(data);
   };
 
   const handleSave = async () => {
@@ -81,6 +85,10 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
       console.error("Error saving data:", error);
     }
   };
+  const handleCancel = () => {
+    setData(originalData); // Revert to the original data
+    setIsEditing(false);
+  };
 
   const handleChange = (field: string, value: string) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
@@ -90,18 +98,45 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
     <div>
       <div className="flex items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">About Business</h2>
-        <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
-        {isEditing && (
-          <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} 
-            className="cursor-pointer"
-             onClick={() => {
-            handleSave();
-            toast({
-              title: "About Business saved!!",
-            })
-          }}
+        <div className="relative group">
+          <EditIcon
+            size={25}
+            className="-mt-6 cursor-pointer"
+            onClick={handleEdit}
           />
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+            Edit
+          </span>
+        </div>
+
+        {isEditing && (
+          <div onClick={handleSave} className="flex -mt-6 ml-4 cursor-pointer">
+            <div className="relative group ml-3">
+              <SaveIcon size={25} 
+                className="cursor-pointer text-green-500"
+                onClick={() => {
+                handleSave();
+                toast({
+                    title: "About Business saved!!",
+                })
+              }}
+              />
+              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+              Save
+              </span>
+            </div>
+            <div className="relative group ml-3">
+              <XIcon
+                size={25}
+                className="cursor-pointer text-red-500"
+                onClick={handleCancel}
+              />
+              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                Cancel
+              </span>
+            </div>
+
+            
           </div>
         )}
       </div>
@@ -145,7 +180,7 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
           <AccordionTrigger className="text-sm font-semibold">
             {field.label}
           </AccordionTrigger>
-          <AccordionContent className="mt-2 text-gray-700">
+          <AccordionContent className="mt-2 text-black">
             <Textarea
               value={data[field.id] || ""} 
               onChange={(e) => onChange(field.id, e.target.value)}

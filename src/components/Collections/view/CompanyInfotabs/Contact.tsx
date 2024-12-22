@@ -9,7 +9,7 @@ import { Client, Databases, Query } from "appwrite";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-type RegulatoryData = {
+type ContactData = {
   companyWebsite: string;
   email: string;
   phone1: string;
@@ -38,8 +38,8 @@ interface RegulatoryInformationProps {
   startupId: string;
 }
 
-const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId }) => {
-  const [regulatoryData, setRegulatoryData] = useState<RegulatoryData>({
+const ContactInformation: React.FC<RegulatoryInformationProps> = ({ startupId }) => {
+  const [contactData, setContactData] = useState<ContactData>({
     companyWebsite: "",
     email: "",
     phone1: "",
@@ -71,7 +71,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   
         if (response.documents.length > 0) {
           const document = response.documents[0];
-          setRegulatoryData({
+          setContactData({
             companyWebsite: document.companyWebsite || "",
             email: document.email || "",
             phone1: document.phone1 || "",
@@ -89,7 +89,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
           });
           setDocumentId(document.$id);
         } else {
-          setRegulatoryData({
+          setContactData({
             companyWebsite: "",
             email: "",
             phone1: "",
@@ -118,10 +118,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: keyof RegulatoryData
+    field: keyof ContactData
   ) => {
-    setRegulatoryData({
-      ...regulatoryData,
+    setContactData({
+      ...contactData,
       [field]: e.target.value,
     });
   };
@@ -135,7 +135,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     setIsSameAddress(checked);
 
     if (checked) {
-      setRegulatoryData((prevData) => ({
+      setContactData((prevData) => ({
         ...prevData,
         address21: prevData.address1,
         address22: prevData.address2,
@@ -149,7 +149,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   // Save data to Appwrite
   const handleSave = async () => {
     try {
-      const { companyWebsite, email, phone1, phone2, address1, address2, city, state, postalCode, address21, address22, city2, state2, postalCode2 } = regulatoryData;
+      const { companyWebsite, email, phone1, phone2, address1, address2, city, state, postalCode, address21, address22, city2, state2, postalCode2 } = contactData;
   
       if (documentId) {
         await databases.updateDocument(DATABASE_ID, CONTACT_ID, documentId, {
@@ -202,10 +202,29 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     <>
       <div className="flex items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Contact</h2>
-        <EditIcon size={25} className="-mt-6 cursor-pointer" onClick={handleEdit} />
+        <div className="relative group">
+            <EditIcon
+              size={25}
+              className="-mt-6 cursor-pointer"
+              onClick={handleEdit}
+            />
+              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                Edit
+              </span>
+        </div>
         {isEditing && (
           <div onClick={handleSave} className="-mt-6 ml-5 cursor-pointer">
-            <SaveIcon size={25} className="cursor-pointer" />
+              <div className="relative group ml-3">
+                <SaveIcon size={25} 
+                  className="cursor-pointer text-green-500"
+                  onClick={() => {
+                  handleSave();
+                  }}
+                />
+                <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                  Save
+                </span>
+              </div>
           </div>
         )}
       </div>
@@ -222,8 +241,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
               <Label className="font-semibold text-gray-700">{label}</Label>
               <Input
                 disabled={!isEditing}
-                value={regulatoryData[field as keyof RegulatoryData]}
-                onChange={(e) => handleInputChange(e, field as keyof RegulatoryData)}
+                value={contactData[field as keyof ContactData]}
+                onChange={(e) => handleInputChange(e, field as keyof ContactData)}
               />
             </div>
           ))}
@@ -247,8 +266,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
                 <Label className="font-semibold text-gray-700">{label}</Label>
                 <Input
                   disabled={!isEditing}
-                  value={regulatoryData[field as keyof RegulatoryData]}
-                  onChange={(e) => handleInputChange(e, field as keyof RegulatoryData)}
+                  value={contactData[field as keyof ContactData]}
+                  onChange={(e) => handleInputChange(e, field as keyof ContactData)}
                 />
               </div>
             ))}
@@ -284,8 +303,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
                 <Label className="font-semibold text-gray-700">{label}</Label>
                 <Input
                   disabled={!isEditing}
-                  value={regulatoryData[field as keyof RegulatoryData]}
-                  onChange={(e) => handleInputChange(e, field as keyof RegulatoryData)}
+                  value={contactData[field as keyof ContactData]}
+                  onChange={(e) => handleInputChange(e, field as keyof ContactData)}
                 />
               </div>
             ))}
@@ -296,4 +315,4 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   );
 };
 
-export default RegulatoryInformation;
+export default ContactInformation;

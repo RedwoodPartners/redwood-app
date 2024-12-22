@@ -197,16 +197,25 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
                 >
-                  <FaEye size={20} className="inline" />
+                  <div className="relative group">
+                    <FaEye size={20} className="inline" />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        View & Download
+                    </span>
+                  </div>
                 </a>
                 
                 ) : null}
                 {changedRows.has(index) ? (
-                  <button
-                    onClick={() => handleSaveDocument(index)}
-                    className="text-black rounded-full transition ml-2"
-                  >
-                    <SaveIcon size={20} />
+                  <button onClick={() => handleSaveDocument(index)} className="text-black rounded-full transition ml-2">
+                    <div className="relative group ml-3">
+                        <SaveIcon size={20} 
+                          className="cursor-pointer text-green-500"
+                        />
+                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                          Save
+                        </span>
+                    </div>
                   </button>
                 ) : null}
                 <label className="ml-2">
@@ -218,7 +227,12 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       if (file) handleUploadFile(index, file);
                     }}
                   />
-                  <UploadCloud size={20} className="cursor-pointer" />
+                  <div className="relative group">
+                    <UploadCloud size={20} className="cursor-pointer" />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                      Upload
+                    </span>
+                  </div>
                 </label>
                 </div>
               </TableCell>
@@ -267,7 +281,12 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <button onClick={handleAddDocument} className="text-black rounded-full transition">
-                <PlusCircle size={20} />
+                <div className="relative group">
+                  <PlusCircle size={20} />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                      Add Row
+                    </span>
+                </div>
               </button>
             </TableCell>
           </TableRow>

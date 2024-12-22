@@ -172,7 +172,14 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
                 <TableCell>
                   {editingIndex === index ? (
                     <button onClick={() => handleSaveItem(index)} className="text-black rounded-full transition">
-                      <SaveIcon size={20} />
+                      <div className="relative group ml-3">
+                          <SaveIcon size={20} 
+                            className="cursor-pointer text-green-500"
+                          />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                              Save
+                          </span>
+                      </div>
                     </button>
                   ) : null}
                 </TableCell>
@@ -183,6 +190,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
+                  disabled
                   value={newFund.description1}
                   onChange={(e) => handleNewFundChange("description1", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -192,6 +200,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
+                  disabled
                   value={newFund.amount1}
                   onChange={(e) => handleNewFundChange("amount1", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -200,7 +209,12 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               </TableCell>
               <TableCell>
                 <button onClick={handleAddItem} className="text-black rounded-full transition">
-                  <PlusCircle size={20} />
+                  <div className="relative group">
+                      <PlusCircle size={20} />
+                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                          Add Row
+                        </span>
+                    </div>
                 </button>
               </TableCell>
             </TableRow>
@@ -251,7 +265,14 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
                 <TableCell>
                   {editingIndex === index ? (
                     <button onClick={() => handleSaveItem(index)} className="text-black rounded-full transition">
-                      <SaveIcon size={20} />
+                      <div className="relative group ml-3">
+                        <SaveIcon size={20} 
+                          className="cursor-pointer text-green-500"
+                        />
+                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                          Save
+                        </span>
+                      </div>
                     </button>
                   ) : null}
                 </TableCell>
@@ -262,6 +283,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
+                  disabled
                   value={newFund.description2}
                   onChange={(e) => handleNewFundChange("description2", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -271,6 +293,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <TableCell>
                 <input
                   type="text"
+                  disabled
                   value={newFund.amount2}
                   onChange={(e) => handleNewFundChange("amount2", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -279,7 +302,12 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               </TableCell>
               <TableCell>
                 <button onClick={handleAddItem} className="text-black rounded-full transition">
-                  <PlusCircle size={20} />
+                  <div className="relative group">
+                    <PlusCircle size={20} />
+                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        Add Row
+                      </span>
+                  </div>
                 </button>
               </TableCell>
             </TableRow>

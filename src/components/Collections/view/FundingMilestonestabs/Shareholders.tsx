@@ -82,7 +82,14 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <button><PlusCircle size={20} className="mb-2 mr-2" /></button>
+            <button>
+              <div className="relative group">
+                <PlusCircle size={20} className="ml-4 mr-3 mb-2" />
+                  <span className="absolute top-full transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                    Add Shareholder
+                  </span>
+              </div>
+            </button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
