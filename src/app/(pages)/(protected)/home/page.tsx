@@ -10,7 +10,7 @@ const HomePage = () => {
   return (
     <>
     <StartupStats />
-    <div className="flex flex-wrap gap-4 p-5 ">
+    <div className="flex flex-grow gap-4 p-4">
       <NoUsers />
       <NoStartups />
       <Domain />

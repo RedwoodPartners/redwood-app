@@ -1,7 +1,10 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts"
+import React, { useState, useEffect } from "react";
+import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
+import { Client, Databases } from "appwrite";
+import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
 import {
   Card,
@@ -10,35 +13,61 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-const chartData = [
-  { month: "2022", desktop: 186 },
-  { month: "2023", desktop: 305 },
-  { month: "2024", desktop: 237 },
-  { month: "2025", desktop: 73 },
-  { month: "2026", desktop: 209 },
-  { month: "2028", desktop: 214 },
-]
+} from "@/components/ui/chart";
 
 const chartConfig = {
   desktop: {
     label: "Startups",
     color: "hsl(var(--chart-1))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function NoStartups() {
+  const [chartData, setChartData] = useState<{ year: string; Startups: number }[]>([]);
+
+  useEffect(() => {
+    const fetchStartups = async () => {
+      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+      const databases = new Databases(client);
+
+      try {
+        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const startups = response.documents;
+
+        const startupsByYear: { [key: string]: number } = startups.reduce((acc, startup) => {
+          const year = startup.year || "Unknown";
+          acc[year] = (acc[year] || 0) + 1;
+          return acc;
+        }, {} as { [key: string]: number });
+
+        const formattedData = Object.entries(startupsByYear)
+          .map(([year, count]) => ({ year, Startups: count }))
+          .sort((a, b) => a.year.localeCompare(b.year));
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching startups:", error);
+      }
+    };
+
+    fetchStartups();
+  }, []);
+
   return (
-    <Card className="flex flex-col shadow-none w-[400px]">
+    <Card className="flex flex-col shadow-none w-full sm:w-[400px]">
       <CardHeader>
         <CardTitle>Startups</CardTitle>
-        <CardDescription>2022 - 2028</CardDescription>
+        <CardDescription>
+          {chartData.length > 0
+            ? `${chartData[0].year} - ${chartData[chartData.length - 1].year}`
+            : "No data available"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -51,7 +80,7 @@ export function NoStartups() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="year"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
@@ -61,7 +90,7 @@ export function NoStartups() {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8}>
+            <Bar dataKey="Startups" fill="var(--color-desktop)" radius={8}>
               <LabelList
                 position="top"
                 offset={12}
@@ -81,5 +110,5 @@ export function NoStartups() {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }
