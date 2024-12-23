@@ -98,6 +98,24 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
   };
 
+  const handleDelete = async () => {
+    if (editingShareholder) {
+      try {
+        await databases.deleteDocument(
+          DATABASE_ID,
+          SHAREHOLDERS_ID,
+          editingShareholder.$id
+        );
+        setIsDialogOpen(false);
+        setEditingShareholder(null);
+        fetchData();
+      } catch (error) {
+        console.error("Error deleting shareholder:", error);
+      }
+    }
+  };
+  
+
   const handleDoubleTap = (shareholder: any) => {
     setEditingShareholder(shareholder);
     setIsDialogOpen(true);
@@ -249,10 +267,15 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   />
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-4 space-x-2">
                 <Button type="button" onClick={handleSave}>
                   Save
                 </Button>
+                {editingShareholder && (
+                  <Button type="button" onClick={handleDelete} variant="destructive">
+                      Delete
+                  </Button>
+                )}
               </div>
             </form>
           </DialogContent>

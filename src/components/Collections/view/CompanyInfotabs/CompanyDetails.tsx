@@ -15,16 +15,16 @@ interface StartupData {
   dateOfIncorporation: string;
   companyStage: string;
   businessType: string;
+  patentsCertifications: string;
   registeredCompanyName: string;
   registeredCountry: string;
+  domain: string;
+  incubated: string;
+  revenue: string;
   natureOfCompany: string;
   registeredState: string;
-  domain: string;
   subDomain: string;
-  incubated: string;
   communityCertificate: string;
-  patentsCertifications: string;
-  revenue: string;
   employees: string;
 }
 
@@ -52,16 +52,16 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             dateOfIncorporation: data.dateOfIncorporation,
             companyStage: data.companyStage,
             businessType: data.businessType,
+            patentsCertifications: data.patentsCertifications,
             registeredCompanyName: data.registeredCompanyName,
             registeredCountry: data.registeredCountry,
+            domain: data.domain,
+            incubated: data.incubated,
+            revenue: data.revenue,
             natureOfCompany: data.natureOfCompany,
             registeredState: data.registeredState,
-            domain: data.domain,
             subDomain: data.subDomain,
-            incubated: data.incubated,
             communityCertificate: data.communityCertificate,
-            patentsCertifications: data.patentsCertifications,
-            revenue: data.revenue,
             employees: data.employees,
           };
           setStartupData(parsedData);
@@ -231,16 +231,16 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     dateOfIncorporation: "Date of Incorporation",
     companyStage: "Company Stage",
     businessType: "Business Type",
+    patentsCertifications: "Patents & Certifications",
     registeredCompanyName: "Registered Company Name",
     registeredCountry: "Registered Country",
+    domain: "Domain",
+    incubated: "Incubated",
+    revenue: "Revenue",
     natureOfCompany: "Nature of Company",
     registeredState: "Registered State",
-    domain: "Domain",
     subDomain: "Sub-Domain",
-    incubated: "Incubated",
     communityCertificate: "Community Certificate",
-    patentsCertifications: "Patents & Certifications",
-    revenue: "Revenue",
     employees: "Number of Employees",
   };
 

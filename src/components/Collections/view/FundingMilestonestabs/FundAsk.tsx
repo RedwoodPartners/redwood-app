@@ -1,15 +1,8 @@
 "use client";
+
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHeader,
-  TableRow,
-  TableHead,
-} from "@/components/ui/table";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import { PlusCircle, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -73,7 +66,6 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         console.error("Error fetching funds:", error);
       }
     };
-
     fetchFunds();
   }, [startupId, databases]);
 
@@ -81,16 +73,13 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     try {
       const newItem = type === "proposed" ? newProposedFund : newValidatedFund;
       const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-
       const response = await databases.createDocument(
         DATABASE_ID,
         collectionId,
         "unique()",
         { ...newItem, startupId }
       );
-
       const newFundItem = mapDocumentToFundItem(response);
-
       if (type === "proposed") {
         setProposedFunds([...proposedFunds, newFundItem]);
         setNewProposedFund({ description: "", amount: "" });
@@ -111,7 +100,6 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   ) => {
     const funds = type === "proposed" ? [...proposedFunds] : [...validatedFunds];
     funds[index] = { ...funds[index], [field]: value };
-
     if (type === "proposed") {
       setProposedFunds(funds);
     } else {
@@ -127,7 +115,6 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     const funds = type === "proposed" ? proposedFunds : validatedFunds;
     const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
     const item = funds[index];
-
     try {
       if (item.$id) {
         const { $id, ...data } = item;
@@ -139,6 +126,20 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     }
   };
 
+  const handleDeleteItem = async (id: string, type: "proposed" | "validated") => {
+    try {
+      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+      await databases.deleteDocument(DATABASE_ID, collectionId, id);
+      if (type === "proposed") {
+        setProposedFunds(proposedFunds.filter(item => item.$id !== id));
+      } else {
+        setValidatedFunds(validatedFunds.filter(item => item.$id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting fund:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto space-y-4">
       <FundTable
@@ -146,10 +147,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         funds={proposedFunds}
         newFund={newProposedFund}
         onAdd={() => handleAddItem("proposed")}
-        onEditChange={(index, field, value) =>
-          handleEditChange(index, field, value, "proposed")
-        }
+        onEditChange={(index, field, value) => handleEditChange(index, field, value, "proposed")}
         onSave={(index) => handleSaveItem(index, "proposed")}
+        onDelete={(id) => handleDeleteItem(id, "proposed")}
         setNewFund={setNewProposedFund}
         editingItems={editingItems}
       />
@@ -158,10 +158,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         funds={validatedFunds}
         newFund={newValidatedFund}
         onAdd={() => handleAddItem("validated")}
-        onEditChange={(index, field, value) =>
-          handleEditChange(index, field, value, "validated")
-        }
+        onEditChange={(index, field, value) => handleEditChange(index, field, value, "validated")}
         onSave={(index) => handleSaveItem(index, "validated")}
+        onDelete={(id) => handleDeleteItem(id, "validated")}
         setNewFund={setNewValidatedFund}
         editingItems={editingItems}
       />
@@ -176,6 +175,7 @@ interface FundTableProps {
   onAdd: () => void;
   onEditChange: (index: number, field: keyof FundItem, value: string) => void;
   onSave: (index: number) => void;
+  onDelete: (id: string) => void;
   setNewFund: React.Dispatch<React.SetStateAction<Omit<FundItem, "startupId" | "$id">>>;
   editingItems: { [key: string]: boolean };
 }
@@ -187,12 +187,26 @@ const FundTable: React.FC<FundTableProps> = ({
   onAdd,
   onEditChange,
   onSave,
+  onDelete,
   setNewFund,
   editingItems,
 }) => {
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ [key: string]: boolean }>({});
   const total = calculateTotal(funds);
 
+  const handleDoubleClick = (id: string) => {
+    setDeleteConfirmation({ ...deleteConfirmation, [id]: true });
+  };
+
+  const handleDiscard = (id: string) => {
+    setDeleteConfirmation({ ...deleteConfirmation, [id]: false });
+  };
+
   return (
+    <div>
+    <h3 className="container text-lg font-medium mb-2 -mt-4">
+        Fund Ask
+    </h3>
     <div className="p-4 bg-white border border-gray-300 rounded shadow">
       <h4 className="mb-4 text-lg font-semibold">{title}</h4>
       <Table>
@@ -206,13 +220,11 @@ const FundTable: React.FC<FundTableProps> = ({
         </TableHeader>
         <TableBody>
           {funds.map((item, index) => (
-            <TableRow key={item.$id || index}>
+            <TableRow key={item.$id || index} onDoubleClick={() => handleDoubleClick(item.$id!)}>
               <TableCell>
                 <Textarea
                   value={item.description}
-                  onChange={(e) =>
-                    onEditChange(index, "description", e.target.value)
-                  }
+                  onChange={(e) => onEditChange(index, "description", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
@@ -220,28 +232,35 @@ const FundTable: React.FC<FundTableProps> = ({
                 <input
                   type="text"
                   value={item.amount}
-                  onChange={(e) =>
-                    onEditChange(index, "amount", e.target.value)
-                  }
+                  onChange={(e) => onEditChange(index, "amount", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
                 />
               </TableCell>
               <TableCell>
-                {editingItems[item.$id!] && (
+                {deleteConfirmation[item.$id!] ? (
+                  <div className="space-x-2">
+                    <span>Delete row?</span>
+                    <button onClick={() => onDelete(item.$id!)} className="bg-red-500 text-white px-2 py-1 rounded">
+                      Yes
+                    </button>
+                    <button onClick={() => handleDiscard(item.$id!)} className="bg-gray-300 text-black px-2 py-1 rounded">
+                      No
+                    </button>
+                  </div>
+                ) : editingItems[item.$id!] ? (
                   <button onClick={() => onSave(index)} className="text-green-500">
                     <SaveIcon size={20} />
                   </button>
-                )}
+                ) : null}
               </TableCell>
             </TableRow>
           ))}
           <TableRow>
             <TableCell>
-              <Textarea
+              <input
+                disabled
                 value={newFund.description}
-                onChange={(e) =>
-                  setNewFund({ ...newFund, description: e.target.value })
-                }
+                onChange={(e) => setNewFund({ ...newFund, description: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
                 placeholder="Add Description"
               />
@@ -249,10 +268,9 @@ const FundTable: React.FC<FundTableProps> = ({
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newFund.amount}
-                onChange={(e) =>
-                  setNewFund({ ...newFund, amount: e.target.value })
-                }
+                onChange={(e) => setNewFund({ ...newFund, amount: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
                 placeholder="Add Amount"
               />
@@ -265,11 +283,12 @@ const FundTable: React.FC<FundTableProps> = ({
           </TableRow>
           <TableRow className="font-bold">
             <TableCell>Total</TableCell>
-            <TableCell>{total.toFixed(2)}</TableCell>
+            <TableCell>₹ {total.toFixed(2)}</TableCell>
             <TableCell></TableCell>
           </TableRow>
         </TableBody>
       </Table>
+    </div>
     </div>
   );
 };

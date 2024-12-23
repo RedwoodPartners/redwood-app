@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon, UploadCloud } from "lucide-react";
+import { PlusCircle, SaveIcon, UploadCloud, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Client, Databases, Storage,ID } from "appwrite";
+import { Client, Databases, Storage, ID } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { FaEye } from "react-icons/fa";
@@ -21,6 +21,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [investments, setInvestments] = useState<any[]>([]);
   const [changedRows, setChangedRows] = useState(new Set<number>());
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
   const [newInvestment, setNewInvestment] = useState({
     stage: "",
     round: "",
@@ -38,7 +39,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-  
+    const storage = new Storage(client);
     const fetchInvestments = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID, [
@@ -49,27 +50,41 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         console.error("Error fetching investments:", error);
       }
     };
-  
     fetchInvestments();
   }, [startupId]);
-  
 
   const handleEditChange = (index: number, field: string, value: string) => {
     const updatedInvestments = [...investments];
     updatedInvestments[index][field] = value;
     setInvestments(updatedInvestments);
-    setEditingIndex(index); // row in edit mode
+    setEditingIndex(index);
+    setChangedRows(prevRows => new Set(prevRows).add(index));
   };
+  
+  
 
   const handleSaveInvestment = async (index: number) => {
     const investment = investments[index];
     const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = investment;
     try {
       await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, $id, dataToUpdate);
-      console.log("Saved successfully");
-      setEditingIndex(null); // Remove edit mode after saving
+      setEditingIndex(null);
+      setChangedRows(prevRows => {
+        const newSet = new Set(prevRows);
+        newSet.delete(index);
+        return newSet;
+      });
+      toast({
+        title: "Investment saved",
+        description: "The investment has been successfully saved.",
+      });
     } catch (error) {
       console.error("Error saving investment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save the investment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -78,7 +93,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       const response = await databases.createDocument(
         DATABASE_ID,
         FUND_RAISED_ID,
-        "unique()",
+        ID.unique(),
         { ...newInvestment, startupId }
       );
       setInvestments([...investments, response]);
@@ -90,23 +105,28 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         amount: "",
         description: "",
       });
+      toast({
+        title: "Investment added",
+        description: "A new investment has been successfully added.",
+      });
     } catch (error) {
       console.error("Error adding investment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add the investment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleUploadFile = async (index: number, file: File) => {
     const documentId = investments[index].$id;
-
     try {
       const uploadResponse = await storage.createFile(FUND_DOCUMENTS_ID, ID.unique(), file);
-      console.log("File uploaded successfully:", uploadResponse);
-
       await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, documentId, {
         fileId: uploadResponse.$id,
         fileName: file.name,
       });
-
       const updatedData = [...investments];
       updatedData[index] = {
         ...updatedData[index],
@@ -118,9 +138,37 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         title: "Document upload successful",
         description: "Your document has been uploaded successfully!",
       });
-      console.log("File link updated in database");
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload the document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRowDoubleTap = (index: number) => {
+    setDeleteConfirmIndex(index);
+  };
+
+  const handleDeleteInvestment = async (index: number) => {
+    try {
+      await databases.deleteDocument(DATABASE_ID, FUND_RAISED_ID, investments[index].$id);
+      const updatedInvestments = investments.filter((_, i) => i !== index);
+      setInvestments(updatedInvestments);
+      setDeleteConfirmIndex(null);
+      toast({
+        title: "Investment deleted",
+        description: "The investment has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting investment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the investment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -131,9 +179,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">
-        Fund Raised So Far
-      </h3>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Raised So Far</h3>
       <Table className="border border-gray-300 shadow-lg">
         <TableCaption>A list of recent investments.</TableCaption>
         <TableHeader>
@@ -149,7 +195,10 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         </TableHeader>
         <TableBody>
           {investments.map((investment, index) => (
-            <TableRow key={investment.$id}>
+            <TableRow 
+              key={investment.$id}
+              onDoubleClick={() => handleRowDoubleTap(index)}
+            >
               <TableCell>
                 <input
                   type="text"
@@ -167,7 +216,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-              <select
+                <select
                   value={investment.mode}
                   onChange={(e) => handleEditChange(index, "mode", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none"
@@ -205,67 +254,68 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </TableCell>
               <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
-                    <div className="relative group">
-                      <SaveIcon size={20} 
-                          className="cursor-pointer text-green-500"
+                {deleteConfirmIndex === index ? (
+                  <div className="flex space-x-2">
+                    <span>Delete row?</span>
+                    <button
+                      onClick={() => handleDeleteInvestment(index)}
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirmIndex(null)}
+                      className="bg-gray-300 text-black px-2 py-1 rounded"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-start space-x-2">
+                    {investment.fileId ? (
+                      <a
+                        href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${investment.fileId}/view?project=${PROJECT_ID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        <div className="relative group">
+                          <FaEye size={20} className="inline" />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                            View & Download
+                          </span>
+                        </div>
+                      </a>
+                    ) : null}
+                    {changedRows.has(index) && (
+                      <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition ml-2">
+                        <div className="relative group">
+                          <SaveIcon size={20} className="cursor-pointer text-green-500" />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                            Save
+                          </span>
+                        </div>
+                      </button>
+                    )}
+                    <label className="ml-2">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUploadFile(index, file);
+                        }}
                       />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
-                      </span>
-                    </div>
-                  </button>
-                )}
-                
-              <div className="flex items-center justify-start space-x-2">
-                {investment.fileId ? (
-                  <a
-                  href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${investment.fileId}/view?project=${PROJECT_ID}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  <div className="relative group">
-                    <FaEye size={20} className="inline" />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                        View & Download
-                    </span>
-                  </div>
-                </a>
-                ) : null}
-                {changedRows.has(index) ? (
-                  <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition ml-2">
-                    <div>
-                        <SaveIcon size={20} 
-                          className="cursor-pointer text-green-500"
-                        />
+                      <div className="relative group">
+                        <UploadCloud size={20} className="cursor-pointer" />
                         <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
+                          Upload
                         </span>
-                    </div>
-                  </button>
-                ) : null}
-                <label className="ml-2">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleUploadFile(index, file);
-                    }}
-                  />
-                  <div className="relative group">
-                    <UploadCloud size={20} className="cursor-pointer" />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                      Upload
-                    </span>
+                      </div>
+                    </label>
+                    <p className="text-xs">{investment.fileName}</p>
                   </div>
-                </label>
-
-                {/*file Name*/}
-                <p className="text-xs">{investment.fileName}</p> 
-                </div>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -291,14 +341,20 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               />
             </TableCell>
             <TableCell>
-              <input
-                type="text"
+              <select
                 disabled
                 value={newInvestment.mode}
                 onChange={(e) => setNewInvestment({ ...newInvestment, mode: e.target.value })}
                 className="w-full h-5 border-none focus:outline-none"
-                placeholder="Mode"
-              />
+              >
+                <option value="">Select</option>
+                <option value="Equity">Equity</option>
+                <option value="CCPS">CCPS</option>
+                <option value="CCD">CCD</option>
+                <option value="OCD">OCD</option>
+                <option value="SAFE Notes">SAFE Notes</option>
+                <option value="Grant">Grant</option>
+              </select>
             </TableCell>
             <TableCell>
               <input
@@ -333,7 +389,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <button onClick={handleAddInvestment} className="text-black rounded-full transition">
                 <div className="relative group">
                   <PlusCircle size={20} />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
                         Add Row
                     </span>
                 </div>
