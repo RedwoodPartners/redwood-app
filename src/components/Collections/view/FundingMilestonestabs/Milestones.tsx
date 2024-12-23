@@ -1,8 +1,7 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import { PlusCircle, SaveIcon, Trash2Icon } from "lucide-react";
 import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -17,6 +16,7 @@ interface TranchesMilestonesProps {
 const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) => {
   const [milestones, setMilestones] = useState<any[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [newMilestone, setNewMilestone] = useState({
     trancheType: "",
     status: "",
@@ -30,7 +30,6 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-  
     const fetchMilestones = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, TRANCHES_MILESTONES_ID, [
@@ -41,7 +40,6 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         console.error("Error fetching investments:", error);
       }
     };
-  
     fetchMilestones();
   }, [startupId]);
 
@@ -49,7 +47,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     const updatedMilestones = [...milestones];
     updatedMilestones[index][field] = value;
     setMilestones(updatedMilestones);
-    setEditingIndex(index); // row in edit mode
+    setEditingIndex(index);
   };
 
   const handleSaveInvestment = async (index: number) => {
@@ -58,7 +56,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     try {
       await databases.updateDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, $id!, dataToUpdate);
       console.log("Saved successfully");
-      setEditingIndex(null); // Remove edit mode after saving
+      setEditingIndex(null);
     } catch (error) {
       console.error("Error saving investment:", error);
     }
@@ -84,6 +82,17 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     }
   };
 
+  const handleDeleteInvestment = async (index: number) => {
+    try {
+      await databases.deleteDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, milestones[index].$id!);
+      const updatedMilestones = milestones.filter((_, i) => i !== index);
+      setMilestones(updatedMilestones);
+      setDeletingIndex(null);
+    } catch (error) {
+      console.error("Error deleting investment:", error);
+    }
+  };
+
   const totalAmount = milestones.reduce((sum, investment) => {
     const amount = parseFloat(investment.amount.replace(/₹|,/g, ""));
     return sum + (isNaN(amount) ? 0 : amount);
@@ -91,9 +100,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">
-        Tranches & Milestones
-      </h3>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
       <Table className="border border-gray-300 shadow-lg">
         <TableCaption>A list of recent Tranches & Milestones.</TableCaption>
         <TableHeader>
@@ -107,7 +114,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         </TableHeader>
         <TableBody>
           {milestones.map((investment, index) => (
-            <TableRow key={investment.$id}>
+            <TableRow key={investment.$id} onDoubleClick={() => setDeletingIndex(index)}>
               <TableCell>
                 <input
                   type="text"
@@ -121,13 +128,12 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                   value={investment.status}
                   onChange={(e) => handleEditChange(index, "status", e.target.value)}
                   className="w-full h-5 border-none focus:outline-none bg-transparent"
-                 >
+                >
                   <option value="">Select Status</option>
                   <option value="Pending">Pending</option>
                   <option value="Released">Released</option>
                 </select>
               </TableCell>
-
               <TableCell>
                 <input
                   type="text"
@@ -147,14 +153,26 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                 {editingIndex === index && (
                   <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
                     <div className="relative group ml-3">
-                        <SaveIcon size={20} 
-                            className="cursor-pointer text-green-500"
-                        />
-                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                            Save
-                        </span>
+                      <SaveIcon size={20} className="cursor-pointer text-green-500" />
+                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        Save
+                      </span>
                     </div>
                   </button>
+                )}
+                {deletingIndex === index ? (
+                  <div className="flex items-center space-x-2">
+                    <span>Delete row?</span>
+                    <button onClick={() => handleDeleteInvestment(index)} className="bg-red-500 text-white px-2 py-1 rounded">
+                      Yes
+                    </button>
+                    <button onClick={() => setDeletingIndex(null)} className="bg-gray-300 text-black px-2 py-1 rounded"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <></>
                 )}
               </TableCell>
             </TableRow>
@@ -171,14 +189,16 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               />
             </TableCell>
             <TableCell>
-              <input
-                type="text"
-                disabled
+              <select
+              disabled
                 value={newMilestone.status}
                 onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Status"
-              />
+                className="w-full h-5 border-none focus:outline-none bg-transparent"
+              >
+                <option value="">Select Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Released">Released</option>
+              </select>
             </TableCell>
             <TableCell>
               <input
@@ -191,8 +211,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               />
             </TableCell>
             <TableCell>
-              <textarea
-                
+              <input
                 disabled
                 value={newMilestone.milestones}
                 onChange={(e) => setNewMilestone({ ...newMilestone, milestones: e.target.value })}
@@ -204,9 +223,9 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               <button onClick={handleAddInvestment} className="text-black rounded-full transition">
                 <div className="relative group">
                   <PlusCircle size={20} />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                      Add Row
-                    </span>
+                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                    Add Row
+                  </span>
                 </div>
               </button>
             </TableCell>

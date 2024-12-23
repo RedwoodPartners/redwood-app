@@ -310,6 +310,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.docName}
                 onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })}
                 placeholder="Document Name"
@@ -318,6 +319,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </TableCell>
             <TableCell>
               <select
+                disabled
                 value={newDoc.docType}
                 onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })}
                 className="h-6 border-none rounded focus:outline-none"
@@ -337,6 +339,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.status}
                 onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })}
                 placeholder="Status"
@@ -346,6 +349,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <TableCell>
               <input
                 type="text"
+                disabled
                 value={newDoc.description}
                 onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
                 placeholder="Description"

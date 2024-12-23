@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import { PlusCircle, SaveIcon, Trash2 } from "lucide-react";
 import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -16,6 +16,7 @@ interface CapTableProps {
 const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const [capTableData, setCapTableData] = useState<any[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [newInvestment, setNewInvestment] = useState({
     round: "",
     shareholderName: "",
@@ -39,7 +40,6 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
         console.error("Error fetching cap table data:", error);
       }
     };
-
     fetchCapTableData();
   }, [startupId]);
 
@@ -53,7 +53,6 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const handleSaveInvestment = async (index: number) => {
     const dataToUpdate = capTableData[index];
     const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...fieldsToUpdate } = dataToUpdate;
-
     try {
       await databases.updateDocument(DATABASE_ID, CAP_TABLE_ID, $id, fieldsToUpdate);
       console.log("Saved successfully");
@@ -83,6 +82,17 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
     }
   };
 
+  const handleDeleteRow = async (index: number) => {
+    try {
+      await databases.deleteDocument(DATABASE_ID, CAP_TABLE_ID, capTableData[index].$id);
+      const updatedCapTableData = capTableData.filter((_, i) => i !== index);
+      setCapTableData(updatedCapTableData);
+      setDeletingIndex(null);
+    } catch (error) {
+      console.error("Error deleting cap table data:", error);
+    }
+  };
+
   const calculateTotalCapital = () => {
     return capTableData.reduce((total, row) => {
       const value = parseFloat(row.capitalStructure.replace("%", "")) || 0;
@@ -91,26 +101,13 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   };
 
   const roleOptions = [
-    "Founder",
-    "Co-Founder",
-    "Employee",
-    "Advisor",
-    "Angel Investor",
-    "Venture Capitalist",
-    "Board Member",
-    "Institutional Investor",
-    "Seed Investor",
-    "Series A Investor",
-    "Series B Investor",
-    "Series C and Beyond Investors",
-    "Convertible Note Holder",
-    "Preferred Stock Holder",
-    "Common Stock Holder",
-    "Employee Stock Option Plan (ESOP) Holder",
-    "Strategic Investor",
-    "Lead Investor",
-    "Syndicate Member",
-    "Secondary Market Investor",
+    "Founder", "Co-Founder", "Employee", "Advisor", "Angel Investor",
+    "Venture Capitalist", "Board Member", "Institutional Investor",
+    "Seed Investor", "Series A Investor", "Series B Investor",
+    "Series C and Beyond Investors", "Convertible Note Holder",
+    "Preferred Stock Holder", "Common Stock Holder",
+    "Employee Stock Option Plan (ESOP) Holder", "Strategic Investor",
+    "Lead Investor", "Syndicate Member", "Secondary Market Investor",
   ];
 
   return (
@@ -129,7 +126,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
         </TableHeader>
         <TableBody>
           {capTableData.map((row, index) => (
-            <TableRow key={row.$id}>
+            <TableRow key={row.$id} onDoubleClick={() => setDeletingIndex(index)}>
               <TableCell>
                 <input
                   type="text"
@@ -150,7 +147,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 <select
                   value={row.role}
                   onChange={(e) => handleEditChange(index, "role", e.target.value)}
-                  className=" h-5 border-none border-gray-300 rounded focus:outline-none"
+                  className="h-5 border-none border-gray-300 rounded focus:outline-none"
                 >
                   <option value="" disabled>Select Role</option>
                   {roleOptions.map((role) => (
@@ -170,14 +167,19 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 {editingIndex === index && (
                   <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
                     <div className="relative group ml-3">
-                        <SaveIcon size={20} 
-                          className="cursor-pointer text-green-500"
-                        />
-                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                            Save
-                        </span>
+                      <SaveIcon size={20} className="cursor-pointer text-green-500" />
+                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        Save
+                      </span>
                     </div>
                   </button>
+                )}
+                {deletingIndex === index && (
+                  <div className="flex items-center space-x-2">
+                    <span>Delete row?</span>
+                    <button onClick={() => handleDeleteRow(index)} className="bg-red-500 text-white px-2 py-1 rounded">Yes</button>
+                    <button onClick={() => setDeletingIndex(null)} className="bg-gray-300 text-black px-2 py-1 rounded">No</button>
+                  </div>
                 )}
               </TableCell>
             </TableRow>
@@ -204,14 +206,17 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               />
             </TableCell>
             <TableCell>
-              <input
+              <select
                 disabled
                 value={newInvestment.role}
                 onChange={(e) => setNewInvestment({ ...newInvestment, role: e.target.value })}
                 className="w-full h-5 border-none rounded focus:outline-none"
-                placeholder="select"
-              />
-                
+              >
+                <option value="" disabled>Select Role</option>
+                {roleOptions.map((role) => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
             </TableCell>
             <TableCell>
               <input
@@ -227,9 +232,9 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               <button onClick={handleAddCapTableData} className="text-black rounded-full transition">
                 <div className="relative group">
                   <PlusCircle size={20} />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                        Add Row
-                    </span>
+                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                    Add Row
+                  </span>
                 </div>
               </button>
             </TableCell>
