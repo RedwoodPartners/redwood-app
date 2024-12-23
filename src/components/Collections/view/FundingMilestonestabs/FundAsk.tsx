@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -9,311 +9,267 @@ import {
   TableRow,
   TableHead,
 } from "@/components/ui/table";
-
 import { PlusCircle, SaveIcon } from "lucide-react";
-import { Client, Databases } from "appwrite";
+import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Textarea } from "@/components/ui/textarea";
-export const FUND_ASK_ID = "67358bc4000af32965f2";
+
+export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
+export const VALIDATED_FUND_ASK_ID = "67694e77002cc9cd69c4";
 
 interface FundAskProps {
   startupId: string;
 }
 
+interface FundItem {
+  $id?: string;
+  description: string;
+  amount: string;
+  startupId: string;
+}
+
+const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
+  $id: doc.$id,
+  description: doc.description,
+  amount: doc.amount,
+  startupId: doc.startupId,
+});
+
+const calculateTotal = (funds: FundItem[]): number => {
+  return funds.reduce((total, fund) => total + parseFloat(fund.amount || '0'), 0);
+};
+
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
-  const [funds, setFunds] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [newFund, setNewFund] = useState({
-    proposedFundAsk: "",
-    description1: "",
-    amount1: "",
-    validatedFundAsk: "",
-    description2: "",
-    amount2: "",
+  const [proposedFunds, setProposedFunds] = useState<FundItem[]>([]);
+  const [validatedFunds, setValidatedFunds] = useState<FundItem[]>([]);
+  const [editingItems, setEditingItems] = useState<{ [key: string]: boolean }>({});
+  const [newProposedFund, setNewProposedFund] = useState<Omit<FundItem, "startupId" | "$id">>({
+    description: "",
+    amount: "",
+  });
+  const [newValidatedFund, setNewValidatedFund] = useState<Omit<FundItem, "startupId" | "$id">>({
+    description: "",
+    amount: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
+  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
+  const databases = useMemo(() => new Databases(client), [client]);
 
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     const fetchFunds = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, FUND_ASK_ID, [
-          Query.equal("startupId", startupId),
+        const [proposedResponse, validatedResponse] = await Promise.all([
+          databases.listDocuments(DATABASE_ID, PROPOSED_FUND_ASK_ID, [
+            Query.equal("startupId", startupId),
+          ]),
+          databases.listDocuments(DATABASE_ID, VALIDATED_FUND_ASK_ID, [
+            Query.equal("startupId", startupId),
+          ]),
         ]);
-        setFunds(response.documents);
-        calculateTotal(response.documents); // totals when data is fetched
+        setProposedFunds(proposedResponse.documents.map(mapDocumentToFundItem));
+        setValidatedFunds(validatedResponse.documents.map(mapDocumentToFundItem));
       } catch (error) {
-        console.error("Error fetching investments:", error);
+        console.error("Error fetching funds:", error);
       }
     };
 
     fetchFunds();
-  }, [startupId]);
+  }, [startupId, databases]);
 
-  const calculateTotal = (funds: any[]) => {
-    let proposedTotal = 0;
-    let validatedTotal = 0;
-
-    // total for Proposed Fund Ask (amount1)
-    funds.forEach(item => {
-      if (item.amount1) {
-        proposedTotal += parseFloat(item.amount1);
-      }
-      if (item.amount2) {
-        validatedTotal += parseFloat(item.amount2);
-      }
-    });
-
-    // Updating the totals in the state
-    setNewFund(prevFund => ({
-      ...prevFund,
-      proposedFundAsk: proposedTotal.toFixed(2),
-      validatedFundAsk: validatedTotal.toFixed(2),
-    }));
-  };
-
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedFunds = [...funds];
-    updatedFunds[index][field] = value;
-    setFunds(updatedFunds);
-    setEditingIndex(index); // row in edit mode
-    calculateTotal(updatedFunds); // Recalculate total when changes are made
-  };
-
-  const handleSaveItem = async (index: number) => {
-    const item = funds[index];
-    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = item;
+  const handleAddItem = async (type: "proposed" | "validated") => {
     try {
-      await databases.updateDocument(DATABASE_ID, FUND_ASK_ID, $id!, dataToUpdate);
-      setEditingIndex(null); // Remove edit mode after saving
-      calculateTotal(funds); // Recalculate total after save
-    } catch (error) {
-      console.error("Error saving investment:", error);
-    }
-  };
+      const newItem = type === "proposed" ? newProposedFund : newValidatedFund;
+      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
 
-  const handleAddItem = async () => {
-    try {
       const response = await databases.createDocument(
         DATABASE_ID,
-        FUND_ASK_ID,
+        collectionId,
         "unique()",
-        { ...newFund, startupId }
+        { ...newItem, startupId }
       );
-      setFunds([...funds, response]);
-      setNewFund({
-        proposedFundAsk: "",
-        description1: "",
-        amount1: "",
-        validatedFundAsk: "",
-        description2: "",
-        amount2: "",
-      });
-      calculateTotal([...funds, response]); // Recalculate total after adding item
+
+      const newFundItem = mapDocumentToFundItem(response);
+
+      if (type === "proposed") {
+        setProposedFunds([...proposedFunds, newFundItem]);
+        setNewProposedFund({ description: "", amount: "" });
+      } else {
+        setValidatedFunds([...validatedFunds, newFundItem]);
+        setNewValidatedFund({ description: "", amount: "" });
+      }
     } catch (error) {
-      console.error("Error adding investment:", error);
+      console.error("Error adding fund:", error);
     }
   };
 
-  const handleNewFundChange = (field: string, value: string) => {
-    setNewFund((prevFund) => ({
-      ...prevFund,
-      [field]: value,
-    }));
+  const handleEditChange = (
+    index: number,
+    field: keyof FundItem,
+    value: string,
+    type: "proposed" | "validated"
+  ) => {
+    const funds = type === "proposed" ? [...proposedFunds] : [...validatedFunds];
+    funds[index] = { ...funds[index], [field]: value };
+
+    if (type === "proposed") {
+      setProposedFunds(funds);
+    } else {
+      setValidatedFunds(funds);
+    }
+    setEditingItems({ ...editingItems, [funds[index].$id!]: true });
+  };
+
+  const handleSaveItem = async (
+    index: number,
+    type: "proposed" | "validated"
+  ) => {
+    const funds = type === "proposed" ? proposedFunds : validatedFunds;
+    const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+    const item = funds[index];
+
+    try {
+      if (item.$id) {
+        const { $id, ...data } = item;
+        await databases.updateDocument(DATABASE_ID, collectionId, $id, data);
+        setEditingItems({ ...editingItems, [$id]: false });
+      }
+    } catch (error) {
+      console.error("Error saving fund:", error);
+    }
   };
 
   return (
-    <div className="container mx-auto space-y-2">
-      <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Ask</h3>
+    <div className="container mx-auto space-y-4">
+      <FundTable
+        title="Proposed Fund Ask"
+        funds={proposedFunds}
+        newFund={newProposedFund}
+        onAdd={() => handleAddItem("proposed")}
+        onEditChange={(index, field, value) =>
+          handleEditChange(index, field, value, "proposed")
+        }
+        onSave={(index) => handleSaveItem(index, "proposed")}
+        setNewFund={setNewProposedFund}
+        editingItems={editingItems}
+      />
+      <FundTable
+        title="Validated Fund Ask"
+        funds={validatedFunds}
+        newFund={newValidatedFund}
+        onAdd={() => handleAddItem("validated")}
+        onEditChange={(index, field, value) =>
+          handleEditChange(index, field, value, "validated")
+        }
+        onSave={(index) => handleSaveItem(index, "validated")}
+        setNewFund={setNewValidatedFund}
+        editingItems={editingItems}
+      />
+    </div>
+  );
+};
 
-      {/* Proposed Fund Ask Box */}
-      <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-gray-300">
-        <h4 className="text-sm font-medium mb-4 w-80 p-3">Total Proposed Fund Ask
-          <input disabled
-            type="text"
-            value={newFund.proposedFundAsk}
-            onChange={(e) => handleNewFundChange("proposedFundAsk", e.target.value)}
-            className="w-44 p-1 border rounded focus:outline-none"
-            placeholder="Enter Proposed Fund Ask"
-          />
-        </h4>
-        
-        <Table>
-          <TableCaption>A list of proposed fund asks.</TableCaption>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead>Utilization Description</TableHead>
-              <TableHead>Budgeted Amount</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {funds.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Textarea
-                    value={item.description1}
-                    onChange={(e) => handleEditChange(index, "description1", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  <input
-                    type="text"
-                    value={item.amount1 || ""}
-                    onChange={(e) => handleEditChange(index, "amount1", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  {editingIndex === index ? (
-                    <button onClick={() => handleSaveItem(index)} className="text-black rounded-full transition">
-                      <div className="relative group ml-3">
-                          <SaveIcon size={20} 
-                            className="cursor-pointer text-green-500"
-                          />
-                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                              Save
-                          </span>
-                      </div>
-                    </button>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            ))}
-            {/* New Proposed Item Row */}
-            <TableRow>
-              <TableCell>
-                <input
-                  type="text"
-                  disabled
-                  value={newFund.description1}
-                  onChange={(e) => handleNewFundChange("description1", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Description"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  disabled
-                  value={newFund.amount1}
-                  onChange={(e) => handleNewFundChange("amount1", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Amount"
-                />
-              </TableCell>
-              <TableCell>
-                <button onClick={handleAddItem} className="text-black rounded-full transition">
-                  <div className="relative group">
-                      <PlusCircle size={20} />
-                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Add Row
-                        </span>
-                    </div>
-                </button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+interface FundTableProps {
+  title: string;
+  funds: FundItem[];
+  newFund: Omit<FundItem, "startupId" | "$id">;
+  onAdd: () => void;
+  onEditChange: (index: number, field: keyof FundItem, value: string) => void;
+  onSave: (index: number) => void;
+  setNewFund: React.Dispatch<React.SetStateAction<Omit<FundItem, "startupId" | "$id">>>;
+  editingItems: { [key: string]: boolean };
+}
 
-      {/* Validated Fund Ask Box */}
-      <div className="flex flex-row p-4 rounded-lg shadow-md bg-white border border-grey-300">
-        <h4 className="text-sm w-80 font-medium mb-4 p-3">Total Validated Fund Ask
-          <input 
-            disabled
-            type="text"
-            value={newFund.validatedFundAsk}
-            onChange={(e) => handleNewFundChange("validatedFundAsk", e.target.value)}
-            className="w-44 p-1 border rounded focus:outline-none"
-            placeholder="Enter Validated Fund Ask"
-          />
-        </h4>
-      
-        <Table>
-          <TableCaption>A list of validated fund asks.</TableCaption>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead>Utilization Description</TableHead>
-              <TableHead>Budgeted Amount</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {funds.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Textarea
-                    value={item.description2}
-                    onChange={(e) => handleEditChange(index, "description2", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  <input
-                    type="text"
-                    value={item.amount2 || ""}
-                    onChange={(e) => handleEditChange(index, "amount2", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  {editingIndex === index ? (
-                    <button onClick={() => handleSaveItem(index)} className="text-black rounded-full transition">
-                      <div className="relative group ml-3">
-                        <SaveIcon size={20} 
-                          className="cursor-pointer text-green-500"
-                        />
-                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
-                        </span>
-                      </div>
-                    </button>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            ))}
-            {/* New Validated Item Row */}
-            <TableRow>
+const FundTable: React.FC<FundTableProps> = ({
+  title,
+  funds,
+  newFund,
+  onAdd,
+  onEditChange,
+  onSave,
+  setNewFund,
+  editingItems,
+}) => {
+  const total = calculateTotal(funds);
+
+  return (
+    <div className="p-4 bg-white border border-gray-300 rounded shadow">
+      <h4 className="mb-4 text-lg font-semibold">{title}</h4>
+      <Table>
+        <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
+        <TableHeader>
+          <TableRow className="bg-gray-50">
+            <TableHead>Utilization Description</TableHead>
+            <TableHead>Budgeted Amount</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {funds.map((item, index) => (
+            <TableRow key={item.$id || index}>
               <TableCell>
-                <input
-                  type="text"
-                  disabled
-                  value={newFund.description2}
-                  onChange={(e) => handleNewFundChange("description2", e.target.value)}
+                <Textarea
+                  value={item.description}
+                  onChange={(e) =>
+                    onEditChange(index, "description", e.target.value)
+                  }
                   className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Description"
                 />
               </TableCell>
               <TableCell>
                 <input
                   type="text"
-                  disabled
-                  value={newFund.amount2}
-                  onChange={(e) => handleNewFundChange("amount2", e.target.value)}
+                  value={item.amount}
+                  onChange={(e) =>
+                    onEditChange(index, "amount", e.target.value)
+                  }
                   className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Amount"
                 />
               </TableCell>
               <TableCell>
-                <button onClick={handleAddItem} className="text-black rounded-full transition">
-                  <div className="relative group">
-                    <PlusCircle size={20} />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                        Add Row
-                      </span>
-                  </div>
-                </button>
+                {editingItems[item.$id!] && (
+                  <button onClick={() => onSave(index)} className="text-green-500">
+                    <SaveIcon size={20} />
+                  </button>
+                )}
               </TableCell>
             </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+          <TableRow>
+            <TableCell>
+              <Textarea
+                value={newFund.description}
+                onChange={(e) =>
+                  setNewFund({ ...newFund, description: e.target.value })
+                }
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Add Description"
+              />
+            </TableCell>
+            <TableCell>
+              <input
+                type="text"
+                value={newFund.amount}
+                onChange={(e) =>
+                  setNewFund({ ...newFund, amount: e.target.value })
+                }
+                className="w-full h-5 border-none focus:outline-none"
+                placeholder="Add Amount"
+              />
+            </TableCell>
+            <TableCell>
+              <button onClick={onAdd} className="text-blue-500">
+                <PlusCircle size={20} />
+              </button>
+            </TableCell>
+          </TableRow>
+          <TableRow className="font-bold">
+            <TableCell>Total</TableCell>
+            <TableCell>{total.toFixed(2)}</TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 };

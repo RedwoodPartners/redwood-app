@@ -13,7 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { PlusCircle } from "lucide-react";
@@ -31,8 +37,8 @@ interface ShareholdersProps {
 const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [allShareholders, setAllShareholders] = useState<any[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingShareholder, setEditingShareholder] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -51,21 +57,38 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     if (startupId) fetchData();
   }, [startupId, fetchData]);
 
+  useEffect(() => {
+    if (editingShareholder) {
+      setData(editingShareholder);
+    } else {
+      setData({});
+    }
+  }, [editingShareholder]);
+
   const handleSave = async () => {
     try {
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = data;
-
-      await databases.createDocument(
-        DATABASE_ID,
-        SHAREHOLDERS_ID,
-        "unique()",
-        { startupId, ...dataToUpdate }
-      );
+      
+      if (editingShareholder) {
+        await databases.updateDocument(
+          DATABASE_ID,
+          SHAREHOLDERS_ID,
+          editingShareholder.$id,
+          { ...dataToUpdate }
+        );
+      } else {
+        await databases.createDocument(
+          DATABASE_ID,
+          SHAREHOLDERS_ID,
+          "unique()",
+          { startupId, ...dataToUpdate }
+        );
+      }
 
       setData({});
-      setIsEditing(false);
-      setIsDialogOpen(false); // Close dialog
-      fetchData(); // Refresh table
+      setEditingShareholder(null);
+      setIsDialogOpen(false);
+      fetchData();
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -75,25 +98,32 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
   };
 
+  const handleDoubleTap = (shareholder: any) => {
+    setEditingShareholder(shareholder);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div>
-      {/* Shareholder Button */}
       <div className="flex items-center justify-between">
-      <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setEditingShareholder(null);
+        }}>
           <DialogTrigger asChild>
             <button>
               <div className="relative group">
                 <PlusCircle size={20} className="ml-4 mr-3 mb-2" />
-                  <span className="absolute top-full transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                    Add Shareholder
-                  </span>
+                <span className="absolute top-full transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                  Add Shareholder
+                </span>
               </div>
             </button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
-              <DialogTitle>Add Shareholder</DialogTitle>
+              <DialogTitle>{editingShareholder ? 'Edit Shareholder' : 'Add Shareholder'}</DialogTitle>
             </DialogHeader>
             <form>
               <div className="grid grid-cols-4 gap-4">
@@ -128,9 +158,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     onChange={(e) => handleChange("gender", e.target.value)}
                     className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                   >
-                    <option value="" disabled>
-                      Select Gender
-                    </option>
+                    <option value="" disabled>Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
@@ -147,7 +175,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <Label>Is Partner/Director?</Label>
@@ -157,12 +184,11 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     onChange={(e) => handleChange("isPartner", e.target.value)}
                     className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                   >
-                    <option value="" disabled>Select Partner or Director</option>
-                    <option value="Partner">Partner</option>
-                    <option value="Director">Director</option>
+                    <option value="" disabled>Select Partner/Director</option>
+                    <option value="Partner">Yes</option>
+                    <option value="Director">No</option>
                   </select>
                 </div>
-
                 <div>
                   <Label>Director Identification Number</Label>
                   <Input
@@ -194,7 +220,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <Label>Educational Qualifications</Label>
@@ -224,7 +249,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   />
                 </div>
               </div>
-
               <div className="mt-4">
                 <Button type="button" onClick={handleSave}>
                   Save
@@ -234,8 +258,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Table for Shareholders */}
       <div className="mb-6 p-3 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
           <TableCaption>A list of all shareholders for this startup</TableCaption>
@@ -255,7 +277,11 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           </TableHeader>
           <TableBody>
             {allShareholders.map((shareholder) => (
-              <TableRow key={shareholder.$id}>
+              <TableRow 
+                key={shareholder.$id}
+                onDoubleClick={() => handleDoubleTap(shareholder)}
+                style={{ cursor: 'pointer' }}
+              >
                 <TableCell>{shareholder.shareholderName || "N/A"}</TableCell>
                 <TableCell>{shareholder.isCommunityHolder || "N/A"}</TableCell>
                 <TableCell>{shareholder.gender || "N/A"}</TableCell>

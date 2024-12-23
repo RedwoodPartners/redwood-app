@@ -291,7 +291,7 @@ const StartupsPage: React.FC = () => {
     { field: "id", headerName: "ID", sortable: true, filter: true, width: 130},
     { field: "name", headerName: "Startup Name", sortable: true, filter: true, editable: true, width: 200 },
     { field: "brandName", headerName: "Brand Name", sortable: true, filter: true, editable: true, width: 200 },
-    { field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
+    //{ field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "natureOfCompany", headerName: "Nature of Company", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "subDomain", headerName: "Sub Domain", sortable: true, filter: true, editable: true, width: 150 },
     //{ field: "patents", headerName: "Patents & Certifications", sortable: true, filter: true, editable: true, width: 150 },
