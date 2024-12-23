@@ -2,13 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import { PlusCircle, SaveIcon, UploadCloud } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Client, Databases } from "appwrite";
+import { Client, Databases, Storage,ID } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { FaEye } from "react-icons/fa";
+import { useToast } from "@/hooks/use-toast";
 
 export const FUND_RAISED_ID = "6731e2fb000d9580025f";
+const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
 
 interface FundRaisedSoFarProps {
   startupId: string;
@@ -16,6 +19,7 @@ interface FundRaisedSoFarProps {
 
 const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [investments, setInvestments] = useState<any[]>([]);
+  const [changedRows, setChangedRows] = useState(new Set<number>());
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newInvestment, setNewInvestment] = useState({
     stage: "",
@@ -28,6 +32,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
   const databases = new Databases(client);
+  const storage = new Storage(client);
+  const { toast } = useToast();
 
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -86,6 +92,35 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       });
     } catch (error) {
       console.error("Error adding investment:", error);
+    }
+  };
+
+  const handleUploadFile = async (index: number, file: File) => {
+    const documentId = investments[index].$id;
+
+    try {
+      const uploadResponse = await storage.createFile(FUND_DOCUMENTS_ID, ID.unique(), file);
+      console.log("File uploaded successfully:", uploadResponse);
+
+      await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, documentId, {
+        fileId: uploadResponse.$id,
+        fileName: file.name,
+      });
+
+      const updatedData = [...investments];
+      updatedData[index] = {
+        ...updatedData[index],
+        fileId: uploadResponse.$id,
+        fileName: file.name,
+      };
+      setInvestments(updatedData);
+      toast({
+        title: "Document upload successful",
+        description: "Your document has been uploaded successfully!",
+      });
+      console.log("File link updated in database");
+    } catch (error) {
+      console.error("Error uploading file:", error);
     }
   };
 
@@ -172,7 +207,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableCell>
                 {editingIndex === index && (
                   <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
-                    <div className="relative group ml-3">
+                    <div className="relative group">
                       <SaveIcon size={20} 
                           className="cursor-pointer text-green-500"
                       />
@@ -182,6 +217,55 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                     </div>
                   </button>
                 )}
+                
+              <div className="flex items-center justify-start space-x-2">
+                {investment.fileId ? (
+                  <a
+                  href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${investment.fileId}/view?project=${PROJECT_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  <div className="relative group">
+                    <FaEye size={20} className="inline" />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        View & Download
+                    </span>
+                  </div>
+                </a>
+                ) : null}
+                {changedRows.has(index) ? (
+                  <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition ml-2">
+                    <div>
+                        <SaveIcon size={20} 
+                          className="cursor-pointer text-green-500"
+                        />
+                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                          Save
+                        </span>
+                    </div>
+                  </button>
+                ) : null}
+                <label className="ml-2">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadFile(index, file);
+                    }}
+                  />
+                  <div className="relative group">
+                    <UploadCloud size={20} className="cursor-pointer" />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                      Upload
+                    </span>
+                  </div>
+                </label>
+
+                {/*file Name*/}
+                <p className="text-xs">{investment.fileName}</p> 
+                </div>
               </TableCell>
             </TableRow>
           ))}
