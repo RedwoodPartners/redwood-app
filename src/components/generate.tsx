@@ -74,9 +74,9 @@ const GenerateReport: React.FC<GenerateReportProps> = ({ startupId }) => {
   };
 
   return (
-    <button id="generateReportBtn" style={{ display: "none" }} onClick={handleGenerateReport}>
+    <div id="generateReportBtn" style={{ display: "none" }} onClick={handleGenerateReport}>
       Generate Report
-    </button>
+    </div>
   );
 };
 
