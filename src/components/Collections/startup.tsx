@@ -9,13 +9,20 @@ import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ICellRendererParams } from 'ag-grid-community';
 import { FaEye } from 'react-icons/fa';
 import { PlusCircle, Trash } from "lucide-react";
-
-import { Client, Databases, ID } from "appwrite";
+import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Button } from "@/components/ui/button";
-
-import { useToast } from "@/hooks/use-toast"
-
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type Startup = {
   id: string;
@@ -48,15 +55,14 @@ const StartupsPage: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editedRow, setEditedRow] = useState<Startup | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const gridRef = useRef<AgGridReact<Startup>>(null);
   const router = useRouter();
   const { toast } = useToast();
-  
-  // Initialize Appwrite client and fetch startups only on the client side
+
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-
     const fetchStartups = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
@@ -86,81 +92,45 @@ const StartupsPage: React.FC = () => {
         console.error("Error fetching startups:", error);
       }
     };
-
     fetchStartups();
   }, []);
 
-  const handleAddStartup = async () => {
+  const handleAddStartup = () => {
+    setShowAddDialog(true);
+  };
+
+  const createAndRedirect = async (newStartupData: Partial<Startup>) => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-    
-    //generating 12 digit Id for Startups
-    const generate12DigitId = () => {
-      return Math.floor(100000000000 + Math.random() * 900000000000).toString();
-    };
-
-    const newStartup: Partial<Startup> = {
-      name: "",
-      brandName: "",
-      businessType: "",
-      natureOfCompany: "",
-      subDomain: "",
-      patents: "",
-      dateOfIncorporation: "",
-      registeredCompanyName: "",
-      registeredState: "",
-      incubated: "",
-      registeredCountry: "",
-      companyStage: "",
-      domain: "",
-      communityCertificate: "",
-      revenue: "",
-      employees: "",
-      year: "",
-      description: "",
-    };
-    const customId = generate12DigitId();
+  
+    // Removes spaces from brandName and generate custom ID
+    const formattedBrandName = newStartupData.brandName?.replace(/\s+/g, '') || '';
+    const customId = `${formattedBrandName}-${Math.floor(1000 + Math.random() * 9000)}`;
+  
     try {
-      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, newStartup);
-      setStartups((prev) => [
-        ...prev,
-        { 
-          id: createdStartup.$id,
-          name: createdStartup.name || "",
-          brandName: createdStartup.brandName || "",
-          businessType: createdStartup.businessType || "",
-          natureOfCompany: createdStartup.natureOfCompany || "",
-          subDomain: createdStartup.subDomain || "",
-          patents: createdStartup.patents || "",
-          dateOfIncorporation: createdStartup.dateOfIncorporation || "",
-          registeredCompanyName: createdStartup.registeredCompanyName || "",
-          registeredState: createdStartup.registeredState || "",
-          incubated: createdStartup.incubated || "",
-          registeredCountry: createdStartup.registeredCountry || "",
-          companyStage: createdStartup.companyStage || "",
-          domain: createdStartup.domain || "",
-          communityCertificate: createdStartup.communityCertificate || "",
-          revenue: createdStartup.revenue || "",
-          employees: createdStartup.employees || "",
-          year: createdStartup.year || "",
-          description: createdStartup.description || "", },
-      ]);
+      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, newStartupData);
+      setShowAddDialog(false);
+      router.push(`/startup/${createdStartup.$id}`);
     } catch (error) {
       console.error("Error adding startup:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create startup. Please try again.",
+      });
     }
   };
+  
 
   const handleRemoveSelected = async () => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-  
     const gridApi = gridRef.current?.api;
     if (gridApi) {
       const selectedNodes = gridApi.getSelectedNodes();
       const selectedIds = selectedNodes
         .map((node) => node.data?.id)
         .filter((id): id is string => id !== undefined);
-  
       try {
         await Promise.all(
           selectedIds.map((id) => databases.deleteDocument(DATABASE_ID, STARTUP_ID, id))
@@ -171,7 +141,7 @@ const StartupsPage: React.FC = () => {
       }
     }
   };
-  
+
   const onGridReady = (params: GridReadyEvent) => {
     params.api.sizeColumnsToFit();
   };
@@ -186,35 +156,10 @@ const StartupsPage: React.FC = () => {
     if (editedRow) {
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
-  
       try {
-        //Update the edited startup in Appwrite
-        await databases.updateDocument(DATABASE_ID, STARTUP_ID, editedRow.id,{
-          name: editedRow.name,
-          brandName: editedRow.brandName,
-          businessType: editedRow.businessType,
-          natureOfCompany:editedRow.natureOfCompany,
-          subDomain: editedRow.subDomain,
-          patents: editedRow.patents,
-          dateOfIncorporation: editedRow.dateOfIncorporation,
-          registeredCompanyName: editedRow.registeredCompanyName,
-          registeredState: editedRow.registeredState,
-          incubated: editedRow.incubated,
-          registeredCountry: editedRow.registeredCountry,
-          companyStage: editedRow.companyStage,
-          domain: editedRow.domain,
-          communityCertificate: editedRow.communityCertificate,
-          revenue: editedRow.revenue,
-          employees: editedRow.employees,
-          year: editedRow.year,
-          description: editedRow.description,
-
-        });
-        //reflect the updated data
+        await databases.updateDocument(DATABASE_ID, STARTUP_ID, editedRow.id, editedRow);
         setStartups((prev) =>
-          prev.map((startup) =>
-            startup.id === editedRow.id ? editedRow : startup
-          )
+          prev.map((startup) => (startup.id === editedRow.id ? editedRow : startup))
         );
         setEditedRow(null);
         setShowModal(false);
@@ -227,15 +172,12 @@ const StartupsPage: React.FC = () => {
   const handleDiscardChanges = async () => {
     setEditedRow(null);
     setShowModal(false);
-
-    //Re-fetch data from the database to revert changes
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-
-    try{
+    try {
       const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
       const startupData = response.documents.map((doc: Document) => ({
-        id:doc.$id,
+        id: doc.$id,
         name: doc.name || "",
         brandName: doc.brandName || "",
         businessType: doc.businessType || "",
@@ -254,17 +196,14 @@ const StartupsPage: React.FC = () => {
         employees: doc.employees || "",
         year: doc.year || "",
         description: doc.description || "",
-        
       }));
       setStartups(startupData);
-    }catch(error){
-      console.error("Error fetching Startups:",error);
+    } catch (error) {
+      console.error("Error fetching Startups:", error);
     }
-
   };
 
   const handleViewStartup = (id: string) => {
-    console.log("View Startup ID:", id);
     router.push(`/startup/${id}`);
   };
 
@@ -273,7 +212,8 @@ const StartupsPage: React.FC = () => {
     {
       headerName: "View",
       cellRenderer: (params: ICellRendererParams<Startup>) => (
-        <button onClick={() => {
+        <button
+          onClick={() => {
             if (params.data) {
               handleViewStartup(params.data.id);
             }
@@ -282,28 +222,15 @@ const StartupsPage: React.FC = () => {
           title="View Startup"
           disabled={!params.data}
         >
-         <FaEye size={18} />
+          <FaEye size={18} />
         </button>
       ),
       width: 70,
       cellClass: "justify-center",
     },
-    { field: "id", headerName: "ID", sortable: true, filter: true, width: 130},
+    { field: "id", headerName: "ID", sortable: true, filter: true, width: 130 },
     { field: "name", headerName: "Startup Name", sortable: true, filter: true, editable: true, width: 200 },
     { field: "brandName", headerName: "Brand Name", sortable: true, filter: true, editable: true, width: 200 },
-    //{ field: "businessType", headerName: "Business Type", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "natureOfCompany", headerName: "Nature of Company", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "subDomain", headerName: "Sub Domain", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "patents", headerName: "Patents & Certifications", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "dateOfIncorporation", headerName: "Date of Incorporation", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "registeredCompanyName", headerName: "Registered Company Name", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "incubated", headerName: "Incubated?", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "registeredState", headerName: "Registered State", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "registeredCountry", headerName: "Registered Country", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "companyStage", headerName: "Company Stage", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "domain", headerName: "Domain", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "communityCertificate", headerName: "Community Certificate?", sortable: true, filter: true, editable: true, width: 150 },
-    //{ field: "employees", headerName: "Employees", sortable: true, filter: true, editable: true, width: 150 },
     { field: "revenue", headerName: "Revenue(last FY)", sortable: true, filter: true, editable: true, width: 200 },
     { field: "year", headerName: "Year", sortable: true, filter: true, editable: true, width: 150 },
     { field: "description", headerName: "Description", sortable: true, filter: true, editable: true, width: 200 },
@@ -313,38 +240,79 @@ const StartupsPage: React.FC = () => {
     <div className="p-2 mx-auto">
       <div className="flex space-x-3">
         <h1 className="text-2xl font-semibold">Startups</h1>
-        <button onClick={handleAddStartup} className="text-black rounded-full transition hover:text-green-500 focus:outline-none">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="text-black rounded-full transition hover:text-green-500 focus:outline-none">
+              <div className="relative group">
+                <PlusCircle size={20} />
+                <span className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2 whitespace-nowrap">
+                  Add new Startup
+                </span>
+              </div>
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Add New Startup</DialogTitle>
+              <DialogDescription className="text-sm" >
+                Fill in the details to add a new startup.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const newStartupData = Object.fromEntries(formData.entries());
+              createAndRedirect(newStartupData as Partial<Startup>);
+            }}>
+              <Input
+                type="text"
+                name="name"
+                placeholder="Startup Name"
+                className="w-full p-2 mb-2 border rounded"
+                required
+              />
+              <Input
+                type="text"
+                name="brandName"
+                placeholder="Brand Name"
+                className="w-full p-2 mb-2 border rounded"
+              />
+              <Input
+                type="text"
+                name="year"
+                placeholder="Year"
+                className="w-full p-2 mb-2 border rounded"
+              />
+              <Textarea
+                name="description"
+                placeholder="Description"
+                className="w-full p-2 mb-2 border rounded"
+                rows={3}
+              ></Textarea>
+              <div className="flex justify-end mt-4">
+                <Button type="submit">Save</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+        <button
+          onClick={handleRemoveSelected}
+          className="text-black rounded-full transition hover:text-red-500 focus:outline-none"
+        >
           <div className="relative group">
-          <PlusCircle size={20} 
-          onClick={() => {
-          toast({
-            title: "Startup added Sucessfully!",
-            description: "12 Digit ID generated",
-          })
-        }} />
-        <span className="absolute top-full left-1/2 transform -translate-y-1/2 -mt-8 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-1 w-36">
-            Add new Startup
-        </span>
-        </div>
+            <Trash size={20} />
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2 whitespace-nowrap">
+              Remove selected Startup
+            </span>
+          </div>
         </button>
-        <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" >
-          <div className="relative group">
-          <Trash size={20} 
-          onClick={() => {
-            toast({
-              variant: "destructive",
-              title: "Startup Removed",
-            })
-          }}
-          />
-          <span className="absolute top-full left-1/2 transform -translate-y-1/2 -mt-8 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-1 w-36">
-            Remove selected Startup  
-          </span>
-          </div></button>
       </div>
-
-      <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
-        <AgGridReact headerHeight={40}
+      <div
+        className="ag-theme-quartz font-medium mt-3 mx-auto"
+        style={{ height: 600, width: '100%' }}
+      >
+        <AgGridReact
+          headerHeight={40}
           ref={gridRef}
           rowData={startups}
           columnDefs={columnDefs}
@@ -356,28 +324,20 @@ const StartupsPage: React.FC = () => {
           onRowEditingStopped={onRowEditingStopped}
         />
       </div>
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Confirm Changes</h2>
-            <p className="mb-4">Do you want to save changes?</p>
-            <div className="flex justify-end">
-              <button
-                onClick={handleConfirmChanges}
-                className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition"
-              >
-                Yes
-              </button>
-              <button
-                onClick={handleDiscardChanges}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
-              >
-                No
-              </button>
-            </div>
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Changes</DialogTitle>
+            <DialogDescription>
+              Do you want to save changes?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={handleConfirmChanges} className="mr-2">Yes</Button>
+            <Button onClick={handleDiscardChanges} variant="outline">No</Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
