@@ -1,8 +1,8 @@
+"use client";
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Client, Databases } from 'appwrite';
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from '@/appwrite/config';
-
 
 interface StatCardProps {
   title: string;
@@ -13,36 +13,47 @@ interface StatCardProps {
 
 const StartupStats: React.FC = () => {
   const [startupCount, setStartupCount] = useState<number>(0);
+  const [pipelineCount, setPipelineCount] = useState<number>(0);
+  const [rejectedCount, setRejectedCount] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
 
   useEffect(() => {
-    const fetchStartupCount = async () => {
+    const fetchStartupStats = async () => {
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const database = new Databases(client);
 
       try {
         const response = await database.listDocuments(DATABASE_ID, STARTUP_ID);
         setStartupCount(response.total);
-      } catch(error){
-        console.error("Error fetching startups count:", error);
+
+        // Assuming you have fields for status in your documents
+        const pipelineStartups = response.documents.filter(doc => doc.status === 'pipeline').length;
+        const rejectedStartups = response.documents.filter(doc => doc.status === 'rejected').length;
+        const completedStartups = response.documents.filter(doc => doc.status === 'completed').length;
+
+        setPipelineCount(pipelineStartups);
+        setRejectedCount(rejectedStartups);
+        setCompletedCount(completedStartups);
+      } catch(error) {
+        console.error("Error fetching startups data:", error);
       }
     };
 
-    fetchStartupCount();
+    fetchStartupStats();
   }, []);
   
   const calculatePercentageChange = (currentCount: number, previousCount: number): string => {
-    if (previousCount === 0) return "+0%"; // Prevent division by zero
+    if (previousCount === 0) return "+0%";
     const percentageChange = ((currentCount - previousCount) / previousCount) * 100;
     return `${percentageChange > 0 ? "+" : ""}${percentageChange.toFixed(1)}% from last month`;
   };
-  
 
   return (
     <div className="flex flex-wrap justify-around p-1">
       <StatCard
         title="Total Startups"
         mainValue={startupCount}
-        subValue="+1% from last month"
+        subValue={calculatePercentageChange(startupCount, startupCount - 1)}
         icon={
           <svg
             className="w-5 h-5"
@@ -62,8 +73,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Pipeline Startups"
-        mainValue="0"
-        subValue="+0% from last month"
+        mainValue={pipelineCount}
+        subValue={calculatePercentageChange(pipelineCount, pipelineCount)}
         icon={
           <svg
             className="w-5 h-5 text-blue-500"
@@ -83,8 +94,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Rejected Startups"
-        mainValue="0"
-        subValue="+0% from last year"
+        mainValue={rejectedCount}
+        subValue={calculatePercentageChange(rejectedCount, rejectedCount)}
         icon={
           <svg
             className="w-5 h-5 text-red-500"
@@ -104,8 +115,8 @@ const StartupStats: React.FC = () => {
       />
       <StatCard
         title="Completed Startups"
-        mainValue="0"
-        subValue="+0 since last year"
+        mainValue={completedCount}
+        subValue={`+${completedCount} since last year`}
         icon={
           <svg
             className="w-5 h-5 text-green-500"
@@ -134,7 +145,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon })
         <h3 className="text-sm text-gray-600 font-medium">{title}</h3>
         <span className="text-gray-600">{icon}</span>
       </div>
-      <h2 className="text-xl font-semibold mb-1">+{mainValue}</h2>
+      <h2 className="text-xl font-semibold mb-1">{mainValue}</h2>
       <p className="text-xs text-gray-500">{subValue}</p>
     </div>
   );

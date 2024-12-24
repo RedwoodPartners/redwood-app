@@ -12,7 +12,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-// Convert path to breadcrumb items
 function generateBreadcrumbs(pathname: string): { href: string; label: string }[] {
   const segments = pathname.split("/").filter(Boolean);
   return segments.map((segment, index) => ({
@@ -22,31 +21,28 @@ function generateBreadcrumbs(pathname: string): { href: string; label: string }[
 }
 
 export default function BreadcrumbWithDynamicPath() {
-  const pathname = usePathname(); // Get the current pathname
+  const pathname = usePathname();
 
-  // Safeguard to avoid SSR issues
   if (!pathname) return null;
 
   const breadcrumbs = generateBreadcrumbs(pathname);
 
   return (
-    <>
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink>
-            <Link href="/home">Home</Link>
-          </BreadcrumbLink>
+          <Link href="/home" passHref legacyBehavior>
+            <BreadcrumbLink>Home</BreadcrumbLink>
+          </Link>
         </BreadcrumbItem>
         {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
-        {/* Dynamically render breadcrumb links */}
         {breadcrumbs.map((breadcrumb, index) => (
           <React.Fragment key={index}>
             <BreadcrumbItem>
               {index < breadcrumbs.length - 1 ? (
-                <BreadcrumbLink>
-                  <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
-                </BreadcrumbLink>
+                <Link href={breadcrumb.href} passHref legacyBehavior>
+                  <BreadcrumbLink>{breadcrumb.label}</BreadcrumbLink>
+                </Link>
               ) : (
                 <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
               )}
@@ -56,6 +52,5 @@ export default function BreadcrumbWithDynamicPath() {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-    </>
   );
 }
