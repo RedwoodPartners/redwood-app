@@ -41,6 +41,7 @@ import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 // Menu items.
 const items = [
@@ -122,7 +123,7 @@ export function AppSidebar() {
               <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
                 <Button className="w-full h-8">
-                  <a className="cursor-pointer" href="/admin">Admin</a>
+                  <Link className="cursor-pointer" href="/admin">Admin</Link>
                 </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -149,10 +150,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -171,13 +172,13 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
-                          <a href="/startup">Startups</a>
+                          <Link href="/startup">Startups</Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <a href="/contact">Contacts</a>
+                          <Link href="/contact">Contacts</Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <a href="/projects">Projects</a>
+                          <Link href="/projects">Projects</Link>
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </CollapsibleContent>
@@ -201,7 +202,7 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
-                  <a href="/profile">Profile</a>
+                  <Link href="/profile">Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <span>Billing</span>

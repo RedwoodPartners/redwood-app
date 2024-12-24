@@ -1,17 +1,31 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { EditIcon, SaveIcon, XIcon } from "lucide-react";
+import { SaveIcon, XIcon, PlusCircleIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const CUSTOMER_COLLECTION_ID = "6731d3a0001a04a8f849";
 
@@ -26,161 +40,249 @@ interface CustomerTestimonialsProps {
 }
 
 const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }) => {
-  const [data, setData] = useState<{ [key: string]: string | null }>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [currentTestimonial, setCurrentTestimonial] = useState<any>({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = useCallback(async () => {
+  const fetchTestimonials = useCallback(async () => {
     try {
       const response = await databases.listDocuments(
         DATABASE_ID,
         CUSTOMER_COLLECTION_ID,
         [Query.equal("startupId", startupId)]
       );
-
-      if (response.documents.length > 0) {
-        setData(response.documents[0]);
-        setDocumentId(response.documents[0].$id);
-      } else {
-        setData({});
-      }
+      setTestimonials(response.documents);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching testimonials:", error);
     }
   }, [startupId]);
 
   useEffect(() => {
     if (startupId) {
-      fetchData();
+      fetchTestimonials();
     }
-  }, [startupId, fetchData]); // Added fetchData as a dependency
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  }, [startupId, fetchTestimonials]);
 
   const handleSave = async () => {
     try {
-      const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
+      const testimonialData = Object.fromEntries(
+        Object.entries(currentTestimonial).filter(([key]) => !key.startsWith('$'))
+      );
 
-      if (documentId) {
-        // Update existing document with only user-defined fields
-        await databases.updateDocument(DATABASE_ID, CUSTOMER_COLLECTION_ID, documentId, userDefinedData);
+      if (currentTestimonial.$id) {
+        await databases.updateDocument(
+          DATABASE_ID,
+          CUSTOMER_COLLECTION_ID,
+          currentTestimonial.$id,
+          { ...testimonialData, startupId }
+        );
       } else {
-        // Create a new document for this startup with only user-defined fields
-        const response = await databases.createDocument(DATABASE_ID, CUSTOMER_COLLECTION_ID, "unique()", {
-          ...userDefinedData,
-          startupId: startupId,
-        });
-        setDocumentId(response.$id);
+        await databases.createDocument(
+          DATABASE_ID,
+          CUSTOMER_COLLECTION_ID,
+          "unique()",
+          { ...testimonialData, startupId }
+        );
       }
-      setIsEditing(false);
-      toast({
-        title: "Customer Testimonials saved!",
-      });
+      setIsDialogOpen(false);
+      fetchTestimonials();
+      toast({ title: "Testimonial saved successfully!" });
     } catch (error) {
-      console.error("Error saving data:", error);
+      console.error("Error saving testimonial:", error);
+      toast({ title: "Error saving testimonial", variant: "destructive" });
     }
   };
 
-  const handleCancel = () => {
-    fetchData(); // Re-fetch the data to discard changes
-    setIsEditing(false);
+  const handleEdit = (testimonial: any) => {
+    setCurrentTestimonial(testimonial);
+    setIsDialogOpen(true);
   };
 
-  const handleChange = (field: string, value: string) => {
-    setData((prevData) => ({ ...prevData, [field]: value }));
+  const handleDelete = async () => {
+    try {
+      await databases.deleteDocument(DATABASE_ID, CUSTOMER_COLLECTION_ID, currentTestimonial.$id);
+      setIsDialogOpen(false);
+      fetchTestimonials();
+      toast({ title: "Testimonial deleted successfully!" });
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      toast({ title: "Error deleting testimonial", variant: "destructive" });
+    }
   };
 
   return (
-    <div>
-      <div className="flex items-center">
+    <div className="">
+      <div className="flex justify-between items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Customer Testimonials</h2>
-        <div className="relative group">
-                  <EditIcon
-                    size={25}
-                    className="-mt-6 cursor-pointer"
-                    onClick={handleEdit}
-                  />
-                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                    Edit
-                  </span>
-                </div>
-        {isEditing && (
-          <div className="flex -mt-6 ml-5">
-              <div className="relative group ml-3">
-                <SaveIcon size={25} 
-                            className="cursor-pointer text-green-500"
-                            onClick={() => {
-                            handleSave();
-                            toast({
-                                title: "Customer Testimonials saved!!",
-                            })
-                          }}
-                          />
-                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
-                          </span>
-              </div>
-              <div className="relative group ml-3">
-                          <XIcon
-                            size={25}
-                            className="cursor-pointer text-red-500"
-                            onClick={handleCancel}
-                          />
-                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                            Cancel
-                          </span>
-              </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <div className="cursor-pointer" onClick={() => setCurrentTestimonial({})}>
+              <PlusCircleIcon size={20} className="mr-3 mb-1" />
             </div>
-        )}
+          </DialogTrigger>
+          <DialogContent className="w-full max-w-5xl">
+            <DialogHeader>
+              <DialogTitle>{currentTestimonial.$id ? "Edit" : "Add"} Testimonial</DialogTitle>
+              <DialogDescription>
+                Enter the customer testimonial details here. Click save when you re done.
+              </DialogDescription>
+            </DialogHeader>
+            <TestimonialForm
+              testimonial={currentTestimonial}
+              onChange={setCurrentTestimonial}
+              onSave={handleSave}
+              onDelete={handleDelete}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-      <AccordionDemo data={data} isEditing={isEditing} onChange={handleChange} />
+      <TestimonialsTable testimonials={testimonials} onEdit={handleEdit} />
     </div>
   );
 };
 
-export default CustomerTestimonials;
-
-interface AccordionDemoProps {
-  data: { [key: string]: string | null };
-  isEditing: boolean;
-  onChange: (field: string, value: string) => void;
+interface TestimonialFormProps {
+  testimonial: any;
+  onChange: (testimonial: any) => void;
+  onSave: () => void;
+  onDelete: () => void;
 }
 
-const AccordionDemo: React.FC<AccordionDemoProps> = ({
-  data,
-  isEditing,
-  onChange,
-}) => {
-  const fields = [
-    { id: "query1", label: "What services/products are using of the company?" },
-    { id: "query2", label: "Your View on Service Utilization—will the Service/product be beneficial for your company/personal use?" },
-    { id: "query3", label: "Unique selling proposition of the company—what made you switch to using this company's service/product—how were you doing earlier?" },
-    { id: "query4", label: "Future of this Segment—what do you think will be the future of this segment?" },
-  ];
+const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onChange, onSave, onDelete }) => {
+  const handleChange = (field: string, value: string) => {
+    onChange({ ...testimonial, [field]: value });
+  };
 
   return (
-    <Accordion type="single" collapsible>
-      {fields.map((field) => (
-        <AccordionItem
-          key={field.id}
-          value={field.id}
-          className="px-3 mb-2 mx-auto bg-white rounded-lg shadow-lg border border-gray-100"
-        >
-          <AccordionTrigger className="text-sm font-semibold">
-            {field.label}
-          </AccordionTrigger>
-          <AccordionContent className="mt-2 text-black">
-            <Textarea
-              value={data[field.id] || ""}
-              onChange={(e) => onChange(field.id, e.target.value)}
-              disabled={!isEditing}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+    <div className="space-y-4 w-full">
+      <div className="grid grid-cols-4 gap-4 w-full">
+        <div className="space-y-2">
+          <Label htmlFor="customerName">Customer Name</Label>
+          <Input
+            id="customerName"
+            placeholder="Enter customer name"
+            value={testimonial.customerName || ""}
+            onChange={(e) => handleChange("customerName", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="designation">Designation</Label>
+          <Input
+            id="designation"
+            placeholder="Enter designation"
+            value={testimonial.designation || ""}
+            onChange={(e) => handleChange("designation", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            placeholder="Enter phone number"
+            value={testimonial.phone || ""}
+            onChange={(e) => handleChange("phone", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            placeholder="Enter email address"
+            value={testimonial.email || ""}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="query1">What services/products are you using from the company?</Label>
+          <Textarea
+            id="query1"
+            value={testimonial.query1 || ""}
+            onChange={(e) => handleChange("query1", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="query2">Your View on Service Utilization-will the service/product be beneficial for your company/personal use</Label>
+          <Textarea
+            id="query2"
+            value={testimonial.query2 || ""}
+            onChange={(e) => handleChange("query2", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="query3">Unique selling proposition of the company-what made you switch to using this company s service/product-how were you doing earlier?</Label>
+          <Textarea
+            id="query3"
+            value={testimonial.query3 || ""}
+            onChange={(e) => handleChange("query3", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="query4">Future of this Segment- in your view, what will be the future of this segment?</Label>
+          <Textarea
+            id="query4"
+            value={testimonial.query4 || ""}
+            onChange={(e) => handleChange("query4", e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end space-x-2">
+        <Button onClick={onSave}>Save</Button>
+        {testimonial.$id && (
+          <Button variant="destructive" onClick={onDelete}>
+            Delete
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
+
+interface TestimonialsTableProps {
+  testimonials: any[];
+  onEdit: (testimonial: any) => void;
+}
+
+const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onEdit }) => {
+  return (
+    <Table className="border border-gray-100">
+      <TableCaption>List of Customer Testimonials</TableCaption>
+      <TableHeader>
+        <TableRow className="bg-gray-100">
+          <TableHead>Customer Name</TableHead>
+          <TableHead>Designation</TableHead>
+          <TableHead>Phone</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>What services/products are using of the company?
+          </TableHead>
+          <TableHead>Your View on Service Utilization-will the service/product be beneficial for your company/personal use.</TableHead>
+          <TableHead>Unique selling proposition of the company-what you switch to using this company’s service/product-how were you doing earlier?
+          </TableHead>
+          <TableHead>Future of this Segment- in your view, what will be the future of this segment?</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {testimonials.map((testimonial) => (
+          <TableRow
+            key={testimonial.$id}
+            onDoubleClick={() => onEdit(testimonial)}
+            className="cursor-pointer hover:bg-gray-100"
+          >
+            <TableCell>{testimonial.customerName}</TableCell>
+            <TableCell>{testimonial.designation}</TableCell>
+            <TableCell>{testimonial.phone}</TableCell>
+            <TableCell>{testimonial.email}</TableCell>
+            <TableCell>{testimonial.query1}</TableCell>
+            <TableCell>{testimonial.query2}</TableCell>
+            <TableCell>{testimonial.query3}</TableCell>
+            <TableCell>{testimonial.query4}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+};
+
+export default CustomerTestimonials;
