@@ -10,6 +10,10 @@ import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { FaEye } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
 
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+
 export const FUND_RAISED_ID = "6731e2fb000d9580025f";
 const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
 
@@ -22,6 +26,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [changedRows, setChangedRows] = useState(new Set<number>());
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
+  const [showDeleteFileDialog, setShowDeleteFileDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<{ index: number; fileId: string } | null>(null);
   const [newInvestment, setNewInvestment] = useState({
     stage: "",
     round: "",
@@ -30,6 +36,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     amount: "",
     description: "",
   });
+  
 
   const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
   const databases = new Databases(client);
@@ -171,6 +178,44 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       });
     }
   };
+  const handleDeleteFile = async (index: number, fileId: string) => {
+    setFileToDelete({ index, fileId });
+    setShowDeleteFileDialog(true);
+  };
+  const confirmDeleteFile = async () => {
+    if (fileToDelete) {
+      try {
+        await storage.deleteFile(FUND_DOCUMENTS_ID, fileToDelete.fileId);
+        await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, investments[fileToDelete.index].$id, {
+          fileId: null,
+          fileName: null,
+        });
+
+        const updatedInvestments = [...investments];
+        updatedInvestments[fileToDelete.index] = {
+          ...updatedInvestments[fileToDelete.index],
+          fileId: null,
+          fileName: null,
+        };
+        setInvestments(updatedInvestments);
+
+        toast({
+          title: "File deleted",
+          description: "The file has been successfully deleted.",
+        });
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete the file. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+    setShowDeleteFileDialog(false);
+    setFileToDelete(null);
+  };
+
 
   const totalAmount = investments.reduce((sum, investment) => {
     const amount = parseFloat(investment.amount.replace(/₹|,/g, ""));
@@ -313,7 +358,12 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                         </span>
                       </div>
                     </label>
-                    <p className="text-xs">{investment.fileName}</p>
+
+                    {/*Delete file*/ }
+                    <button onClick={() => handleDeleteFile(index, investment.fileId)} className="text-red-500">
+                      <p className="text-xs text-gray-800 underline">{investment.fileName}</p>
+                    </button>
+                    
                   </div>
                 )}
               </TableCell>
@@ -403,6 +453,24 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           </TableRow>
         </TableBody>
       </Table>
+      <Dialog open={showDeleteFileDialog} onOpenChange={setShowDeleteFileDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete File</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this file? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteFileDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteFile}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

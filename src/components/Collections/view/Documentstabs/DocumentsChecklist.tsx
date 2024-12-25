@@ -16,6 +16,9 @@ import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -28,6 +31,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [docData, setDocData] = useState<any[]>([]);
   const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
   const [rowToDelete, setRowToDelete] = useState<number | null>(null);
+  const [fileToDelete, setFileToDelete] = useState<{ index: number, fileId: string } | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
   const [newDoc, setNewDoc] = useState({
     docName: "",
     docType: "",
@@ -95,7 +101,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
   const handleUploadFile = async (index: number, file: File) => {
     const documentId = docData[index].$id;
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'csv'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
     if (fileExtension && allowedExtensions.includes(fileExtension)) {
@@ -177,6 +183,41 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         variant: "destructive",
       });
     }
+  };
+  
+
+  const handleDeleteFile = async () => {
+    if (fileToDelete) {
+      try {
+        await storage.deleteFile(BUCKET_ID, fileToDelete.fileId);
+        await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, docData[fileToDelete.index].$id, {
+          fileId: null,
+          fileName: null,
+        });
+
+        const updatedData = [...docData];
+        updatedData[fileToDelete.index] = {
+          ...updatedData[fileToDelete.index],
+          fileId: null,
+          fileName: null,
+        };
+        setDocData(updatedData);
+
+        toast({
+          title: "File deleted",
+          description: "The file has been successfully deleted.",
+        });
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete the file.",
+          variant: "destructive",
+        });
+      }
+    }
+    setIsDeleteDialogOpen(false);
+    setFileToDelete(null);
   };
 
   return (
@@ -282,7 +323,18 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       </span>
                     </div>
                   </label>
-                  <p className="text-xs">{row.fileName}</p>
+
+                  {/*Delete file */}
+                  <button
+                    onClick={() => {
+                      setFileToDelete({ index, fileId: row.fileId });
+                      setIsDeleteDialogOpen(true);
+                        }}
+                        className="text-gray-800 underline"
+                      >
+                      <p className="text-xs">{row.fileName}</p>
+                  </button>
+                  
                 </div>
               </TableCell>
               {rowToDelete === index && (
@@ -369,6 +421,24 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
           </TableRow>
         </TableBody>
       </Table>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete File</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this file? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteFile}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
