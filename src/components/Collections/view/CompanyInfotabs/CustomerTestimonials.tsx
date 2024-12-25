@@ -247,10 +247,11 @@ interface TestimonialsTableProps {
 
 const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onEdit }) => {
   return (
-    <Table className="border border-gray-100">
+    <div className="mb-6 p-3 bg-white shadow-md rounded-lg border border-gray-300">
+    <Table>
       <TableCaption>List of Customer Testimonials</TableCaption>
       <TableHeader>
-        <TableRow className="bg-gray-100">
+        <TableRow>
           <TableHead>Customer Name</TableHead>
           <TableHead>Designation</TableHead>
           <TableHead>Phone</TableHead>
@@ -282,6 +283,7 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 };
 

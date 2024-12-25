@@ -150,6 +150,10 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   };
 
   return (
+    <>
+    <h3 className="container text-lg font-medium mb-2 -mt-4">
+        Fund Ask
+      </h3>
     <div className="container mx-auto space-y-4">
       <FundTable
         title="Proposed Fund Ask"
@@ -174,6 +178,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         editingItems={editingItems}
       />
     </div>
+    </>
   );
 };
 
@@ -222,9 +227,6 @@ const FundTable: React.FC<FundTableProps> = ({
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">
-        Fund Ask
-      </h3>
       <div className="p-4 bg-white border border-gray-300 rounded shadow">
         <h4 className="mb-4 text-lg font-semibold">{title}</h4>
         <Table>
