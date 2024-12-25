@@ -276,12 +276,14 @@ const StartupsPage: React.FC = () => {
                 name="brandName"
                 placeholder="Brand Name"
                 className="w-full p-2 mb-2 border rounded"
+                required
               />
               <Input
                 type="text"
                 name="year"
                 placeholder="Year"
                 className="w-full p-2 mb-2 border rounded"
+                required
               />
               <Textarea
                 name="description"

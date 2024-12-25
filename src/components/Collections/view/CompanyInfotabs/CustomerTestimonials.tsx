@@ -255,12 +255,12 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
           <TableHead>Designation</TableHead>
           <TableHead>Phone</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>What services/products are using of the company?
+          <TableHead className="w-96">What services/products are using of the company?
           </TableHead>
-          <TableHead>Your View on Service Utilization-will the service/product be beneficial for your company/personal use.</TableHead>
-          <TableHead>Unique selling proposition of the company-what you switch to using this company’s service/product-how were you doing earlier?
+          <TableHead className="w-96">Your View on Service Utilization-will the service/product be beneficial for your company/personal use.</TableHead>
+          <TableHead className="w-96">Unique selling proposition of the company-what you switch to using this company’s service/product-how were you doing earlier?
           </TableHead>
-          <TableHead>Future of this Segment- in your view, what will be the future of this segment?</TableHead>
+          <TableHead className="w-96">Future of this Segment- in your view, what will be the future of this segment?</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
