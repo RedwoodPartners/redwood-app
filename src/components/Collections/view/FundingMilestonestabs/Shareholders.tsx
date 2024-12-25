@@ -293,9 +293,9 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               <TableHead>Is Partner/Director</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
-              <TableHead>Educational Qualifications</TableHead>
+              {/*<TableHead>Educational Qualifications</TableHead>
               <TableHead>Work Experience</TableHead>
-              <TableHead>Associated Companies</TableHead>
+              <TableHead>Associated Companies</TableHead>*/}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -325,9 +325,9 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 <TableCell>{shareholder.isPartner || "N/A"}</TableCell>
                 <TableCell>{shareholder.email || "N/A"}</TableCell>
                 <TableCell>{shareholder.phone || "N/A"}</TableCell>
-                <TableCell>{shareholder.educationalQualifications || "N/A"}</TableCell>
+                {/*<TableCell>{shareholder.educationalQualifications || "N/A"}</TableCell>
                 <TableCell>{shareholder.workExperience || "N/A"}</TableCell>
-                <TableCell>{shareholder.associatedCompanies || "N/A"}</TableCell>
+                <TableCell>{shareholder.associatedCompanies || "N/A"}</TableCell>*/}
               </TableRow>
             ))}
           </TableBody>

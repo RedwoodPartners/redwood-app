@@ -30,7 +30,10 @@ const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
 });
 
 const calculateTotal = (funds: FundItem[]): number => {
-  return funds.reduce((total, fund) => total + parseFloat(fund.amount || '0'), 0);
+  return funds.reduce((total, fund) => {
+    const cleanAmount = fund.amount.replace(/,/g, '');
+    return total + (parseFloat(cleanAmount) || 0);
+  }, 0);
 };
 
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
@@ -99,7 +102,13 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     type: "proposed" | "validated"
   ) => {
     const funds = type === "proposed" ? [...proposedFunds] : [...validatedFunds];
-    funds[index] = { ...funds[index], [field]: value };
+    if (field === "amount") {
+      const cleanValue = value.replace(/[^\d]/g, '');
+      const formattedValue = new Intl.NumberFormat('en-IN').format(parseInt(cleanValue) || 0);
+      funds[index] = { ...funds[index], [field]: formattedValue };
+    } else {
+      funds[index] = { ...funds[index], [field]: value };
+    }
     if (type === "proposed") {
       setProposedFunds(funds);
     } else {
@@ -202,93 +211,108 @@ const FundTable: React.FC<FundTableProps> = ({
     setDeleteConfirmation({ ...deleteConfirmation, [id]: false });
   };
 
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <div>
-    <h3 className="container text-lg font-medium mb-2 -mt-4">
+      <h3 className="container text-lg font-medium mb-2 -mt-4">
         Fund Ask
-    </h3>
-    <div className="p-4 bg-white border border-gray-300 rounded shadow">
-      <h4 className="mb-4 text-lg font-semibold">{title}</h4>
-      <Table>
-        <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead>Utilization Description</TableHead>
-            <TableHead>Budgeted Amount</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {funds.map((item, index) => (
-            <TableRow key={item.$id || index} onDoubleClick={() => handleDoubleClick(item.$id!)}>
+      </h3>
+      <div className="p-4 bg-white border border-gray-300 rounded shadow">
+        <h4 className="mb-4 text-lg font-semibold">{title}</h4>
+        <Table>
+          <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead>Utilization Description</TableHead>
+              <TableHead>Budgeted Amount</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {funds.map((item, index) => (
+              <TableRow key={item.$id || index} onDoubleClick={() => handleDoubleClick(item.$id!)}>
+                <TableCell>
+                  <Textarea
+                    value={item.description}
+                    onChange={(e) => onEditChange(index, "description", e.target.value)}
+                    className="w-full h-5 border-none focus:outline-none"
+                  />
+                </TableCell>
+                <TableCell>
+                  <input
+                    type="text"
+                    value={item.amount}
+                    onChange={(e) => onEditChange(index, "amount", e.target.value)}
+                    className="w-full h-5 border-none focus:outline-none"
+                  />
+                </TableCell>
+                <TableCell>
+                  {deleteConfirmation[item.$id!] ? (
+                    <div className="space-x-2">
+                      <span>Delete row?</span>
+                      <button
+                        onClick={() => onDelete(item.$id!)}
+                        className="bg-red-500 text-white px-2 py-1 rounded"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => handleDiscard(item.$id!)}
+                        className="bg-gray-300 text-black px-2 py-1 rounded"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : editingItems[item.$id!] ? (
+                    <button onClick={() => onSave(index)} className="text-green-500">
+                      <SaveIcon size={20} />
+                    </button>
+                  ) : null}
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow>
               <TableCell>
-                <Textarea
-                  value={item.description}
-                  onChange={(e) => onEditChange(index, "description", e.target.value)}
+                <input
+                  disabled
+                  value={newFund.description}
+                  onChange={(e) => setNewFund({ ...newFund, description: e.target.value })}
                   className="w-full h-5 border-none focus:outline-none"
+                  placeholder="Add Description"
                 />
               </TableCell>
               <TableCell>
                 <input
                   type="text"
-                  value={item.amount}
-                  onChange={(e) => onEditChange(index, "amount", e.target.value)}
+                  disabled
+                  value={newFund.amount}
+                  onChange={(e) => setNewFund({ ...newFund, amount: e.target.value })}
                   className="w-full h-5 border-none focus:outline-none"
+                  placeholder="Add Amount"
                 />
               </TableCell>
               <TableCell>
-                {deleteConfirmation[item.$id!] ? (
-                  <div className="space-x-2">
-                    <span>Delete row?</span>
-                    <button onClick={() => onDelete(item.$id!)} className="bg-red-500 text-white px-2 py-1 rounded">
-                      Yes
-                    </button>
-                    <button onClick={() => handleDiscard(item.$id!)} className="bg-gray-300 text-black px-2 py-1 rounded">
-                      No
-                    </button>
-                  </div>
-                ) : editingItems[item.$id!] ? (
-                  <button onClick={() => onSave(index)} className="text-green-500">
-                    <SaveIcon size={20} />
-                  </button>
-                ) : null}
+                <button onClick={onAdd} className="text-blue-500">
+                  <PlusCircle size={20} />
+                </button>
               </TableCell>
             </TableRow>
-          ))}
-          <TableRow>
-            <TableCell>
-              <input
-                disabled
-                value={newFund.description}
-                onChange={(e) => setNewFund({ ...newFund, description: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Add Description"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newFund.amount}
-                onChange={(e) => setNewFund({ ...newFund, amount: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Add Amount"
-              />
-            </TableCell>
-            <TableCell>
-              <button onClick={onAdd} className="text-blue-500">
-                <PlusCircle size={20} />
-              </button>
-            </TableCell>
-          </TableRow>
-          <TableRow className="font-bold">
-            <TableCell>Total</TableCell>
-            <TableCell>₹ {total.toFixed(2)}</TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+            <TableRow className="font-bold">
+              <TableCell>Total</TableCell>
+              <TableCell>{formatCurrency(total)}</TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
