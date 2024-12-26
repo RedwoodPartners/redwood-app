@@ -177,7 +177,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           <NavigationMenu className="-ml-2">
             <NavigationMenuList className="flex flex-wrap space-x-2 mt-2">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold">
+                <NavigationMenuTrigger className="font-bold bg-transparent">
                   Company Information
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2 w-full sm:w-64 z-20">
@@ -226,7 +226,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold">
+                <NavigationMenuTrigger className="font-bold bg-transparent">
                   Funding and Milestones
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 sm:left-48 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
@@ -275,7 +275,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-bold">
+                <NavigationMenuTrigger className="font-bold bg-transparent">
                   Compliance
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
@@ -325,7 +325,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger  className="font-bold">
+                <NavigationMenuTrigger  className="font-bold bg-transparent">
                   Documents
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="absolute left-0 ml-36 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2">
