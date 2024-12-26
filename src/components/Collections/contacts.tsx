@@ -32,8 +32,23 @@ type Contact = Models.Document & {
   postalCode: string;
 };
 
+type GroupedContact = {
+  startupId: string;
+  companyWebsite: string;
+  email: string;
+  phone1: string;
+  phone2: string;
+  addresses: {
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+  }[];
+};
+
 const ContactsTable: React.FC = () => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [groupedContacts, setGroupedContacts] = useState<GroupedContact[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -44,7 +59,31 @@ const ContactsTable: React.FC = () => {
           DATABASE_ID,
           CONTACT_ID
         );
-        setContacts(response.documents);
+        const contacts = response.documents;
+
+        // Group contacts by startupId
+        const groupedContactsMap = contacts.reduce((acc, contact) => {
+          if (!acc[contact.startupId]) {
+            acc[contact.startupId] = {
+              startupId: contact.startupId,
+              companyWebsite: contact.companyWebsite,
+              email: contact.email,
+              phone1: contact.phone1,
+              phone2: contact.phone2,
+              addresses: [],
+            };
+          }
+          acc[contact.startupId].addresses.push({
+            address1: contact.address1,
+            address2: contact.address2,
+            city: contact.city,
+            state: contact.state,
+            postalCode: contact.postalCode,
+          });
+          return acc;
+        }, {} as Record<string, GroupedContact>);
+
+        setGroupedContacts(Object.values(groupedContactsMap));
       } catch (error) {
         console.error("Error fetching contacts:", error);
         toast({
@@ -64,11 +103,11 @@ const ContactsTable: React.FC = () => {
       <h2 className="text-xl font-bold mb-4">All Contacts</h2>
       {loading ? (
         <p>Loading contacts...</p>
-      ) : contacts.length === 0 ? (
+      ) : groupedContacts.length === 0 ? (
         <p>No contacts found.</p>
       ) : (
         <Table className="border border-gray-100 rounded-lg">
-          <TableCaption>A list of all contacts.</TableCaption>
+          <TableCaption>A list of all contacts grouped by Startup ID.</TableCaption>
           <TableHeader className="bg-gray-100">
             <TableRow>
               <TableHead>Startup ID</TableHead>
@@ -76,19 +115,35 @@ const ContactsTable: React.FC = () => {
               <TableHead>Email</TableHead>
               <TableHead>Phone 1</TableHead>
               <TableHead>Phone 2</TableHead>
-              <TableHead>Address</TableHead>
+              <TableHead>Registered Address</TableHead>
+              <TableHead>Communication Address</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((contact) => (
-              <TableRow key={contact.$id}>
+            {groupedContacts.map((contact) => (
+              <TableRow key={contact.startupId}>
                 <TableCell>{contact.startupId}</TableCell>
                 <TableCell>{contact.companyWebsite}</TableCell>
                 <TableCell>{contact.email}</TableCell>
                 <TableCell>{contact.phone1}</TableCell>
                 <TableCell>{contact.phone2}</TableCell>
                 <TableCell>
-                  {`${contact.address1}, ${contact.address2}, ${contact.city}, ${contact.state} - ${contact.postalCode}`}
+                  {contact.addresses[0] && (
+                    <>
+                      <p>{contact.addresses[0].address1}</p>
+                      <p>{contact.addresses[0].address2}</p>
+                      <p>{`${contact.addresses[0].city}, ${contact.addresses[0].state} - ${contact.addresses[0].postalCode}`}</p>
+                    </>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {contact.addresses[1] && (
+                    <>
+                      <p>{contact.addresses[1].address1}</p>
+                      <p>{contact.addresses[1].address2}</p>
+                      <p>{`${contact.addresses[1].city}, ${contact.addresses[1].state} - ${contact.addresses[1].postalCode}`}</p>
+                    </>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

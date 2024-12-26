@@ -75,7 +75,7 @@ export function NoStartups() {
             accessibilityLayer
             data={chartData}
             margin={{
-              top: 20,
+              top: 25,
             }}
           >
             <CartesianGrid vertical={false} />

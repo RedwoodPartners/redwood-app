@@ -20,7 +20,7 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex w-full">
+      <div className="flex w-full bg-gradient-to-b from-blue-50 via-pink-50 to-transparent">
         {/* Sidebar */}
         <AppSidebar />
 
