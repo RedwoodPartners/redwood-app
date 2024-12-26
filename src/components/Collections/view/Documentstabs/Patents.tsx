@@ -114,7 +114,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
   return (
     <div>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Patents</h3>
-      <Table className="border border-gray-300 shadow-lg">
+      <Table className="border border-gray-300 shadow-lg bg-white">
         <TableCaption>Patents Information</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-100">

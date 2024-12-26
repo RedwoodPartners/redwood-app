@@ -103,7 +103,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   return (
     <div>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Incubation</h3>
-      <Table className="border border-gray-300 shadow-lg">
+      <Table className="border border-gray-300 shadow-lg bg-white">
         <TableCaption>Incubation Program Information</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-100">
