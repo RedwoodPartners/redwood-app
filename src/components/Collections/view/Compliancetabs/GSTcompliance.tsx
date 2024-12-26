@@ -92,7 +92,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   return (
     <div>
       <h3 className="container text-lg font-medium mb-2 -mt-4">GST Compliance</h3>
-      <Table className="border border-gray-300 shadow-lg">
+      <Table className="border border-gray-300 shadow-lg bg-white">
         <TableCaption>GST Compliance Information</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-100">

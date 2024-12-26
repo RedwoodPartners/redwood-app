@@ -101,7 +101,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   return (
     <div>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
-      <Table className="border border-gray-300 shadow-lg">
+      <Table className="border border-gray-300 shadow-lg bg-white">
         <TableCaption>A list of recent Tranches & Milestones.</TableCaption>
         <TableHeader>
           <TableRow className="bg-gray-50">

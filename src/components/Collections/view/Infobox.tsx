@@ -9,7 +9,7 @@ interface InfoBoxProps {
 
 const InfoBox: React.FC<InfoBoxProps> = ({ name }) => {
   return (
-    <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 bg-white space-y-4 sm:space-y-0">
+    <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
         <span className="font-semibold text-gray-700 text-sm sm:text-base">
