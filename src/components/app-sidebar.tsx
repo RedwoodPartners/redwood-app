@@ -91,7 +91,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="bg-gradient-to-br from-blue-50 via-purple-50 rounded-t-lg text-sidebar-primary-foreground font-semibold">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -116,7 +116,7 @@ export function AppSidebar() {
                       <rect width="18" height="12" x="3" y="10" rx="2"></rect>
                     </svg>
                   </div>
-                  <span className="ml-1">Redwood Partners</span>
+                  <span className="ml-1 text-black">Redwood Partners</span>
                   <ChevronDown className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -142,7 +142,7 @@ export function AppSidebar() {
       </div> */}
 
 
-      <SidebarContent>
+      <SidebarContent className="">
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -190,7 +190,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

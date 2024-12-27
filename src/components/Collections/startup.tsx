@@ -228,7 +228,20 @@ const StartupsPage: React.FC = () => {
       width: 70,
       cellClass: "justify-center",
     },
-    { field: "id", headerName: "ID", sortable: true, filter: true, width: 130 },
+    { field: "id", headerName: "ID", sortable: true, filter: true, width: 130,
+      cellRenderer: (params: ICellRendererParams<Startup>) => (
+      <button
+      onClick={() => {
+        if (params.data) {
+          handleViewStartup(params.data.id);
+        }
+      }}
+      className=""
+    >
+      {params.value}
+    </button>
+      )
+     },
     { field: "name", headerName: "Startup Name", sortable: true, filter: true, editable: true, width: 200 },
     { field: "brandName", headerName: "Brand Name", sortable: true, filter: true, editable: true, width: 200 },
     { field: "revenue", headerName: "Revenue(last FY)", sortable: true, filter: true, editable: true, width: 200 },
