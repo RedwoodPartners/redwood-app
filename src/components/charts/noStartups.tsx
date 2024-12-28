@@ -60,7 +60,7 @@ export function NoStartups() {
   }, []);
 
   return (
-    <Card className="flex flex-col shadow-none w-full sm:w-[400px]">
+    <Card className="flex flex-col shadow-none w-[300px] h-auto">
       <CardHeader>
         <CardTitle>Startups</CardTitle>
         <CardDescription>
