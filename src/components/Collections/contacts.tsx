@@ -16,6 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { Input } from "@/components/ui/input";
+
 const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
 const databases = new Databases(client);
 
@@ -49,7 +51,9 @@ type GroupedContact = {
 
 const ContactsTable: React.FC = () => {
   const [groupedContacts, setGroupedContacts] = useState<GroupedContact[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<GroupedContact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,7 +87,9 @@ const ContactsTable: React.FC = () => {
           return acc;
         }, {} as Record<string, GroupedContact>);
 
-        setGroupedContacts(Object.values(groupedContactsMap));
+        const groupedContactsArray = Object.values(groupedContactsMap);
+        setGroupedContacts(groupedContactsArray);
+        setFilteredContacts(groupedContactsArray);
       } catch (error) {
         console.error("Error fetching contacts:", error);
         toast({
@@ -98,15 +104,42 @@ const ContactsTable: React.FC = () => {
     fetchContacts();
   }, [toast]);
 
+  useEffect(() => {
+    const filtered = groupedContacts.filter((contact) =>
+      contact.startupId.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredContacts(filtered);
+  }, [searchTerm, groupedContacts]);
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
   return (
-    <div className="p-2 bg-white rounded-lg">
+    <div className="p-2 rounded-lg">
       <h2 className="text-xl font-bold mb-4">All Contacts</h2>
+      <Input
+        type="text"
+        placeholder="Search by Startup ID"
+        value={searchTerm}
+        onChange={handleSearch}
+        className="mb-4 w-44"
+      />
       {loading ? (
-        <p>Loading contacts...</p>
-      ) : groupedContacts.length === 0 ? (
+        <>
+        <div className="flex justify-center mt-56">
+          <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-labelledby="title" role="img">
+          <title id="title">Loading...</title>
+          <circle cx="50" cy="50" r="35" stroke="gray" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="55 35">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite"/>
+          </circle>
+          </svg>
+        </div>
+        </>
+      ) : filteredContacts.length === 0 ? (
         <p>No contacts found.</p>
       ) : (
-        <Table className="border border-gray-100 rounded-lg">
+        <Table className="border border-gray-100 rounded-lg bg-white">
           <TableCaption>A list of all contacts grouped by Startup ID.</TableCaption>
           <TableHeader className="bg-gray-100">
             <TableRow>
@@ -120,7 +153,7 @@ const ContactsTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {groupedContacts.map((contact) => (
+            {filteredContacts.map((contact) => (
               <TableRow key={contact.startupId}>
                 <TableCell>{contact.startupId}</TableCell>
                 <TableCell>{contact.companyWebsite}</TableCell>

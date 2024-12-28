@@ -2,6 +2,18 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Client, Account } from "appwrite";
 import { PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const UsersList: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -42,7 +54,7 @@ const UsersList: React.FC = () => {
           const res = await fetch("/api/users");
           const data = await res.json();
           setUsers(data.users);
-          setFilteredUsers(data.users); // Initialize filtered users
+          setFilteredUsers(data.users);
         } catch (err) {
           setError("Error fetching users");
         }
@@ -51,7 +63,6 @@ const UsersList: React.FC = () => {
     }
   }, [isAdmin]);
 
-  // Filter users based on search query
   useEffect(() => {
     if (searchQuery) {
       setFilteredUsers(
@@ -71,7 +82,6 @@ const UsersList: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, newLabel }),
       });
-      // Update local state immediately after successful API call
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.$id === userId ? { ...user, labels: [newLabel] } : user
@@ -83,23 +93,22 @@ const UsersList: React.FC = () => {
     }
   };
 
-  if (loading) return <div>
+  if (loading) return (
     <div className="flex justify-center mt-56">
-          <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-labelledby="title" role="img">
-          <title id="title">Loading...</title>
-          <circle cx="50" cy="50" r="35" stroke="gray" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="55 35">
+      <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-labelledby="title" role="img">
+        <title id="title">Loading...</title>
+        <circle cx="50" cy="50" r="35" stroke="gray" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="55 35">
           <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite"/>
-          </circle>
-          </svg>
-        </div>
-  </div>;
+        </circle>
+      </svg>
+    </div>
+  );
 
-  if (!isAdmin)
-    return (
-      <div className="text-red-500 font-medium">
-        Access Denied: You must be an admin to view this page.
-      </div>
-    );
+  if (!isAdmin) return (
+    <div className="text-red-500 font-medium">
+      Access Denied: You must be an admin to view this page.
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-3">
@@ -109,70 +118,78 @@ const UsersList: React.FC = () => {
 
       {error && <p className="text-red-500 font-medium mb-4">{error}</p>}
 
-      {/* Search Bar */}
-      <input
-        type="text"
-        placeholder="Search by email"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 h-8  p-2 border border-gray-300 rounded"
-      />
-
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200 rounded-lg shadow-md">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase">#</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase">Last Activity</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase">Labels</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.map((user, index) => (
-              <tr key={user.$id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{index + 1}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{user.name || "N/A"}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{user.email || "N/A"}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{user.latestActivity || "N/A"}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                  <select value={user.labels[0] || "User"} // Default to "User" if no label
-                    onChange={(e) => handleLabelChange(user.$id, e.target.value)}>
-                    <option value="user">User</option>
-                    <option value="editor">Editor</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Role Permissions Section */}
-        <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-black rounded-lg shadow-lg max-w-md mx-auto">
-          <h2 className="text-xl font-semibold mb-4 text-center border-b border-white pb-2">Role Permissions</h2>
-          <ul className="space-y-4">
-            <li className="flex items-start">
-              <span className="font-semibold text-base w-24">Admin:</span>
-              <span className="ml-4">Create, Read, Update, Delete</span>
-            </li>
-            <li className="flex items-start">
-              <span className="font-semibold text-base w-24">Moderator:</span>
-              <span className="ml-4">Create, Read, Update</span>
-            </li>
-            <li className="flex items-start">
-              <span className="font-semibold text-base w-24">Editor:</span>
-              <span className="ml-4">Read, Update</span>
-            </li>
-            <li className="flex items-start">
-              <span className="font-semibold text-base w-24">User:</span>
-              <span className="ml-4">Read</span>
-            </li>
-          </ul>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <Input
+          type="text"
+          placeholder="Search by email"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 w-36 p-2 border border-gray-300 rounded"
+        />
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">View Role Permissions</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Role Permissions</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold">Admin:</span>
+                <span className="col-span-3">Create, Read, Update, Delete</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold">Moderator:</span>
+                <span className="col-span-3">Create, Read, Update</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold">Editor:</span>
+                <span className="col-span-3">Read, Update</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold">User:</span>
+                <span className="col-span-3">Read</span>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <Table className="bg-white">
+        <TableCaption>A list of registered users</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px]">#</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Last Activity</TableHead>
+            <TableHead>Labels</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers.map((user, index) => (
+            <TableRow key={user.$id}>
+              <TableCell>{index + 1}</TableCell>
+              <TableCell>{user.name || "N/A"}</TableCell>
+              <TableCell>{user.email || "N/A"}</TableCell>
+              <TableCell>{user.latestActivity || "N/A"}</TableCell>
+              <TableCell>
+                <select 
+                  value={user.labels[0] || "User"}
+                  onChange={(e) => handleLabelChange(user.$id, e.target.value)}
+                  className="border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="user">User</option>
+                  <option value="editor">Editor</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

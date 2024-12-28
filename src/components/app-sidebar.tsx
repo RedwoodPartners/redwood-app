@@ -11,6 +11,8 @@ import {
   ChevronUp,
   ChevronDown,
   Grid,
+  Rocket,
+  Folder,
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,6 +56,16 @@ const items = [
     title: "Inbox",
     url: "/message",
     icon: Inbox,
+  },
+  {
+    title: "Startups",
+    url: "/startup",
+    icon: Rocket,
+  },
+  {
+    title: "Projects",
+    url: "/projects",
+    icon: Folder,
   },
   {
     title: "Settings",
@@ -171,14 +183,14 @@ export function AppSidebar() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        <SidebarMenuSubItem>
+                        {/*<SidebarMenuSubItem>
                           <Link href="/startup">Startups</Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <Link href="/contact">Contacts</Link>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
                           <Link href="/projects">Projects</Link>
+                        </SidebarMenuSubItem> */}
+                        <SidebarMenuSubItem>
+                          <Link href="/contact">Contacts</Link>
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </CollapsibleContent>

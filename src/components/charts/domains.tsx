@@ -76,7 +76,7 @@ export function Domain() {
 
   
   return (
-      <Card className="flex flex-col">
+      <Card className="flex flex-col w-[300px]">
         <CardHeader className="items-center pb-0">
           <CardTitle>Top 5 Domains</CardTitle>
           <CardDescription>Current Data</CardDescription>
@@ -84,7 +84,7 @@ export function Domain() {
         <CardContent className="flex-1 pb-0">
           <ChartContainer
             config={chartConfig}
-            className="mx-auto aspect-square max-h-[250px]"
+            className=""
           >
             <PieChart>
               <ChartTooltip
@@ -95,7 +95,7 @@ export function Domain() {
                 data={chartData}
                 dataKey="visitors"
                 nameKey="browser"
-                innerRadius={60}
+                innerRadius={40}
                 strokeWidth={5}
                 activeIndex={0}
                 activeShape={({
