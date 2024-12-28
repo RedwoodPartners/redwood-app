@@ -12,6 +12,20 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+
+interface CustomBreadcrumbLinkProps {
+  href: string;
+  children: React.ReactNode;
+}
+
+const CustomBreadcrumbLink: React.FC<CustomBreadcrumbLinkProps> = ({ href, children }) => {
+  return (
+    <Link href={href} passHref legacyBehavior>
+      <BreadcrumbLink>{children}</BreadcrumbLink>
+    </Link>
+  );
+};
+
 // Convert path to breadcrumb items
 function generateBreadcrumbs(pathname: string): { href: string; label: string }[] {
   const segments = pathname.split("/").filter(Boolean);
@@ -22,7 +36,7 @@ function generateBreadcrumbs(pathname: string): { href: string; label: string }[
 }
 
 export default function BreadcrumbWithDynamicPath() {
-  const pathname = usePathname(); // Get the current pathname
+  const pathname = usePathname(); // current pathname
 
   // Safeguard to avoid SSR issues
   if (!pathname) return null;
@@ -30,13 +44,10 @@ export default function BreadcrumbWithDynamicPath() {
   const breadcrumbs = generateBreadcrumbs(pathname);
 
   return (
-    <>
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink>
-            <Link href="/home">Home</Link>
-          </BreadcrumbLink>
+          <CustomBreadcrumbLink href="/home">Home</CustomBreadcrumbLink>
         </BreadcrumbItem>
         {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
         {/* Dynamically render breadcrumb links */}
@@ -44,9 +55,9 @@ export default function BreadcrumbWithDynamicPath() {
           <React.Fragment key={index}>
             <BreadcrumbItem>
               {index < breadcrumbs.length - 1 ? (
-                <BreadcrumbLink>
-                  <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
-                </BreadcrumbLink>
+                <CustomBreadcrumbLink href={breadcrumb.href}>
+                  {breadcrumb.label}
+                </CustomBreadcrumbLink>
               ) : (
                 <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
               )}
@@ -56,6 +67,5 @@ export default function BreadcrumbWithDynamicPath() {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-    </>
   );
 }
