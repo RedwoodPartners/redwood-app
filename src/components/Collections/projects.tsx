@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridReadyEvent, RowEditingStoppedEvent } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
+import React, { useState, useEffect } from "react";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
-import { PlusCircle, Trash } from "lucide-react";
-
+import { PlusCircle, Trash, Pencil } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type Project = {
   id: string;
@@ -19,18 +18,11 @@ type Project = {
   description: string;
 };
 
-type Document = {
-  $id: string;
-  [key: string]: any;
-};
-
 const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [editedRow, setEditedRow] = useState<Project | null>(null);
-  const gridRef = useRef<AgGridReact<Project>>(null);
+  const [editedProject, setEditedProject] = useState<Project | null>(null);
 
-  // Initialize Appwrite client and fetch projects only on the client side
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
@@ -38,7 +30,7 @@ const ProjectsPage: React.FC = () => {
     const fetchProjects = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID);
-        const projectData = response.documents.map((doc: Document) => ({
+        const projectData = response.documents.map((doc: any) => ({
           id: doc.$id,
           name: doc.name || "",
           manager: doc.manager || "",
@@ -66,6 +58,7 @@ const ProjectsPage: React.FC = () => {
       endDate: "",
       description: "Project Description",
     };
+
     try {
       const createdProject = await databases.createDocument(DATABASE_ID, PROJECTS_ID, "unique()", newProject);
       setProjects((prev) => [
@@ -84,62 +77,30 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
-  const handleRemoveSelected = async () => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-
-    const gridApi = gridRef.current?.api;
-    if (gridApi) {
-      const selectedNodes = gridApi.getSelectedNodes();
-      const selectedIds = selectedNodes
-        .map((node) => node.data?.id) 
-        .filter((id): id is string => id !== undefined);
-
-      try {
-        await Promise.all(
-          selectedIds.map((id) => databases.deleteDocument(DATABASE_ID, PROJECTS_ID, id))
-        );
-        setProjects((prev) => prev.filter((project) => !selectedIds.includes(project.id)));
-      } catch (error) {
-        console.error("Error deleting projects:", error);
-      }
-    }
-  };
-
-  const onGridReady = (params: GridReadyEvent) => {
-    params.api.sizeColumnsToFit();
-  };
-
-  const onRowEditingStopped = (event: RowEditingStoppedEvent) => {
-    const updatedRow = event.data as Project;
-    setEditedRow(updatedRow);
+  const handleEditProject = (project: Project) => {
+    setEditedProject(project);
     setShowModal(true);
   };
 
   const handleConfirmChanges = async () => {
-    if (editedRow) {
+    if (editedProject) {
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
 
       try {
-        // Update the edited project in Appwrite
-        await databases.updateDocument(DATABASE_ID, PROJECTS_ID, editedRow.id, {
-          name: editedRow.name,
-          manager: editedRow.manager,
-          startDate: editedRow.startDate,
-          endDate: editedRow.endDate,
-          description: editedRow.description,
+        await databases.updateDocument(DATABASE_ID, PROJECTS_ID, editedProject.id, {
+          name: editedProject.name,
+          manager: editedProject.manager,
+          startDate: editedProject.startDate,
+          endDate: editedProject.endDate,
+          description: editedProject.description,
         });
 
-        // Reflect the updated data in the UI
         setProjects((prev) =>
-          prev.map((project) =>
-            project.id === editedRow.id ? editedRow : project
-          )
+          prev.map((project) => (project.id === editedProject.id ? editedProject : project))
         );
 
-        // Clear edited row state
-        setEditedRow(null);
+        setEditedProject(null);
         setShowModal(false);
       } catch (error) {
         console.error("Error updating project:", error);
@@ -147,99 +108,138 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
-  const handleDiscardChanges = async () => {
-    setEditedRow(null);
+  const handleDiscardChanges = () => {
+    setEditedProject(null);
     setShowModal(false);
-    
-    // Re-fetch data from the database to revert changes
+  };
+
+  const handleDeleteProject = async (id: string) => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
 
     try {
-      const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID);
-      const projectData = response.documents.map((doc: Document) => ({
-        id: doc.$id,
-        name: doc.name || "",
-        manager: doc.manager || "",
-        startDate: doc.startDate || "",
-        endDate: doc.endDate || "",
-        description: doc.description || "",
-      }));
-      setProjects(projectData);
+      await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, id);
+      setProjects((prev) => prev.filter((project) => project.id !== id));
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error("Error deleting project:", error);
     }
   };
 
-  const columnDefs: ColDef<Project>[] = [
-    { headerCheckboxSelection: true, checkboxSelection: true, width: 50 },
-    { field: "id", headerName: "ID", sortable: true, filter: true },
-    { field: "name", headerName: "Name", sortable: true, filter: true, editable: true },
-    { field: "manager", headerName: "Manager", sortable: true, filter: true, editable: true },
-    {
-      field: "startDate",
-      headerName: "Start Date",
-      sortable: true,
-      filter: true,
-      editable: true,
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
-    },
-    {
-      field: "endDate",
-      headerName: "End Date",
-      sortable: true,
-      filter: true,
-      editable: true,
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
-    },
-    { field: "description", headerName: "Description", sortable: true, filter: true, editable: true },
-  ];
-
   return (
     <div className="p-2">
-      <div className="flex space-x-3">
-      <h1 className="text-2xl font-semibold">Projects</h1>
-      <button onClick={handleAddProject} className="text-black rounded-full transition hover:text-green-500 focus:outline-none"><PlusCircle size={20} /></button>
-      <button onClick={handleRemoveSelected} className="text-black rounded-full transition hover:text-red-500 focus:outline-none" ><Trash size={20}/></button>
+      <div className="flex space-x-3 mb-4">
+        <h1 className="text-2xl font-semibold">Projects</h1>
+        <Button onClick={handleAddProject} variant="ghost" size="icon">
+          <PlusCircle className="h-5 w-5" />
+        </Button>
       </div>
-      
 
-      <div className="ag-theme-quartz font-medium mt-3 mx-auto" style={{ height: 600, width: '100%'}}>
-        <AgGridReact
-          headerHeight={40}
-          ref={gridRef}
-          rowData={projects}
-          columnDefs={columnDefs}
-          onGridReady={onGridReady}
-          //pagination={true}
-          //paginationPageSize={20}
-          domLayout='normal'
-          editType='fullRow'
-          onRowEditingStopped={onRowEditingStopped}
-        />
-      </div>
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Confirm Changes</h2>
-            <p className="mb-4">Do you want to save changes?</p>
-            <div className="flex justify-end">
-              <button
-                onClick={handleConfirmChanges}
-                className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition"
-              >
-                Yes
-              </button>
-              <button
-                onClick={handleDiscardChanges}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
-              >
-                No
-              </button>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Manager</TableHead>
+            <TableHead>Start Date</TableHead>
+            <TableHead>End Date</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {projects.map((project) => (
+            <TableRow key={project.id}>
+              <TableCell>{project.name}</TableCell>
+              <TableCell>{project.manager}</TableCell>
+              <TableCell>{new Date(project.startDate).toLocaleDateString()}</TableCell>
+              <TableCell>{project.endDate ? new Date(project.endDate).toLocaleDateString() : "-"}</TableCell>
+              <TableCell>{project.description}</TableCell>
+              <TableCell>
+                <Button onClick={() => handleEditProject(project)} variant="ghost" size="icon">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button onClick={() => handleDeleteProject(project.id)} variant="ghost" size="icon">
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+          </DialogHeader>
+          {editedProject && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="name" className="text-right">
+                  Name
+                </label>
+                <Input
+                  id="name"
+                  value={editedProject.name}
+                  onChange={(e) => setEditedProject({ ...editedProject, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="manager" className="text-right">
+                  Manager
+                </label>
+                <Input
+                  id="manager"
+                  value={editedProject.manager}
+                  onChange={(e) => setEditedProject({ ...editedProject, manager: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="startDate" className="text-right">
+                  Start Date
+                </label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={editedProject.startDate}
+                  onChange={(e) => setEditedProject({ ...editedProject, startDate: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="endDate" className="text-right">
+                  End Date
+                </label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={editedProject.endDate}
+                  onChange={(e) => setEditedProject({ ...editedProject, endDate: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="description" className="text-right">
+                  Description
+                </label>
+                <Input
+                  id="description"
+                  value={editedProject.description}
+                  onChange={(e) => setEditedProject({ ...editedProject, description: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+          <DialogFooter>
+            <Button onClick={handleDiscardChanges} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmChanges}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -139,7 +139,8 @@ const ContactsTable: React.FC = () => {
       ) : filteredContacts.length === 0 ? (
         <p>No contacts found.</p>
       ) : (
-        <Table className="border border-gray-100 rounded-lg bg-white">
+        <div className="bg-white shadow-md rounded-lg border border-gray-300">
+        <Table className="border border-gray-100 rounded-lg">
           <TableCaption>A list of all contacts grouped by Startup ID.</TableCaption>
           <TableHeader className="bg-gray-100">
             <TableRow>
@@ -182,6 +183,7 @@ const ContactsTable: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
     </div>
   );
