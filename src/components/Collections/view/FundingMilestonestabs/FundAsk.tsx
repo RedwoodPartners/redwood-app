@@ -1,11 +1,14 @@
 "use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon, Trash2Icon, XIcon } from "lucide-react";
+import { PlusCircle, Trash2Icon } from "lucide-react";
 import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
@@ -39,15 +42,9 @@ const calculateTotal = (funds: FundItem[]): number => {
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [proposedFunds, setProposedFunds] = useState<FundItem[]>([]);
   const [validatedFunds, setValidatedFunds] = useState<FundItem[]>([]);
-  const [editingItems, setEditingItems] = useState<{ [key: string]: boolean }>({});
-  const [newProposedFund, setNewProposedFund] = useState<Omit<FundItem, "startupId" | "$id">>({
-    description: "",
-    amount: "",
-  });
-  const [newValidatedFund, setNewValidatedFund] = useState<Omit<FundItem, "startupId" | "$id">>({
-    description: "",
-    amount: "",
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTable, setActiveTable] = useState<"proposed" | "validated">("proposed");
+  const [editingFund, setEditingFund] = useState<FundItem | null>(null);
 
   const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
   const databases = useMemo(() => new Databases(client), [client]);
@@ -72,112 +69,137 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     fetchFunds();
   }, [startupId, databases]);
 
-  const handleAddItem = async (type: "proposed" | "validated") => {
+  const handleAddItem = async () => {
     try {
-      const newItem = type === "proposed" ? newProposedFund : newValidatedFund;
-      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+      const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
       const response = await databases.createDocument(
         DATABASE_ID,
         collectionId,
         "unique()",
-        { ...newItem, startupId }
+        { ...editingFund, startupId }
       );
       const newFundItem = mapDocumentToFundItem(response);
-      if (type === "proposed") {
+      if (activeTable === "proposed") {
         setProposedFunds([...proposedFunds, newFundItem]);
-        setNewProposedFund({ description: "", amount: "" });
       } else {
         setValidatedFunds([...validatedFunds, newFundItem]);
-        setNewValidatedFund({ description: "", amount: "" });
       }
+      setEditingFund(null);
+      setIsDialogOpen(false);
     } catch (error) {
       console.error("Error adding fund:", error);
     }
   };
 
-  const handleEditChange = (
-    index: number,
-    field: keyof FundItem,
-    value: string,
-    type: "proposed" | "validated"
-  ) => {
-    const funds = type === "proposed" ? [...proposedFunds] : [...validatedFunds];
-    if (field === "amount") {
-      const cleanValue = value.replace(/[^\d]/g, '');
-      const formattedValue = new Intl.NumberFormat('en-IN').format(parseInt(cleanValue) || 0);
-      funds[index] = { ...funds[index], [field]: formattedValue };
-    } else {
-      funds[index] = { ...funds[index], [field]: value };
-    }
-    if (type === "proposed") {
-      setProposedFunds(funds);
-    } else {
-      setValidatedFunds(funds);
-    }
-    setEditingItems({ ...editingItems, [funds[index].$id!]: true });
-  };
-
-  const handleSaveItem = async (
-    index: number,
-    type: "proposed" | "validated"
-  ) => {
-    const funds = type === "proposed" ? proposedFunds : validatedFunds;
-    const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-    const item = funds[index];
+  const handleUpdateItem = async () => {
+    if (!editingFund || !editingFund.$id) return;
     try {
-      if (item.$id) {
-        const { $id, ...data } = item;
-        await databases.updateDocument(DATABASE_ID, collectionId, $id, data);
-        setEditingItems({ ...editingItems, [$id]: false });
-      }
-    } catch (error) {
-      console.error("Error saving fund:", error);
-    }
-  };
-
-  const handleDeleteItem = async (id: string, type: "proposed" | "validated") => {
-    try {
-      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-      await databases.deleteDocument(DATABASE_ID, collectionId, id);
-      if (type === "proposed") {
-        setProposedFunds(proposedFunds.filter(item => item.$id !== id));
+      const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+      const { $id, ...updateData } = editingFund;
+      await databases.updateDocument(DATABASE_ID, collectionId, $id, updateData);
+      const updatedFunds = activeTable === "proposed" ? proposedFunds : validatedFunds;
+      const updatedFundsList = updatedFunds.map(fund => fund.$id === $id ? editingFund : fund);
+      if (activeTable === "proposed") {
+        setProposedFunds(updatedFundsList);
       } else {
-        setValidatedFunds(validatedFunds.filter(item => item.$id !== id));
+        setValidatedFunds(updatedFundsList);
       }
+      setEditingFund(null);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating fund:", error);
+    }
+  };
+
+  const handleDeleteItem = async () => {
+    if (!editingFund || !editingFund.$id) return;
+    try {
+      const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+      await databases.deleteDocument(DATABASE_ID, collectionId, editingFund.$id);
+      const updatedFunds = activeTable === "proposed" ? proposedFunds : validatedFunds;
+      const updatedFundsList = updatedFunds.filter(fund => fund.$id !== editingFund.$id);
+      if (activeTable === "proposed") {
+        setProposedFunds(updatedFundsList);
+      } else {
+        setValidatedFunds(updatedFundsList);
+      }
+      setEditingFund(null);
+      setIsDialogOpen(false);
     } catch (error) {
       console.error("Error deleting fund:", error);
     }
   };
 
+  const handleRowDoubleTap = (fund: FundItem, type: "proposed" | "validated") => {
+    setActiveTable(type);
+    setEditingFund(fund);
+    setIsDialogOpen(true);
+  };
+
   return (
     <>
-    <h3 className="container text-lg font-medium mb-2 -mt-4">
-        Fund Ask
-      </h3>
-    <div className="container mx-auto space-y-4">
-      <FundTable
-        title="Proposed Fund Ask"
-        funds={proposedFunds}
-        newFund={newProposedFund}
-        onAdd={() => handleAddItem("proposed")}
-        onEditChange={(index, field, value) => handleEditChange(index, field, value, "proposed")}
-        onSave={(index) => handleSaveItem(index, "proposed")}
-        onDelete={(id) => handleDeleteItem(id, "proposed")}
-        setNewFund={setNewProposedFund}
-        editingItems={editingItems}
-      />
-      <FundTable
-        title="Validated Fund Ask"
-        funds={validatedFunds}
-        newFund={newValidatedFund}
-        onAdd={() => handleAddItem("validated")}
-        onEditChange={(index, field, value) => handleEditChange(index, field, value, "validated")}
-        onSave={(index) => handleSaveItem(index, "validated")}
-        onDelete={(id) => handleDeleteItem(id, "validated")}
-        setNewFund={setNewValidatedFund}
-        editingItems={editingItems}
-      />
-    </div>
+      <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Ask</h3>
+      <div className="container mx-auto space-y-4">
+        <FundTable
+          title="Proposed Fund Ask"
+          funds={proposedFunds}
+          onRowDoubleTap={(fund) => handleRowDoubleTap(fund, "proposed")}
+          onOpenDialog={() => {
+            setActiveTable("proposed");
+            setEditingFund({ description: "", amount: "", startupId });
+            setIsDialogOpen(true);
+          }}
+        />
+        <FundTable
+          title="Validated Fund Ask"
+          funds={validatedFunds}
+          onRowDoubleTap={(fund) => handleRowDoubleTap(fund, "validated")}
+          onOpenDialog={() => {
+            setActiveTable("validated");
+            setEditingFund({ description: "", amount: "", startupId });
+            setIsDialogOpen(true);
+          }}
+        />
+      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingFund?.$id ? "Edit Fund Item" : "Add New Fund Item"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={editingFund?.description || ""}
+                onChange={(e) => setEditingFund({ ...editingFund!, description: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Amount
+              </Label>
+              <Input
+                id="amount"
+                value={editingFund?.amount || ""}
+                onChange={(e) => setEditingFund({ ...editingFund!, amount: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            {editingFund?.$id && (
+              <Button variant="destructive" onClick={handleDeleteItem}>Delete</Button>
+            )}
+            <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem}>
+              {editingFund?.$id ? "Update" : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
@@ -185,36 +207,17 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 interface FundTableProps {
   title: string;
   funds: FundItem[];
-  newFund: Omit<FundItem, "startupId" | "$id">;
-  onAdd: () => void;
-  onEditChange: (index: number, field: keyof FundItem, value: string) => void;
-  onSave: (index: number) => void;
-  onDelete: (id: string) => void;
-  setNewFund: React.Dispatch<React.SetStateAction<Omit<FundItem, "startupId" | "$id">>>;
-  editingItems: { [key: string]: boolean };
+  onRowDoubleTap: (fund: FundItem) => void;
+  onOpenDialog: () => void;
 }
 
 const FundTable: React.FC<FundTableProps> = ({
   title,
   funds,
-  newFund,
-  onAdd,
-  onEditChange,
-  onSave,
-  onDelete,
-  setNewFund,
-  editingItems,
+  onRowDoubleTap,
+  onOpenDialog,
 }) => {
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{ [key: string]: boolean }>({});
   const total = calculateTotal(funds);
-
-  const handleDoubleClick = (id: string) => {
-    setDeleteConfirmation({ ...deleteConfirmation, [id]: true });
-  };
-
-  const handleDiscard = (id: string) => {
-    setDeleteConfirmation({ ...deleteConfirmation, [id]: false });
-  };
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
@@ -227,90 +230,31 @@ const FundTable: React.FC<FundTableProps> = ({
 
   return (
     <div>
-      <div className="p-4 bg-white border border-gray-300 rounded shadow">
-        <h4 className="mb-4 text-lg font-semibold">{title}</h4>
+      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-lg font-semibold">{title}</h4>
+          <div onClick={onOpenDialog}>
+            <PlusCircle size={20} className="mr-2 cursor-pointer" />
+          </div>
+        </div>
         <Table>
           <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead>Utilization Description</TableHead>
+              <TableHead className="w-1/2">Utilization Description</TableHead>
               <TableHead>Budgeted Amount</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {funds.map((item, index) => (
-              <TableRow key={item.$id || index} onDoubleClick={() => handleDoubleClick(item.$id!)}>
-                <TableCell>
-                  <Textarea
-                    value={item.description}
-                    onChange={(e) => onEditChange(index, "description", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  <input
-                    type="text"
-                    value={item.amount}
-                    onChange={(e) => onEditChange(index, "amount", e.target.value)}
-                    className="w-full h-5 border-none focus:outline-none"
-                  />
-                </TableCell>
-                <TableCell>
-                  {deleteConfirmation[item.$id!] ? (
-                    <div className="space-x-2">
-                      <span>Delete row?</span>
-                      <button
-                        onClick={() => onDelete(item.$id!)}
-                        className="bg-red-500 text-white px-2 py-1 rounded"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        onClick={() => handleDiscard(item.$id!)}
-                        className="bg-gray-300 text-black px-2 py-1 rounded"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : editingItems[item.$id!] ? (
-                    <button onClick={() => onSave(index)} className="text-green-500">
-                      <SaveIcon size={20} />
-                    </button>
-                  ) : null}
-                </TableCell>
+            {funds.map((item) => (
+              <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
+                <TableCell>{item.description}</TableCell>
+                <TableCell>{item.amount}</TableCell>
               </TableRow>
             ))}
-            <TableRow>
-              <TableCell>
-                <input
-                  disabled
-                  value={newFund.description}
-                  onChange={(e) => setNewFund({ ...newFund, description: e.target.value })}
-                  className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Description"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  disabled
-                  value={newFund.amount}
-                  onChange={(e) => setNewFund({ ...newFund, amount: e.target.value })}
-                  className="w-full h-5 border-none focus:outline-none"
-                  placeholder="Add Amount"
-                />
-              </TableCell>
-              <TableCell>
-                <button onClick={onAdd} className="text-blue-500">
-                  <PlusCircle size={20} />
-                </button>
-              </TableCell>
-            </TableRow>
             <TableRow className="font-bold">
               <TableCell>Total</TableCell>
               <TableCell>{formatCurrency(total)}</TableCell>
-              <TableCell></TableCell>
             </TableRow>
           </TableBody>
         </Table>
