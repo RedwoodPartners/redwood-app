@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 
@@ -105,37 +106,51 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
           <DialogTrigger asChild>
             <PlusCircle size={20} className="cursor-pointer mb-2" />
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>Add New Tranche & Milestone</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 gap-4 py-4">
+              <div>
+              <Label>Tranche Type</Label>
               <Input
                 placeholder="Tranche Type"
                 value={newMilestone.trancheType}
                 onChange={(e) => setNewMilestone({ ...newMilestone, trancheType: e.target.value })}
               />
+              </div>
+              <div>
+              <Label>Status</Label>
               <select
                 value={newMilestone.status}
                 onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
-                className="w-full p-2 border rounded"
+                className="w-full text-sm p-2 border rounded"
               >
                 <option value="">Select Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Released">Released</option>
               </select>
+              </div>
+              <div>
+              <Label>Amount</Label>
               <Input
                 placeholder="Amount"
                 value={newMilestone.amount}
                 onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
               />
+              </div>
+              <div>
+              <Label>Milestones</Label>
               <Textarea
                 placeholder="Milestones"
                 value={newMilestone.milestones}
                 onChange={(e) => setNewMilestone({ ...newMilestone, milestones: e.target.value })}
               />
+              </div>
             </div>
+            <div className="flex justify-end">
             <Button onClick={handleAddMilestone}>Save</Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -165,46 +180,58 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                 <TableCell>{milestone.milestones}</TableCell>
               </TableRow>
             ))}
-            <TableRow className="font-semibold bg-gray-100">
-              <TableCell colSpan={3} className="text-right">
+            <TableRow className="font-semibold bg-gray-100 text-left">
+              <TableCell colSpan={3} className="">
                 Total:
               </TableCell>
-              <TableCell className="text-right">₹{totalAmount.toLocaleString()}</TableCell>
+              <TableCell className="">₹{totalAmount.toLocaleString()}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </div>
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Edit Tranche & Milestone</DialogTitle>
           </DialogHeader>
           {editingMilestone && (
-            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 gap-4 py-4">
+              <div>
+              <Label>Tranche Type</Label>
               <Input
                 placeholder="Tranche Type"
                 value={editingMilestone.trancheType}
                 onChange={(e) => setEditingMilestone({ ...editingMilestone, trancheType: e.target.value })}
               />
+              </div>
+              <div>
+              <Label>select</Label>
               <select
                 value={editingMilestone.status}
                 onChange={(e) => setEditingMilestone({ ...editingMilestone, status: e.target.value })}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 text-sm border rounded"
               >
                 <option value="">Select Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Released">Released</option>
               </select>
+              </div>
+              <div>
+              <Label>Amount</Label>
               <Input
                 placeholder="Amount"
                 value={editingMilestone.amount}
                 onChange={(e) => setEditingMilestone({ ...editingMilestone, amount: e.target.value })}
               />
+              </div>
+              <div>
+              <Label>Milestones</Label>
               <Textarea
                 placeholder="Milestones"
                 value={editingMilestone.milestones}
                 onChange={(e) => setEditingMilestone({ ...editingMilestone, milestones: e.target.value })}
               />
+              </div>
             </div>
           )}
           <div className="flex space-x-3 justify-end">

@@ -136,7 +136,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                   id="role"
                   value={editingRow?.role || ""}
                   onChange={(e) => setEditingRow({ ...editingRow, role: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className="w-full p-2 text-sm border border-gray-300 rounded"
                 >
                   <option value="" disabled>Select Role</option>
                   {roleOptions.map((role) => (
@@ -194,7 +194,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           ))}
           <TableRow className="font-semibold bg-gray-100">
             <TableCell colSpan={3} className="text-right">Total Capital Structure:</TableCell>
-            <TableCell className="text-right">{calculateTotalCapital()}%</TableCell>
+            <TableCell className="text-left">{calculateTotalCapital()}%</TableCell>
           </TableRow>
         </TableBody>
       </Table>
