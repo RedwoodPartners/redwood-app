@@ -24,6 +24,7 @@ import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { PlusCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
@@ -157,30 +158,34 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 </div>
                 <div>
                   <Label>Is Community Certificate Holder?</Label>
-                  <select
-                    id="isCommunityHolder"
+                  <Select
                     value={data["isCommunityHolder"] || ""}
-                    onChange={(e) => handleChange("isCommunityHolder", e.target.value)}
-                    className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                    onValueChange={(value) => handleChange("isCommunityHolder", value)}
                   >
-                    <option value="" disabled>Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
+                    <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Gender</Label>
-                  <select
-                    id="gender"
+                  <Select
                     value={data["gender"] || ""}
-                    onChange={(e) => handleChange("gender", e.target.value)}
-                    className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                    onValueChange={(value) => handleChange("gender", value)}
                   >
-                    <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                    <SelectValue placeholder="Select Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>LinkedIn Profile</Label>
@@ -196,16 +201,18 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <Label>Is Partner/Director?</Label>
-                  <select
-                    id="isPartner"
+                  <Select
                     value={data["isPartner"] || ""}
-                    onChange={(e) => handleChange("isPartner", e.target.value)}
-                    className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                    onValueChange={(value) => handleChange("isPartner", value)}
                   >
-                    <option value="" disabled>Select Partner/Director</option>
-                    <option value="Partner">Yes</option>
-                    <option value="Director">No</option>
-                  </select>
+                  <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                    <SelectValue placeholder="Partner/Director" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Partner">Yes</SelectItem>
+                    <SelectItem value="Director">No</SelectItem>
+                  </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Director Identification Number</Label>
