@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { FaEye } from "react-icons/fa";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const FUND_RAISED_ID = "6731e2fb000d9580025f";
 const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
@@ -280,20 +281,23 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </div>
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Mode of Investment</Label>
-                <select
-                  value={selectedInvestment?.mode || ""}
-                  onChange={(e) => setSelectedInvestment({ ...selectedInvestment, mode: e.target.value } as Investment)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Mode</option>
-                  <option value="Equity">Equity</option>
-                  <option value="CCPS">CCPS</option>
-                  <option value="CCD">CCD</option>
-                  <option value="OCD">OCD</option>
-                  <option value="SAFE Notes">SAFE Notes</option>
-                  <option value="Grant">Grant</option>
-                </select>
+              <Label className="">Mode of Investment</Label>
+              <Select
+                value={selectedInvestment?.mode || ""}
+                onValueChange={(value) => setSelectedInvestment({ ...selectedInvestment, mode: value } as Investment)}
+              >
+                <SelectTrigger className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue placeholder="Select Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Equity">Equity</SelectItem>
+                  <SelectItem value="CCPS">CCPS</SelectItem>
+                  <SelectItem value="CCD">CCD</SelectItem>
+                  <SelectItem value="OCD">OCD</SelectItem>
+                  <SelectItem value="SAFE Notes">SAFE Notes</SelectItem>
+                  <SelectItem value="Grant">Grant</SelectItem>
+                  </SelectContent>
+              </Select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4">

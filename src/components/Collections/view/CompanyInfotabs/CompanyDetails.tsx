@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StartupData {
   brandName: string;
@@ -211,20 +212,24 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   };
 
   const renderDropdown = (key: keyof StartupData) => (
-    <select
+    <Select
       disabled={!isEditing}
+      onValueChange={(value) => handleChange(key, value)}
       value={updatedData?.[key] || ""}
-      onChange={(e) => handleChange(key, e.target.value)}
-      className="py-2 border rounded-md text-sm opacity-100"
     >
-      <option value="">Select</option>
-      {dropdownOptions[key]?.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="py-2 border rounded-md text-sm">
+        <SelectValue placeholder="Select" />
+      </SelectTrigger>
+      <SelectContent className="-mb-10">
+        {dropdownOptions[key]?.map((option) => (
+          <SelectItem key={option} value={option}>
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
+  
 
   const fieldLabels: { [key in keyof StartupData]: string } = {
     brandName: "Brand Name",

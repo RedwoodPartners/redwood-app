@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, SaveIcon, TrashIcon, UploadCloud } from "lucide-react";
@@ -114,28 +115,42 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     }
   };
 
-  const handleUploadFile = async (file: File) => {
+  const handleUploadFile = async (index: number, file: File) => {
+    const documentId = docData[index].$id;
+    if (!documentId) return;
+
     const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'csv'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
     if (fileExtension && allowedExtensions.includes(fileExtension)) {
       try {
         const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), file);
-        const updatedDoc = {
-          ...editingDoc,
-          fileId: uploadResponse.$id,
-          fileName: file.name,
-        };
-        await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, editingDoc.$id, updatedDoc);
-        setEditingDoc(updatedDoc);
-        toast({
-          title: "File uploaded",
-          description: "The file has been successfully uploaded.",
-        });
+        if (uploadResponse && uploadResponse.$id) {
+          const { $id, $createdAt, $updatedAt, $permissions, $collectionId, $databaseId, ...validFields } = docData[index];
+          const updatedDoc = {
+            ...validFields,
+            fileId: uploadResponse.$id,
+            fileName: file.name,
+          };
+          await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedDoc);
+          
+          // Update the local state
+          const updatedDocData = [...docData];
+          updatedDocData[index] = { ...updatedDocData[index], ...updatedDoc };
+          setDocData(updatedDocData);
+
+          toast({
+            title: "Document upload successful",
+            description: "Your document has been uploaded successfully!",
+          });
+        } else {
+          throw new Error("Invalid upload response");
+        }
       } catch (error) {
         console.error("Error uploading file:", error);
         toast({
           title: "Error",
-          description: "Failed to upload the file.",
+          description: "Failed to upload the document. Please try again.",
           variant: "destructive",
         });
       }
@@ -164,11 +179,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <div className="grid grid-cols-4 gap-4 mt-4">
               <div>
                 <Label>Document Name</Label>
-                <Input placeholder="Document Name" value={newDoc.docName} onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })} />
+                <Input
+                  placeholder="Document Name"
+                  value={newDoc.docName}
+                  onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Document Type</Label>
-                <select value={newDoc.docType} onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })} className="w-full p-2 text-sm border rounded">
+                <select
+                  value={newDoc.docType}
+                  onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })}
+                  className="w-full p-2 text-sm border rounded"
+                >
                   <option value="" disabled>Select Type</option>
                   <option value="Regulatory and Registration">Regulatory and Registration</option>
                   <option value="Legal">Legal</option>
@@ -183,11 +206,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label>Status</Label>
-                <Input placeholder="Status" value={newDoc.status} onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })} />
+                <Input
+                  placeholder="Status"
+                  value={newDoc.status}
+                  onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea placeholder="Description" value={newDoc.description} onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })} />
+                <Textarea
+                  placeholder="Description"
+                  value={newDoc.description}
+                  onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -209,11 +240,14 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {docData.map((row) => (
-              <TableRow key={row.$id} onDoubleClick={() => {
-                setEditingDoc(row);
-                setIsEditDialogOpen(true);
-              }}>
+            {docData.map((row, index) => (
+              <TableRow
+                key={row.$id}
+                onDoubleClick={() => {
+                  setEditingDoc(row);
+                  setIsEditDialogOpen(true);
+                }}
+              >
                 <TableCell>{row.docName}</TableCell>
                 <TableCell>{row.docType}</TableCell>
                 <TableCell>{row.status}</TableCell>
@@ -225,30 +259,29 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                         <div className="relative group">
                           <FaEye size={20} className="inline" />
                           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                            View & Download
+                          View & Download
                           </span>
                         </div>
                       </a>
-                    ) : null}
+                   ) : (
                     <label className="ml-2">
                       <div className="relative group">
                         <UploadCloud size={20} className="cursor-pointer" />
                         <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Upload
+                         Upload
                         </span>
                       </div>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            handleUploadFile(e.target.files[0]);
-                          }
-                        }}
-                      />
+                      
+                      <input type="file" className="hidden" onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleUploadFile(index, e.target.files[0]);
+                        }
+                      }} />
                     </label>
+                   )}
                   </div>
                 </TableCell>
+
               </TableRow>
             ))}
           </TableBody>
@@ -263,11 +296,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
           <div className="grid grid-cols-4 gap-4 mt-4">
             <div>
               <Label>Document Name</Label>
-              <Input placeholder="Document Name" value={editingDoc?.docName} onChange={(e) => setEditingDoc({ ...editingDoc, docName: e.target.value })} />
+              <Input
+                placeholder="Document Name"
+                value={editingDoc?.docName}
+                onChange={(e) => setEditingDoc({ ...editingDoc, docName: e.target.value })}
+              />
             </div>
             <div>
               <Label>Document Type</Label>
-              <select value={editingDoc?.docType} onChange={(e) => setEditingDoc({ ...editingDoc, docType: e.target.value })} className="w-full p-2 text-sm border rounded">
+              <select
+                value={editingDoc?.docType}
+                onChange={(e) => setEditingDoc({ ...editingDoc, docType: e.target.value })}
+                className="w-full p-2 text-sm border rounded"
+              >
                 <option value="Regulatory and Registration">Regulatory and Registration</option>
                 <option value="Legal">Legal</option>
                 <option value="Financial">Financial</option>
@@ -281,11 +322,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </div>
             <div>
               <Label>Status</Label>
-              <Input placeholder="Status" value={editingDoc?.status} onChange={(e) => setEditingDoc({ ...editingDoc, status: e.target.value })} />
+              <Input
+                placeholder="Status"
+                value={editingDoc?.status}
+                onChange={(e) => setEditingDoc({ ...editingDoc, status: e.target.value })}
+              />
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea placeholder="Description" value={editingDoc?.description} onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })} />
+              <Textarea
+                placeholder="Description"
+                value={editingDoc?.description}
+                onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
+              />
             </div>
           </div>
           <DialogFooter>
