@@ -196,7 +196,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableHead>Mode</TableHead>
               <TableHead>Investment Date</TableHead>
               <TableHead>Investment Amount (INR)</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="w-96">Description</TableHead>
               <TableHead>Document</TableHead>
             </TableRow>
           </TableHeader>
