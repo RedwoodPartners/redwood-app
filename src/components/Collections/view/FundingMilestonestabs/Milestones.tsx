@@ -1,11 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon, Trash2Icon } from "lucide-react";
+import { PlusCircle, Trash2Icon } from "lucide-react";
 import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 
@@ -15,8 +19,9 @@ interface TranchesMilestonesProps {
 
 const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) => {
   const [milestones, setMilestones] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState<any>(null);
   const [newMilestone, setNewMilestone] = useState({
     trancheType: "",
     status: "",
@@ -24,12 +29,10 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     milestones: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
+  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
+  const databases = useMemo(() => new Databases(client), [client]);
 
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     const fetchMilestones = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, TRANCHES_MILESTONES_ID, [
@@ -37,32 +40,13 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         ]);
         setMilestones(response.documents);
       } catch (error) {
-        console.error("Error fetching investments:", error);
+        console.error("Error fetching milestones:", error);
       }
     };
     fetchMilestones();
-  }, [startupId]);
+  }, [databases, startupId]);
 
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedMilestones = [...milestones];
-    updatedMilestones[index][field] = value;
-    setMilestones(updatedMilestones);
-    setEditingIndex(index);
-  };
-
-  const handleSaveInvestment = async (index: number) => {
-    const investment = milestones[index];
-    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = investment;
-    try {
-      await databases.updateDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, $id!, dataToUpdate);
-      console.log("Saved successfully");
-      setEditingIndex(null);
-    } catch (error) {
-      console.error("Error saving investment:", error);
-    }
-  };
-
-  const handleAddInvestment = async () => {
+  const handleAddMilestone = async () => {
     try {
       const response = await databases.createDocument(
         DATABASE_ID,
@@ -77,165 +61,160 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         amount: "",
         milestones: "",
       });
+      setIsAddDialogOpen(false);
     } catch (error) {
-      console.error("Error adding investment:", error);
+      console.error("Error adding milestone:", error);
     }
   };
 
-  const handleDeleteInvestment = async (index: number) => {
+  const handleEditMilestone = async () => {
+    if (!editingMilestone) return;
+    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = editingMilestone;
     try {
-      await databases.deleteDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, milestones[index].$id!);
-      const updatedMilestones = milestones.filter((_, i) => i !== index);
+      await databases.updateDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, $id, dataToUpdate);
+      const updatedMilestones = milestones.map((m) => (m.$id === $id ? editingMilestone : m));
       setMilestones(updatedMilestones);
-      setDeletingIndex(null);
+      setIsEditDialogOpen(false);
     } catch (error) {
-      console.error("Error deleting investment:", error);
+      console.error("Error updating milestone:", error);
     }
   };
 
-  const totalAmount = milestones.reduce((sum, investment) => {
-    const amount = parseFloat(investment.amount.replace(/₹|,/g, ""));
+  const handleDeleteMilestone = async () => {
+    if (!editingMilestone) return;
+    try {
+      await databases.deleteDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, editingMilestone.$id);
+      const updatedMilestones = milestones.filter((m) => m.$id !== editingMilestone.$id);
+      setMilestones(updatedMilestones);
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting milestone:", error);
+    }
+  };
+
+  const totalAmount = milestones.reduce((sum, milestone) => {
+    const amount = parseFloat(milestone.amount.replace(/₹|,/g, ""));
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
-      <Table className="border border-gray-300 shadow-lg bg-white">
-        <TableCaption>A list of recent Tranches & Milestones.</TableCaption>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead>Tranche Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Amount (As Per SHA)</TableHead>
-            <TableHead>Milestones</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {milestones.map((investment, index) => (
-            <TableRow key={investment.$id} onDoubleClick={() => setDeletingIndex(index)}>
-              <TableCell>
-                <input
-                  type="text"
-                  value={investment.trancheType}
-                  onChange={(e) => handleEditChange(index, "trancheType", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <select
-                  value={investment.status}
-                  onChange={(e) => handleEditChange(index, "status", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none bg-transparent"
-                >
-                  <option value="">Select Status</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Released">Released</option>
-                </select>
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={investment.amount}
-                  onChange={(e) => handleEditChange(index, "amount", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <Textarea
-                  value={investment.milestones}
-                  onChange={(e) => handleEditChange(index, "milestones", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSaveInvestment(index)} className="text-black rounded-full transition">
-                    <div className="relative group ml-3">
-                      <SaveIcon size={20} className="cursor-pointer text-green-500" />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                        Save
-                      </span>
-                    </div>
-                  </button>
-                )}
-                {deletingIndex === index ? (
-                  <div className="flex items-center space-x-2">
-                    <span>Delete row?</span>
-                    <button onClick={() => handleDeleteInvestment(index)} className="bg-red-500 text-white px-2 py-1 rounded">
-                      Yes
-                    </button>
-                    <button onClick={() => setDeletingIndex(null)} className="bg-gray-300 text-black px-2 py-1 rounded"
-                    >
-                      No
-                    </button>
-                  </div>
-                ) : (
-                  <></>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-          <TableRow>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+      <div className="flex justify-between items-center">
+        <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <PlusCircle size={20} className="cursor-pointer mb-2" />
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Tranche & Milestone</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Input
+                placeholder="Tranche Type"
                 value={newMilestone.trancheType}
                 onChange={(e) => setNewMilestone({ ...newMilestone, trancheType: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Tranches Type"
               />
-            </TableCell>
-            <TableCell>
               <select
-              disabled
                 value={newMilestone.status}
                 onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none bg-transparent"
+                className="w-full p-2 border rounded"
               >
                 <option value="">Select Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Released">Released</option>
               </select>
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+              <Input
+                placeholder="Amount"
                 value={newMilestone.amount}
                 onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Amount"
               />
-            </TableCell>
-            <TableCell>
-              <input
-                disabled
+              <Textarea
+                placeholder="Milestones"
                 value={newMilestone.milestones}
                 onChange={(e) => setNewMilestone({ ...newMilestone, milestones: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-                placeholder="Milestones"
               />
-            </TableCell>
-            <TableCell>
-              <button onClick={handleAddInvestment} className="text-black rounded-full transition">
-                <div className="relative group">
-                  <PlusCircle size={20} />
-                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                    Add Row
-                  </span>
-                </div>
-              </button>
-            </TableCell>
-          </TableRow>
-          <TableRow className="font-semibold bg-gray-100">
-            <TableCell colSpan={4} className="text-right">Total:</TableCell>
-            <TableCell className="text-right">₹{totalAmount.toLocaleString()}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            </div>
+            <Button onClick={handleAddMilestone}>Save</Button>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <Table>
+          <TableCaption>A list of recent Tranches & Milestones.</TableCaption>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead>Tranche Type</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Amount (As Per SHA)</TableHead>
+              <TableHead className="w-96">Milestones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {milestones.map((milestone) => (
+              <TableRow
+                key={milestone.$id}
+                onDoubleClick={() => {
+                  setEditingMilestone(milestone);
+                  setIsEditDialogOpen(true);
+                }}
+              >
+                <TableCell>{milestone.trancheType}</TableCell>
+                <TableCell>{milestone.status}</TableCell>
+                <TableCell>{milestone.amount}</TableCell>
+                <TableCell>{milestone.milestones}</TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="font-semibold bg-gray-100">
+              <TableCell colSpan={3} className="text-right">
+                Total:
+              </TableCell>
+              <TableCell className="text-right">₹{totalAmount.toLocaleString()}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Tranche & Milestone</DialogTitle>
+          </DialogHeader>
+          {editingMilestone && (
+            <div className="grid gap-4 py-4">
+              <Input
+                placeholder="Tranche Type"
+                value={editingMilestone.trancheType}
+                onChange={(e) => setEditingMilestone({ ...editingMilestone, trancheType: e.target.value })}
+              />
+              <select
+                value={editingMilestone.status}
+                onChange={(e) => setEditingMilestone({ ...editingMilestone, status: e.target.value })}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Released">Released</option>
+              </select>
+              <Input
+                placeholder="Amount"
+                value={editingMilestone.amount}
+                onChange={(e) => setEditingMilestone({ ...editingMilestone, amount: e.target.value })}
+              />
+              <Textarea
+                placeholder="Milestones"
+                value={editingMilestone.milestones}
+                onChange={(e) => setEditingMilestone({ ...editingMilestone, milestones: e.target.value })}
+              />
+            </div>
+          )}
+          <div className="flex space-x-3 justify-end">
+            <Button onClick={handleDeleteMilestone} variant="destructive">
+              Delete
+            </Button>
+            <Button onClick={handleEditMilestone}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
