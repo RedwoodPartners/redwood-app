@@ -169,7 +169,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Description
+               Utilization Description
               </Label>
               <Textarea
                 id="description"
@@ -195,7 +195,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <Button variant="destructive" onClick={handleDeleteItem}>Delete</Button>
             )}
             <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem}>
-              {editingFund?.$id ? "Update" : "Add"}
+              {editingFund?.$id ? "Save" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

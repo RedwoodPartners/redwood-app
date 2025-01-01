@@ -193,8 +193,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Investment Stage</TableHead>
-              <TableHead>Round</TableHead>
-              <TableHead>Mode</TableHead>
+              <TableHead>Round Name</TableHead>
+              <TableHead>Mode of Investment</TableHead>
               <TableHead>Investment Date</TableHead>
               <TableHead>Investment Amount (INR)</TableHead>
               <TableHead className="w-96">Description</TableHead>
@@ -261,7 +261,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Stage</Label>
+                <Label className="block text-sm font-medium text-gray-700">Investment Stage</Label>
                 <Input
                   type="text"
                   placeholder="Enter the investment stage"
@@ -271,7 +271,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </div>
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Round</Label>
+                <Label className="block text-sm font-medium text-gray-700">Round Name</Label>
                 <Input
                   type="text"
                   placeholder="Enter the round name"

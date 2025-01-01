@@ -241,12 +241,12 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     registeredCountry: "Registered Country",
     domain: "Domain",
     incubated: "Incubated",
-    revenue: "Revenue",
+    revenue: "Revenue (last FY)",
     natureOfCompany: "Nature of Company",
     registeredState: "Registered State",
     subDomain: "Sub-Domain",
     communityCertificate: "Community Certificate",
-    employees: "Number of Employees",
+    employees: "Employees (last FY)",
   };
 
   if (!startupData) {
