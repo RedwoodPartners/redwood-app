@@ -229,7 +229,7 @@ const ContactInformation: React.FC<RegulatoryInformationProps> = ({ startupId })
         )}
       </div>
 
-      <div className="flex flex-col space-y-4 border border-gray-150 p-4 rounded-md shadow-sm">
+      <div className="flex flex-col space-y-4 border border-gray-150 p-4 rounded-md shadow-sm bg-slate-50">
         <div className="flex flex-row space-x-4 w-full">
           {[
             ["Company website", "companyWebsite"],
@@ -251,7 +251,7 @@ const ContactInformation: React.FC<RegulatoryInformationProps> = ({ startupId })
       
 
       {/* Registered Address Section */}
-      <div className="flex flex-col space-y-4 mt-5 border border-gray-150 p-4 rounded-md shadow-sm">
+      <div className="flex flex-col space-y-4 mt-5 border border-gray-150 p-4 rounded-md shadow-sm bg-slate-50">
         <h3 className="font-bold text-sm">Registered Address</h3>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-row space-x-5">
@@ -288,7 +288,7 @@ const ContactInformation: React.FC<RegulatoryInformationProps> = ({ startupId })
         </div>
 
       {/* Communication Address Section */}
-      <div className="flex flex-col space-y-4 mt-5 border border-gray-150 p-4 rounded-md shadow-sm">
+      <div className="flex flex-col space-y-4 mt-5 border border-gray-150 p-4 rounded-md shadow-sm bg-slate-50">
         <h3 className="font-bold text-sm">Communication Address</h3>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-row space-x-5">

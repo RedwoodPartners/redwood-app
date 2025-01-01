@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { SaveIcon, XIcon, PlusCircleIcon } from "lucide-react";
+import { SaveIcon, XIcon, PlusCircleIcon, ChevronRightIcon } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +69,6 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       const testimonialData = Object.fromEntries(
         Object.entries(currentTestimonial).filter(([key]) => !key.startsWith('$'))
       );
-
       if (currentTestimonial.$id) {
         await databases.updateDocument(
           DATABASE_ID,
@@ -149,7 +148,12 @@ interface TestimonialFormProps {
   onDelete: () => void;
 }
 
-const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onChange, onSave, onDelete }) => {
+const TestimonialForm: React.FC<TestimonialFormProps> = ({
+  testimonial,
+  onChange,
+  onSave,
+  onDelete,
+}) => {
   const handleChange = (field: string, value: string) => {
     onChange({ ...testimonial, [field]: value });
   };
@@ -229,12 +233,12 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onChange
         </div>
       </div>
       <div className="flex justify-end space-x-2">
-        <Button onClick={onSave}>Save</Button>
         {testimonial.$id && (
           <Button variant="destructive" onClick={onDelete}>
             Delete
           </Button>
         )}
+        <Button onClick={onSave}>Save</Button>
       </div>
     </div>
   );
@@ -246,43 +250,80 @@ interface TestimonialsTableProps {
 }
 
 const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onEdit }) => {
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const toggleRow = (id: string) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
+
   return (
     <div className="mb-6 p-3 bg-white shadow-md rounded-lg border border-gray-300">
-    <Table>
-      <TableCaption>List of Customer Testimonials</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Customer Name</TableHead>
-          <TableHead>Designation</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead className="w-96">What services/products are using of the company?
-          </TableHead>
-          <TableHead className="w-96">Your View on Service Utilization-will the service/product be beneficial for your company/personal use.</TableHead>
-          <TableHead className="w-96">Unique selling proposition of the company-what you switch to using this company’s service/product-how were you doing earlier?
-          </TableHead>
-          <TableHead className="w-96">Future of this Segment- in your view, what will be the future of this segment?</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {testimonials.map((testimonial) => (
-          <TableRow
-            key={testimonial.$id}
-            onDoubleClick={() => onEdit(testimonial)}
-            className="cursor-pointer hover:bg-gray-100"
-          >
-            <TableCell>{testimonial.customerName}</TableCell>
-            <TableCell>{testimonial.designation}</TableCell>
-            <TableCell>{testimonial.phone}</TableCell>
-            <TableCell>{testimonial.email}</TableCell>
-            <TableCell>{testimonial.query1}</TableCell>
-            <TableCell>{testimonial.query2}</TableCell>
-            <TableCell>{testimonial.query3}</TableCell>
-            <TableCell>{testimonial.query4}</TableCell>
+      <Table>
+        <TableCaption>List of Customer Testimonials</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Customer Name</TableHead>
+            <TableHead>Designation</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead></TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {testimonials.map((testimonial) => (
+            <React.Fragment key={testimonial.$id}>
+              <TableRow
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => onEdit(testimonial)}
+              >
+                <TableCell>{testimonial.customerName}</TableCell>
+                <TableCell>{testimonial.designation}</TableCell>
+                <TableCell>{testimonial.phone}</TableCell>
+                <TableCell>{testimonial.email}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRow(testimonial.$id);
+                    }}
+                  >
+                    <ChevronRightIcon
+                      className={`transition-transform ${
+                        expandedRow === testimonial.$id ? "rotate-90" : ""
+                      }`}
+                    />
+                  </Button>
+                </TableCell>
+              </TableRow>
+              {expandedRow === testimonial.$id && (
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50">
+                      <div>
+                        <strong>What services/products are you using from the company?</strong>
+                        <p>{testimonial.query1}</p>
+                      </div>
+                      <div>
+                        <strong>Your View on Service Utilization</strong>
+                        <p>{testimonial.query2}</p>
+                      </div>
+                      <div>
+                        <strong>Unique selling proposition of the company</strong>
+                        <p>{testimonial.query3}</p>
+                      </div>
+                      <div>
+                        <strong>Future of this Segment</strong>
+                        <p>{testimonial.query4}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </React.Fragment>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
