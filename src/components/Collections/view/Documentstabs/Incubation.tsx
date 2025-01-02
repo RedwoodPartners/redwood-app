@@ -1,11 +1,17 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, SaveIcon, Trash2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const INCUBATION_ID = "673c2945001eddd9aea3";
 
@@ -15,8 +21,8 @@ interface IncubationProps {
 
 const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   const [incubationData, setIncubationData] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [editingIncubation, setEditingIncubation] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newIncubation, setNewIncubation] = useState({
     program: "",
     date: "",
@@ -28,286 +34,230 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
     description: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
-
-  useEffect(() => {
+  const { client, databases } = useMemo(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-    const fetchComplianceData = async () => {
+    return { client, databases };
+  }, []);
+
+  useEffect(() => {
+    const fetchIncubationData = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, INCUBATION_ID, [
           Query.equal("startupId", startupId),
         ]);
-        setIncubationData(response.documents);
+        const filteredDocuments = response.documents.map(doc => {
+          const { $id, program, date, exitDate, status, spocName, spocNumber, spocEmail, description } = doc;
+          return { $id, program, date, exitDate, status, spocName, spocNumber, spocEmail, description };
+        });
+        setIncubationData(filteredDocuments);
       } catch (error) {
-        console.error("Error fetching compliance data:", error);
+        console.error("Error fetching incubation data:", error);
       }
     };
-    fetchComplianceData();
-  }, [startupId]);
+    fetchIncubationData();
+  }, [startupId, databases]);
 
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedData = [...incubationData];
-    updatedData[index][field] = value;
-    setIncubationData(updatedData);
-    setEditingIndex(index);
-  };
-
-  const handleSaveCompliance = async (index: number) => {
-    const dataToUpdate = incubationData[index];
-    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...fieldsToUpdate } = dataToUpdate;
+  const handleSaveIncubation = async () => {
+    if (!editingIncubation) return;
     try {
-      await databases.updateDocument(DATABASE_ID, INCUBATION_ID, $id, fieldsToUpdate);
-      console.log("Saved successfully");
-      setEditingIndex(null);
+      const allowedFields = ['program', 'date', 'exitDate', 'status', 'spocName', 'spocNumber', 'spocEmail', 'description'];
+      const updateData = Object.fromEntries(
+        Object.entries(editingIncubation).filter(([key]) => allowedFields.includes(key))
+      );
+      await databases.updateDocument(DATABASE_ID, INCUBATION_ID, editingIncubation.$id, updateData);
+      const updatedIncubations = incubationData.map(i => i.$id === editingIncubation.$id ? {...i, ...updateData} : i);
+      setIncubationData(updatedIncubations);
+      setEditingIncubation(null);
     } catch (error) {
-      console.error("Error saving compliance data:", error);
+      console.error("Error saving incubation data:", error);
     }
   };
 
-  const handleAddComplianceData = async () => {
+  const handleDeleteIncubation = async () => {
+    if (!editingIncubation) return;
     try {
+      await databases.deleteDocument(DATABASE_ID, INCUBATION_ID, editingIncubation.$id);
+      const updatedIncubations = incubationData.filter(i => i.$id !== editingIncubation.$id);
+      setIncubationData(updatedIncubations);
+      setEditingIncubation(null);
+    } catch (error) {
+      console.error("Error deleting incubation:", error);
+    }
+  };
+
+  const handleAddIncubationData = async () => {
+    try {
+      const { program, date, exitDate, status, spocName, spocNumber, spocEmail, description } = newIncubation;
       const response = await databases.createDocument(
         DATABASE_ID,
         INCUBATION_ID,
         "unique()",
-        { ...newIncubation, startupId }
+        { program, date, exitDate, status, spocName, spocNumber, spocEmail, description, startupId }
       );
       setIncubationData([...incubationData, response]);
-      setNewIncubation({ program: "", date: "", exitDate: "", status: "", spocName: "", spocNumber: "", spocEmail: "", description: "" });
+      setIsDialogOpen(false);
+      setNewIncubation({
+        program: "",
+        date: "",
+        exitDate: "",
+        status: "",
+        spocName: "",
+        spocNumber: "",
+        spocEmail: "",
+        description: "",
+      });
     } catch (error) {
-      console.error("Error adding compliance data:", error);
+      console.error("Error adding incubation data:", error);
     }
-  };
-
-  const handleDoubleClick = (index: number) => {
-    setDeleteIndex(index);
-  };
-
-  const handleDeleteRow = async (index: number) => {
-    try {
-      await databases.deleteDocument(DATABASE_ID, INCUBATION_ID, incubationData[index].$id);
-      const updatedData = incubationData.filter((_, i) => i !== index);
-      setIncubationData(updatedData);
-      setDeleteIndex(null);
-    } catch (error) {
-      console.error("Error deleting row:", error);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteIndex(null);
   };
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">Incubation</h3>
-      <Table className="border border-gray-300 shadow-lg bg-white">
-        <TableCaption>Incubation Program Information</TableCaption>
-        <TableHeader>
-          <TableRow className="bg-gray-100">
-            <TableHead>Incubator Name</TableHead>
-            <TableHead>Incubated Date</TableHead>
-            <TableHead>Exit Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>SPOC Name</TableHead>
-            <TableHead>SPOC Phone Number</TableHead>
-            <TableHead>SPOC Email</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {incubationData.map((row, index) => (
-            <TableRow key={row.$id} onDoubleClick={() => handleDoubleClick(index)}>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.program}
-                  onChange={(e) => handleEditChange(index, "program", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="date"
-                  value={row.date}
-                  onChange={(e) => handleEditChange(index, "date", e.target.value)}
-                  className=" h-5 border-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="date"
-                  value={row.exitDate}
-                  onChange={(e) => handleEditChange(index, "exitDate", e.target.value)}
-                  className=" h-5 border-none"
-                />
-              </TableCell>
-              <TableCell>
-                <select
-                  value={row.status}
-                  onChange={(e) => handleEditChange(index, "status", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                >
-                  <option value="">Select Status</option>
-                  <option value="Applied">Applied</option>
-                  <option value="Incubated">Incubated</option>
-                  <option value="Exited">Exited</option>
-                </select>
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.spocName}
-                  onChange={(e) => handleEditChange(index, "spocName", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.spocNumber}
-                  onChange={(e) => handleEditChange(index, "spocNumber", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.spocEmail}
-                  onChange={(e) => handleEditChange(index, "spocEmail", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <Textarea
-                  value={row.description}
-                  onChange={(e) => handleEditChange(index, "description", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSaveCompliance(index)} className="text-black rounded-full transition">
-                    <div className="relative group ml-3">
-                      <SaveIcon size={20} className="cursor-pointer text-green-500" />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                        Save
-                      </span>
-                    </div>
-                  </button>
-                )}
-                {deleteIndex === index && (
-                  <div className="flex space-x-1">
-                    <span>Delete row?</span>
-                    <button onClick={() => handleDeleteRow(index)} className="bg-red-500 text-white px-2 py-1 rounded">
-                      Yes
-                    </button>
-                    <button onClick={handleCancelDelete} className="bg-gray-300 text-black px-2 py-1 rounded">
-                      No
-                    </button>
-                  </div>
-                )}
-              </TableCell>
+      <div className="flex justify-between items-center">
+        <h3 className="container text-lg font-medium mb-2 -mt-4">Incubation</h3>
+        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+      </div>
+      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <Table>
+          <TableCaption>Incubation Program Information</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Incubator Name</TableHead>
+              <TableHead>Incubated Date</TableHead>
+              <TableHead>Exit Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>SPOC Name</TableHead>
+              <TableHead>SPOC Phone Number</TableHead>
+              <TableHead>SPOC Email</TableHead>
+              <TableHead>Description</TableHead>
             </TableRow>
-          ))}
-          <TableRow>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newIncubation.program}
-                onChange={(e) => setNewIncubation({ ...newIncubation, program: e.target.value })}
-                placeholder="Incubation Program"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="date"
-                disabled
-                value={newIncubation.date}
-                onChange={(e) => setNewIncubation({ ...newIncubation, date: e.target.value })}
-                className="h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="date"
-                disabled
-                value={newIncubation.exitDate}
-                onChange={(e) => setNewIncubation({ ...newIncubation, exitDate: e.target.value })}
-                className="h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <select
-                disabled
-                value={newIncubation.status}
-                onChange={(e) => setNewIncubation({ ...newIncubation, status: e.target.value })}
-                className="w-full h-5 border-none focus:outline-none"
-              >
-                <option value="">Select Status</option>
-                <option value="Applied">Applied</option>
-                <option value="Incubated">Incubated</option>
-                <option value="Exited">Exited</option>
-              </select>
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newIncubation.spocName}
-                onChange={(e) => setNewIncubation({ ...newIncubation, spocName: e.target.value })}
-                placeholder="SPOC Name"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newIncubation.spocNumber}
-                onChange={(e) => setNewIncubation({ ...newIncubation, spocNumber: e.target.value })}
-                placeholder="SPOC Number"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newIncubation.spocEmail}
-                onChange={(e) => setNewIncubation({ ...newIncubation, spocEmail: e.target.value })}
-                placeholder="SPOC Email"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newIncubation.description}
-                onChange={(e) => setNewIncubation({ ...newIncubation, description: e.target.value })}
-                placeholder="Description"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <button onClick={handleAddComplianceData} className="text-black rounded-full transition">
-                <div className="relative group">
-                  <PlusCircle size={20} />
-                  <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                    Add Row
-                  </span>
-                </div>
-              </button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {incubationData.map((row) => (
+              <TableRow key={row.$id} onDoubleClick={() => setEditingIncubation(row)}>
+                <TableCell>{row.program}</TableCell>
+                <TableCell>{row.date}</TableCell>
+                <TableCell>{row.exitDate}</TableCell>
+                <TableCell>{row.status}</TableCell>
+                <TableCell>{row.spocName}</TableCell>
+                <TableCell>{row.spocNumber}</TableCell>
+                <TableCell>{row.spocEmail}</TableCell>
+                <TableCell>{row.description}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-full max-w-5xl p-6">
+          <DialogHeader>
+            <DialogTitle>Add New Incubation</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-4 py-4">
+            <div>
+              <Label htmlFor="program" className="text-right">Incubator Name</Label>
+              <Input id="program" value={newIncubation.program} onChange={(e) => setNewIncubation({ ...newIncubation, program: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="date" className="text-right">Incubated Date</Label>
+              <Input id="date" type="date" value={newIncubation.date} onChange={(e) => setNewIncubation({ ...newIncubation, date: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="exitDate" className="text-right">Exit Date</Label>
+              <Input id="exitDate" type="date" value={newIncubation.exitDate} onChange={(e) => setNewIncubation({ ...newIncubation, exitDate: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="status" className="text-right">Status</Label>
+              <Select value={newIncubation.status} onValueChange={(value) => setNewIncubation({ ...newIncubation, status: value })}>
+                <SelectTrigger id="status" className="col-span-3">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                  <SelectItem value="Incubated">Incubated</SelectItem>
+                  <SelectItem value="Exited">Exited</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="spocName" className="text-right">SPOC Name</Label>
+              <Input id="spocName" value={newIncubation.spocName} onChange={(e) => setNewIncubation({ ...newIncubation, spocName: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="spocNumber" className="text-right">SPOC Phone Number</Label>
+              <Input id="spocNumber" value={newIncubation.spocNumber} onChange={(e) => setNewIncubation({ ...newIncubation, spocNumber: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="spocEmail" className="text-right">SPOC Email</Label>
+              <Input id="spocEmail" value={newIncubation.spocEmail} onChange={(e) => setNewIncubation({ ...newIncubation, spocEmail: e.target.value })} className="col-span-3" />
+            </div>
+            <div>
+              <Label htmlFor="description" className="text-right">Description</Label>
+              <Textarea id="description" value={newIncubation.description} onChange={(e) => setNewIncubation({ ...newIncubation, description: e.target.value })} className="col-span-3" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleAddIncubationData}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {editingIncubation && (
+        <Dialog open={!!editingIncubation} onOpenChange={() => setEditingIncubation(null)}>
+          <DialogContent className="w-full max-w-5xl p-6">
+            <DialogHeader>
+              <DialogTitle>Edit Incubation</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-4 gap-4 py-4">
+              <div>
+                <Label htmlFor="edit-program" className="text-right">Incubator Name</Label>
+                <Input id="edit-program" value={editingIncubation.program} onChange={(e) => setEditingIncubation({ ...editingIncubation, program: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-date" className="text-right">Incubated Date</Label>
+                <Input id="edit-date" type="date" value={editingIncubation.date} onChange={(e) => setEditingIncubation({ ...editingIncubation, date: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-exitDate" className="text-right">Exit Date</Label>
+                <Input id="edit-exitDate" type="date" value={editingIncubation.exitDate} onChange={(e) => setEditingIncubation({ ...editingIncubation, exitDate: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-status" className="text-right">Status</Label>
+                <Select value={editingIncubation.status} onValueChange={(value) => setEditingIncubation({ ...editingIncubation, status: value })}>
+                  <SelectTrigger id="edit-status" className="col-span-3">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Applied">Applied</SelectItem>
+                    <SelectItem value="Incubated">Incubated</SelectItem>
+                    <SelectItem value="Exited">Exited</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-spocName" className="text-right">SPOC Name</Label>
+                <Input id="edit-spocName" value={editingIncubation.spocName} onChange={(e) => setEditingIncubation({ ...editingIncubation, spocName: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-spocNumber" className="text-right">SPOC Phone Number</Label>
+                <Input id="edit-spocNumber" value={editingIncubation.spocNumber} onChange={(e) => setEditingIncubation({ ...editingIncubation, spocNumber: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-spocEmail" className="text-right">SPOC Email</Label>
+                <Input id="edit-spocEmail" value={editingIncubation.spocEmail} onChange={(e) => setEditingIncubation({ ...editingIncubation, spocEmail: e.target.value })} className="col-span-3" />
+              </div>
+              <div>
+                <Label htmlFor="edit-description" className="text-right">Description</Label>
+                <Textarea id="edit-description" value={editingIncubation.description} onChange={(e) => setEditingIncubation({ ...editingIncubation, description: e.target.value })} className="col-span-3" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleDeleteIncubation} variant="destructive">Delete</Button>
+              <Button onClick={handleSaveIncubation} className="mr-2">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "../ui/label";
 
 type Startup = {
   id: string;
@@ -166,7 +167,7 @@ const StartupsPage: React.FC = () => {
               </div>
             </button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-full max-w-4xl p-6">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold">Add New Startup</DialogTitle>
               <DialogDescription className="text-sm">
@@ -181,12 +182,38 @@ const StartupsPage: React.FC = () => {
                 createAndRedirect(newStartupData as Partial<Startup>);
               }}
             >
-              <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" required />
-              <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" required />
-              <Input type="text" name="year" placeholder="Year" className="w-full p-2 mb-2 border rounded" required />
-              <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3}></Textarea>
+              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Startup Name</Label>
+                <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" required />
+              </div>
+              <div>
+                <Label>Brand Name</Label>
+                <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" required />
+              </div>
+              <div>
+                <Label htmlFor="year">Year</Label>
+                  <select
+                    id="year"
+                    name="year"
+                    className="w-full p-2 mb-2 border rounded"
+                    required
+                  >
+                  {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                   ))}
+                  </select>
+              </div>
+
+              <div>
+                <Label>Remarks</Label>
+                <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3}></Textarea>
+              </div>
               <div className="flex justify-end mt-4">
                 <Button type="submit">Save</Button>
+              </div>
               </div>
             </form>
           </DialogContent>

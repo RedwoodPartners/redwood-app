@@ -1,8 +1,6 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Client, Databases } from 'appwrite';
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from '@/appwrite/config';
-
 
 interface StatCardProps {
   title: string;
@@ -22,30 +20,23 @@ const StartupStats: React.FC = () => {
       try {
         const response = await database.listDocuments(DATABASE_ID, STARTUP_ID);
         setStartupCount(response.total);
-      } catch(error){
+      } catch (error) {
         console.error("Error fetching startups count:", error);
       }
     };
 
     fetchStartupCount();
   }, []);
-  
-  const calculatePercentageChange = (currentCount: number, previousCount: number): string => {
-    if (previousCount === 0) return "+0%"; // Prevent division by zero
-    const percentageChange = ((currentCount - previousCount) / previousCount) * 100;
-    return `${percentageChange > 0 ? "+" : ""}${percentageChange.toFixed(1)}% from last month`;
-  };
-  
 
   return (
-    <div className="flex flex-wrap justify-around p-1">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       <StatCard
         title="Total Startups"
         mainValue={startupCount}
         subValue="+1% from last month"
         icon={
           <svg
-            className="w-5 h-5"
+            className="w-6 h-5"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -66,7 +57,7 @@ const StartupStats: React.FC = () => {
         subValue="+0% from last month"
         icon={
           <svg
-            className="w-5 h-5 text-blue-500"
+            className="w-6 h-5 text-blue-500"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -87,7 +78,7 @@ const StartupStats: React.FC = () => {
         subValue="+0% from last year"
         icon={
           <svg
-            className="w-5 h-5 text-red-500"
+            className="w-6 h-5 text-red-500"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -108,7 +99,7 @@ const StartupStats: React.FC = () => {
         subValue="+0 since last year"
         icon={
           <svg
-            className="w-5 h-5 text-green-500"
+            className="w-6 h-5 text-green-500"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -129,13 +120,13 @@ const StartupStats: React.FC = () => {
 
 const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon }) => {
   return (
-    <div className="bg-white rounded-xl p-2 w-72 mt-2 shadow-sm border border-gray-200">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm text-gray-600 font-medium">{title}</h3>
+    <div className="bg-white rounded-xl p-3 shadow-md border border-gray-200 max-w-full sm:max-w-sm">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
         <span className="text-gray-600">{icon}</span>
       </div>
-      <h2 className="text-xl font-semibold mb-1">+{mainValue}</h2>
-      <p className="text-xs text-gray-500">{subValue}</p>
+      <h2 className="text-2xl font-semibold mb-2">{mainValue}</h2>
+      <p className="text-sm text-gray-500">{subValue}</p>
     </div>
   );
 };
