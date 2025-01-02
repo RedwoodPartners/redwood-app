@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -187,23 +188,27 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label>Document Type</Label>
-                <select
+                <Select
                   value={newDoc.docType}
-                  onChange={(e) => setNewDoc({ ...newDoc, docType: e.target.value })}
-                  className="w-full p-2 text-sm border rounded"
+                  onValueChange={(value) => setNewDoc({ ...newDoc, docType: value })}
                 >
-                  <option value="" disabled>Select Type</option>
-                  <option value="Regulatory and Registration">Regulatory and Registration</option>
-                  <option value="Legal">Legal</option>
-                  <option value="Financial">Financial</option>
-                  <option value="Technical">Technical</option>
-                  <option value="Compliance Forms">Compliance Forms</option>
-                  <option value="Director and Promotor Documents">Director and Promotor Documents</option>
-                  <option value="Portal Credentials">Portal Credentials</option>
-                  <option value="RP Workings">RP Workings</option>
-                  <option value="Received Document">Received Document</option>
-                </select>
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
+                  <SelectItem value="Legal">Legal</SelectItem>
+                  <SelectItem value="Financial">Financial</SelectItem>
+                  <SelectItem value="Technical">Technical</SelectItem>
+                  <SelectItem value="Compliance Forms">Compliance Forms</SelectItem>
+                  <SelectItem value="Director and Promotor Documents">Director and Promotor Documents</SelectItem>
+                  <SelectItem value="Portal Credentials">Portal Credentials</SelectItem>
+                  <SelectItem value="RP Workings">RP Workings</SelectItem>
+                  <SelectItem value="Received Document">Received Document</SelectItem>
+                </SelectContent>
+                </Select>
               </div>
+
               <div>
                 <Label>Status</Label>
                 <Input
@@ -304,22 +309,27 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </div>
             <div>
               <Label>Document Type</Label>
-              <select
-                value={editingDoc?.docType}
-                onChange={(e) => setEditingDoc({ ...editingDoc, docType: e.target.value })}
-                className="w-full p-2 text-sm border rounded"
+              <Select
+                value={editingDoc?.docType || ""}
+                onValueChange={(value) => setEditingDoc({ ...editingDoc, docType: value })}
               >
-                <option value="Regulatory and Registration">Regulatory and Registration</option>
-                <option value="Legal">Legal</option>
-                <option value="Financial">Financial</option>
-                <option value="Technical">Technical</option>
-                <option value="Compliance Forms">Compliance Forms</option>
-                <option value="Director and Promotor Documents">Director and Promotor Documents</option>
-                <option value="Portal Credentials">Portal Credentials</option>
-                <option value="RP Workings">RP Workings</option>
-                <option value="Received Document">Received Document</option>
-              </select>
+              <SelectTrigger className="w-full p-2 text-sm border rounded">
+                <SelectValue placeholder="Select Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
+                <SelectItem value="Legal">Legal</SelectItem>
+                <SelectItem value="Financial">Financial</SelectItem>
+                <SelectItem value="Technical">Technical</SelectItem>
+                <SelectItem value="Compliance Forms">Compliance Forms</SelectItem>
+                <SelectItem value="Director and Promotor Documents">Director and Promotor Documents</SelectItem>
+                <SelectItem value="Portal Credentials">Portal Credentials</SelectItem>
+                <SelectItem value="RP Workings">RP Workings</SelectItem>
+                <SelectItem value="Received Document">Received Document</SelectItem>
+              </SelectContent>
+              </Select>
             </div>
+
             <div>
               <Label>Status</Label>
               <Input

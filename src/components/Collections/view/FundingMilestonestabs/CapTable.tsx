@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const CAP_TABLE_ID = "67339ad7000ee8d123a9";
 
@@ -76,10 +77,14 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   const calculateTotalCapital = () => {
     return capTableData.reduce((total, row) => {
-      const value = parseFloat(row.capitalStructure.replace("%", "")) || 0;
-      return total + value;
+      if (row.capitalStructure && typeof row.capitalStructure === 'string') {
+        const value = parseFloat(row.capitalStructure.replace("%", "")) || 0;
+        return total + value;
+      }
+      return total;
     }, 0);
   };
+  
 
   const roleOptions = [
     "Founder", "Co-Founder", "Employee", "Advisor", "Angel Investor",
@@ -132,18 +137,21 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div className="flex-1">
                 <Label htmlFor="role" className="block mb-2">Role</Label>
-                <select
-                  id="role"
+                <Select
                   value={editingRow?.role || ""}
-                  onChange={(e) => setEditingRow({ ...editingRow, role: e.target.value })}
-                  className="w-full p-2 text-sm border border-gray-300 rounded"
+                  onValueChange={(value) => setEditingRow({ ...editingRow, role: value })}
                 >
-                  <option value="" disabled>Select Role</option>
+                <SelectTrigger id="role" className="w-full p-2 text-sm border border-gray-300 rounded">
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent className="-mb-10">
                   {roleOptions.map((role) => (
-                    <option key={role} value={role}>{role}</option>
+                  <SelectItem key={role} value={role}>{role}</SelectItem>
                   ))}
-                </select>
+                </SelectContent>
+                </Select>
               </div>
+
               <div className="flex-1">
                 <Label htmlFor="capitalStructure" className="block mb-2">Capital Structure (%)</Label>
                 <Input
