@@ -5,6 +5,11 @@ import useAuth from "@/context/useAuth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+
+import { Eye, EyeOff } from "lucide-react";
 
 const Signup = () => {
   const router = useRouter();
@@ -16,6 +21,7 @@ const Signup = () => {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const create = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,7 +73,8 @@ const Signup = () => {
         </p>
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
         <form onSubmit={create} className="w-full max-w-sm">
-          <input
+          <Label>Name</Label>
+          <Input
             id="name"
             type="text"
             placeholder="Name"
@@ -76,7 +83,8 @@ const Signup = () => {
             className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
             required
           />
-          <input
+          <Label>Email</Label>
+          <Input
             id="email"
             type="email"
             placeholder="name@example.com"
@@ -85,22 +93,37 @@ const Signup = () => {
             className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
             required
           />
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
-            required
-          />
-          <button
+          <Label>Password</Label>
+          <div className="relative mb-4">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="block w-full pr-10 rounded-lg border border-gray-300 p-3 text-sm text-gray-900"
+              required
+            />
+            <span
+              className="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5 text-gray-500" />
+              ) : (
+                <Eye className="w-5 h-5 text-gray-500" />
+              )}
+            </span>
+          </div>
+          <Button
             type="submit"
             className="w-full mb-4 rounded-lg bg-black py-3 text-sm text-white hover:bg-gray-800"
             disabled={isLoading}
           >
             {isLoading ? "Signing Up..." : "Sign Up"}
-          </button>
+          </Button>
           <div className="flex items-center justify-center mb-4">
             <span className="text-sm text-gray-500">OR</span>
           </div>

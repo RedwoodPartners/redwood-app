@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { Client, Databases } from 'appwrite';
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from '@/appwrite/config';

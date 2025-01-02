@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -10,13 +10,20 @@ import {
   TableRow,
   TableHead,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const GSTR_ID = "673b1988001c3d93380e";
 
@@ -26,187 +33,231 @@ interface GstrComplianceProps {
 
 const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingCompliance, setEditingCompliance] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCompliance, setNewCompliance] = useState({
     date: "",
     gstr1: "",
     gst3b: "",
-    difference: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
-
-  useEffect(() => {
+  const { client, databases } = useMemo(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
+    return { client, databases };
+  }, []);
+
+  useEffect(() => {
     const fetchComplianceData = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, GSTR_ID, [
           Query.equal("startupId", startupId),
         ]);
-        setComplianceData(response.documents);
+        const filteredDocuments = response.documents.map(doc => {
+          const { $id, date, gstr1, gst3b } = doc;
+          const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
+          const gst3bValue = parseFloat(gst3b.replace(/,/g, ''));
+          const difference = (gstr1Value - gst3bValue).toFixed(2);
+          return { $id, date, gstr1, gst3b, difference };
+        });
+        setComplianceData(filteredDocuments);
       } catch (error) {
         console.error("Error fetching compliance data:", error);
       }
     };
-
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, databases]);
 
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedData = [...complianceData];
-    updatedData[index][field] = value;
-    setComplianceData(updatedData);
-    setEditingIndex(index);
+  const formatNumber = (value: string) => {
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  const handleSaveCompliance = async (index: number) => {
-    const dataToUpdate = complianceData[index];
-    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...fieldsToUpdate } = dataToUpdate;
-
+  const handleSaveCompliance = async () => {
+    if (!editingCompliance) return;
     try {
-      await databases.updateDocument(DATABASE_ID, GSTR_ID, $id, fieldsToUpdate);
-      console.log("Saved successfully");
-      setEditingIndex(null);
+      const { date, gstr1, gst3b } = editingCompliance;
+      const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
+      const gst3bValue = parseFloat(gst3b.replace(/,/g, ''));
+      const difference = (gstr1Value - gst3bValue).toFixed(2);
+
+      const updateData = { 
+        date, 
+        gstr1: formatNumber(gstr1), 
+        gst3b: formatNumber(gst3b), 
+        difference: formatNumber(difference) 
+      };
+      await databases.updateDocument(DATABASE_ID, GSTR_ID, editingCompliance.$id, updateData);
+      const updatedCompliances = complianceData.map(c => 
+        c.$id === editingCompliance.$id ? {...c, ...updateData} : c
+      );
+      setComplianceData(updatedCompliances);
+      setEditingCompliance(null);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     }
   };
 
+  const handleDeleteCompliance = async () => {
+    if (!editingCompliance) return;
+    try {
+      await databases.deleteDocument(DATABASE_ID, GSTR_ID, editingCompliance.$id);
+      const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
+      setComplianceData(updatedCompliances);
+      setEditingCompliance(null);
+    } catch (error) {
+      console.error("Error deleting compliance:", error);
+    }
+  };
+
   const handleAddComplianceData = async () => {
     try {
+      const { date, gstr1, gst3b } = newCompliance;
+      const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
+      const gst3bValue = parseFloat(gst3b.replace(/,/g, ''));
+      const difference = (gstr1Value - gst3bValue).toFixed(2);
+
       const response = await databases.createDocument(
         DATABASE_ID,
         GSTR_ID,
         "unique()",
-        { ...newCompliance, startupId }
+        { 
+          date, 
+          gstr1: formatNumber(gstr1), 
+          gst3b: formatNumber(gst3b), 
+          difference: formatNumber(difference), 
+          startupId 
+        }
       );
       setComplianceData([...complianceData, response]);
-      setNewCompliance({ date: "", gstr1: "", gst3b: "", difference: "" });
+      setIsDialogOpen(false);
+      setNewCompliance({
+        date: "",
+        gstr1: "",
+        gst3b: "",
+      });
     } catch (error) {
       console.error("Error adding compliance data:", error);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+    let value = e.target.value.replace(/[^\d,]/g, '');
+    value = formatNumber(value.replace(/,/g, ''));
+    setNewCompliance({ ...newCompliance, [field]: value });
+  };
+
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">GSTR-1 & GSTR-3B</h3>
-      <Table className="border border-gray-300 shadow-lg bg-white">
-        <TableCaption>GSTR Compliance Information</TableCaption>
-        <TableHeader>
-          <TableRow className="bg-gray-100">
-            <TableHead>Month</TableHead>
-            <TableHead>GST R1</TableHead>
-            <TableHead>GST 3B</TableHead>
-            <TableHead>Difference</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {complianceData.map((row, index) => (
-            <TableRow key={row.$id}>
-              
-              <TableCell>
-                <input
-                  type="date"
-                  value={row.date}
-                  onChange={(e) => handleEditChange(index, "date", e.target.value)}
-                  className=" h-5 border-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.gstr1}
-                  onChange={(e) => handleEditChange(index, "gstr1", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.gst3b}
-                  onChange={(e) => handleEditChange(index, "gst3b", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <Textarea
-                  value={row.difference}
-                  onChange={(e) => handleEditChange(index, "difference", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSaveCompliance(index)} className="text-black rounded-full transition">
-                    <div className="relative group ml-3">
-                        <SaveIcon size={20} 
-                          className="cursor-pointer text-green-500"
-                        />
-                        <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
-                        </span>
-                    </div>
-                  </button>
-                )}
-              </TableCell>
+      <div className="flex justify-between items-center">
+        <h3 className="container text-lg font-medium mb-2 -mt-4">GSTR-1 & GSTR-3B</h3>
+        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+      </div>
+      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <Table>
+          <TableCaption>GSTR Compliance Information</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Month</TableHead>
+              <TableHead>GST R1</TableHead>
+              <TableHead>GST 3B</TableHead>
+              <TableHead>Difference</TableHead>
             </TableRow>
-          ))}
-          <TableRow>
-            <TableCell>
-              <input
+          </TableHeader>
+          <TableBody>
+            {complianceData.map((row) => (
+              <TableRow key={row.$id} onDoubleClick={() => setEditingCompliance(row)}>
+                <TableCell>{row.date}</TableCell>
+                <TableCell>{row.gstr1}</TableCell>
+                <TableCell>{row.gst3b}</TableCell>
+                <TableCell>{row.difference}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-full max-w-5xl p-6">
+          <DialogHeader>
+            <DialogTitle>Add New Compliance</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-4 py-4">
+            <div>
+              <Label htmlFor="date" className="text-right">Month</Label>
+              <Input
+                id="date"
                 type="date"
-                disabled
                 value={newCompliance.date}
                 onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
-                className="h-5 border-none focus:outline-none"
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+            </div>
+            <div>
+              <Label htmlFor="gstr1" className="text-right">GST R1</Label>
+              <Input
+                id="gstr1"
                 value={newCompliance.gstr1}
-                onChange={(e) => setNewCompliance({ ...newCompliance, gstr1: e.target.value })}
-                placeholder="GST R1"
-                className="w-full h-5 border-none focus:outline-none"
+                onChange={(e) => handleInputChange(e, 'gstr1')}
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+            </div>
+            <div>
+              <Label htmlFor="gst3b" className="text-right">GST 3B</Label>
+              <Input
+                id="gst3b"
                 value={newCompliance.gst3b}
-                onChange={(e) => setNewCompliance({ ...newCompliance, gst3b: e.target.value })}
-                placeholder="GST 3B"
-                className="w-full h-5 border-none focus:outline-none"
+                onChange={(e) => handleInputChange(e, 'gst3b')}
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
-                value={newCompliance.difference}
-                onChange={(e) => setNewCompliance({ ...newCompliance, difference: e.target.value })}
-                placeholder="Description"
-                className="w-full h-5 border-none focus:outline-none"
-              />
-            </TableCell>
-            <TableCell>
-              <button onClick={handleAddComplianceData} className="text-black rounded-full transition">
-                <div className="relative group">
-                  <PlusCircle size={20} />
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                      Add Row
-                    </span>
-                </div>
-              </button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleAddComplianceData}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {editingCompliance && (
+        <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
+          <DialogContent className="w-full max-w-5xl p-6">
+            <DialogHeader>
+              <DialogTitle>Edit Compliance</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-3 gap-4 py-4">
+              <div>
+                <Label htmlFor="edit-date" className="text-right">Month</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={editingCompliance.date}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-gstr1" className="text-right">GST R1</Label>
+                <Input
+                  id="edit-gstr1"
+                  value={editingCompliance.gstr1}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, gstr1: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) })}
+                  className="col-span-3"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-gst3b" className="text-right">GST 3B</Label>
+                <Input
+                  id="edit-gst3b"
+                  value={editingCompliance.gst3b}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, gst3b: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) })}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleDeleteCompliance} variant="destructive">Delete</Button>
+              <Button onClick={handleSaveCompliance} className="mr-2">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

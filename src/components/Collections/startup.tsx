@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 type Startup = {
   id: string;
@@ -167,7 +168,7 @@ const StartupsPage: React.FC = () => {
               </div>
             </button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-4xl p-6">
+          <DialogContent className="w-full max-w-lg p-4">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold">Add New Startup</DialogTitle>
               <DialogDescription className="text-sm">
@@ -182,7 +183,7 @@ const StartupsPage: React.FC = () => {
                 createAndRedirect(newStartupData as Partial<Startup>);
               }}
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-rows-1 gap-4">
               <div>
                 <Label>Startup Name</Label>
                 <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" required />
@@ -193,18 +194,18 @@ const StartupsPage: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="year">Year</Label>
-                  <select
-                    id="year"
-                    name="year"
-                    className="w-full p-2 mb-2 border rounded"
-                    required
-                  >
+                <Select>
+                <SelectTrigger id="year" name="year" className="w-full p-2 mb-2 border rounded">
+                  <SelectValue placeholder="Select a year" />
+                </SelectTrigger>
+                <SelectContent>
                   {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                   ))}
-                  </select>
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                  ))}
+                </SelectContent>
+                </Select>
               </div>
 
               <div>
