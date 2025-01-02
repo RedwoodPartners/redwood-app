@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 
@@ -120,17 +121,21 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               />
               </div>
               <div>
-              <Label>Status</Label>
-              <select
-                value={newMilestone.status}
-                onChange={(e) => setNewMilestone({ ...newMilestone, status: e.target.value })}
-                className="w-full text-sm p-2 border rounded"
-              >
-                <option value="">Select Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Released">Released</option>
-              </select>
+                <Label>Status</Label>
+                <Select
+                  value={newMilestone.status}
+                  onValueChange={(value) => setNewMilestone({ ...newMilestone, status: value })}
+                >
+                <SelectTrigger className="w-full text-sm p-2 border rounded">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Released">Released</SelectItem>
+                </SelectContent>
+                </Select>
               </div>
+
               <div>
               <Label>Amount</Label>
               <Input
@@ -205,17 +210,21 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               />
               </div>
               <div>
-              <Label>select</Label>
-              <select
-                value={editingMilestone.status}
-                onChange={(e) => setEditingMilestone({ ...editingMilestone, status: e.target.value })}
-                className="w-full p-2 text-sm border rounded"
-              >
-                <option value="">Select Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Released">Released</option>
-              </select>
+                <Label>Status</Label>
+                <Select
+                  value={editingMilestone.status}
+                  onValueChange={(value) => setEditingMilestone({ ...editingMilestone, status: value })}
+                >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Released">Released</SelectItem>
+                </SelectContent>
+                </Select>
               </div>
+
               <div>
               <Label>Amount</Label>
               <Input
