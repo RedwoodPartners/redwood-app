@@ -5,6 +5,10 @@ import useAuth from "@/context/useAuth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const router = useRouter();
@@ -15,6 +19,7 @@ const Login = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const login = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,46 +65,59 @@ const Login = () => {
         </p>
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
         <form onSubmit={login} className="w-full max-w-sm">
-          <input
+          <Label>Email</Label>
+          <Input
             id="email"
             type="email"
             placeholder="Name/Email"
             value={formData.email}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            }  
             required
           />
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) =>
+          <Label>Password</Label>
+          <div className="relative mb-2">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) =>
               setFormData((prev) => ({
                 ...prev,
                 password: e.target.value,
-              }))
-            }
-            className="block w-full mb-4 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-            required
-          />
+               }))
+              }
+              className="pr-10"
+              required
+              />
+              <span
+                className="absolute inset-y-0 right-2 flex items-center cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              > 
+              {showPassword ? (
+                <EyeOff className="w-5 h-5 text-gray-500" />
+              ) : (
+                <Eye className="w-5 h-5 text-gray-500" />
+              )}
+              </span>
+          </div>
           <div className="flex items-center justify-between mb-4">
-            <label className="flex items-center text-sm text-gray-700">
+            <Label className="flex items-center text-sm text-gray-700">
               <input type="checkbox" className="mr-2" />
               Remember me
-            </label>
+            </Label>
             <Link href="/resetpassword" className="text-sm text-gray-700">
               Forgot password?
             </Link>
           </div>
-          <button
+          <Button
             type="submit"
             className="w-full mb-4 rounded-lg bg-black py-3 text-sm text-white hover:bg-gray-800"
           >
             Log In
-          </button>
+          </Button>
           <div className="flex items-center justify-center mb-4">
             <span className="text-sm text-gray-500">OR</span>
           </div>

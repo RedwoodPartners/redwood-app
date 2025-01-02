@@ -1,22 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHeader,
-  TableRow,
-  TableHead,
-} from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, SaveIcon } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const GST_ID = "6739ce42002b5b5036a8";
 
@@ -26,7 +21,8 @@ interface GstComplianceProps {
 
 const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingCompliance, setEditingCompliance] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCompliance, setNewCompliance] = useState({
     query: "",
     yesNo: "",
@@ -34,56 +30,75 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
     description: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
-
-  useEffect(() => {
+  const { client, databases } = useMemo(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
+    return { client, databases };
+  }, []);
+
+  useEffect(() => {
     const fetchComplianceData = async () => {
       try {
         const response = await databases.listDocuments(DATABASE_ID, GST_ID, [
           Query.equal("startupId", startupId),
         ]);
-        setComplianceData(response.documents);
+        const filteredDocuments = response.documents.map(doc => {
+          const { $id, query, yesNo, date, description } = doc;
+          return { $id, query, yesNo, date, description };
+        });
+        setComplianceData(filteredDocuments);
       } catch (error) {
         console.error("Error fetching compliance data:", error);
       }
     };
-
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, databases]);
 
-  const handleEditChange = (index: number, field: string, value: string) => {
-    const updatedData = [...complianceData];
-    updatedData[index][field] = value;
-    setComplianceData(updatedData);
-    setEditingIndex(index);
-  };
-
-  const handleSaveCompliance = async (index: number) => {
-    const dataToUpdate = complianceData[index];
-    const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...fieldsToUpdate } = dataToUpdate;
-
+  const handleSaveCompliance = async () => {
+    if (!editingCompliance) return;
     try {
-      await databases.updateDocument(DATABASE_ID, GST_ID, $id, fieldsToUpdate);
-      console.log("Saved successfully");
-      setEditingIndex(null);
+      const allowedFields = ['query', 'yesNo', 'date', 'description'];
+      const updateData = Object.fromEntries(
+        Object.entries(editingCompliance).filter(([key]) => allowedFields.includes(key))
+      );
+      await databases.updateDocument(DATABASE_ID, GST_ID, editingCompliance.$id, updateData);
+      const updatedCompliances = complianceData.map(c => c.$id === editingCompliance.$id ? {...c, ...updateData} : c);
+      setComplianceData(updatedCompliances);
+      setEditingCompliance(null);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     }
   };
 
+  const handleDeleteCompliance = async () => {
+    if (!editingCompliance) return;
+    try {
+      await databases.deleteDocument(DATABASE_ID, GST_ID, editingCompliance.$id);
+      const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
+      setComplianceData(updatedCompliances);
+      setEditingCompliance(null);
+    } catch (error) {
+      console.error("Error deleting compliance:", error);
+    }
+  };
+
   const handleAddComplianceData = async () => {
     try {
+      const { query, yesNo, date, description } = newCompliance;
       const response = await databases.createDocument(
         DATABASE_ID,
         GST_ID,
         "unique()",
-        { ...newCompliance, startupId }
+        { query, yesNo, date, description, startupId }
       );
       setComplianceData([...complianceData, response]);
-      setNewCompliance({ query: "", yesNo: "", date: "", description: "" });
+      setIsDialogOpen(false);
+      setNewCompliance({
+        query: "",
+        yesNo: "",
+        date: "",
+        description: "",
+      });
     } catch (error) {
       console.error("Error adding compliance data:", error);
     }
@@ -91,152 +106,148 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
 
   return (
     <div>
-      <h3 className="container text-lg font-medium mb-2 -mt-4">GST Compliance</h3>
-      <Table className="border border-gray-300 shadow-lg bg-white">
-        <TableCaption>GST Compliance Information</TableCaption>
-        <TableHeader>
-          <TableRow className="bg-gray-100">
-            <TableHead>Form Queries</TableHead>
-            <TableHead>Yes/No</TableHead>
-            <TableHead>Choose Date</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {complianceData.map((row, index) => (
-            <TableRow key={row.$id}>
-              <TableCell>
-                <Textarea
-                  value={row.query}
-                  onChange={(e) => handleEditChange(index, "query", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-4">
-                  <Label className=" space-x-1">
-                    <input
-                      type="radio"
-                      name={`yesNo-${index}`}
-                      value="yes"
-                      checked={row.yesNo === "yes"}
-                      onChange={(e) => handleEditChange(index, "yesNo", e.target.value)}
-                    />
-                    <span>Yes</span>
-                  </Label>
-                  <Label className="space-x-1">
-                    <input
-                      type="radio"
-                      name={`yesNo-${index}`}
-                      value="no"
-                      checked={row.yesNo === "no"}
-                      onChange={(e) => handleEditChange(index, "yesNo", e.target.value)}
-                    />
-                    <span>No</span>
-                  </Label>
-                </div>
-              </TableCell>
-              <TableCell>
-                <input
-                  type="date"
-                  value={row.date}
-                  onChange={(e) => handleEditChange(index, "date", e.target.value)}
-                  className=" h-5 border-none"
-                />
-              </TableCell>
-              <TableCell>
-                <Textarea
-                  value={row.description}
-                  onChange={(e) => handleEditChange(index, "description", e.target.value)}
-                  className="w-full h-5 border-none focus:outline-none"
-                />
-              </TableCell>
-              <TableCell>
-                {editingIndex === index && (
-                  <button onClick={() => handleSaveCompliance(index)} className="text-black rounded-full transition">
-                    <div className="relative group ml-3">
-                      <SaveIcon size={20} 
-                        className="cursor-pointer text-green-500"
-                      />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Save
-                      </span>
-                    </div>
-                  </button>
-                )}
-              </TableCell>
+      <div className="flex justify-between items-center">
+        <h3 className="container text-lg font-medium mb-2 -mt-4">GST Compliance</h3>
+        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+      </div>
+      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <Table>
+          <TableCaption>GST Compliance Information</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-1/3">Form Queries</TableHead>
+              <TableHead>Yes/No</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="w-1/3">Description</TableHead>
             </TableRow>
-          ))}
-          <TableRow>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+          </TableHeader>
+          <TableBody>
+            {complianceData.map((row) => (
+              <TableRow key={row.$id} onDoubleClick={() => setEditingCompliance(row)}>
+                <TableCell>{row.query}</TableCell>
+                <TableCell>{row.yesNo}</TableCell>
+                <TableCell>{row.date}</TableCell>
+                <TableCell>{row.description}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-full max-w-5xl p-6">
+          <DialogHeader>
+            <DialogTitle>Add New Compliance</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-4 py-4">
+            <div>
+              <Label htmlFor="query" className="text-right">Form Query</Label>
+              <Textarea
+                id="query"
                 value={newCompliance.query}
                 onChange={(e) => setNewCompliance({ ...newCompliance, query: e.target.value })}
-                placeholder="Form Query"
-                className="w-full h-5 border-none focus:outline-none"
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <div className="flex space-x-4">
-                <Label className="flex items-center space-x-1">
-                  <input
-                    type="radio"
-                    disabled
-                    name="new-yesNo"
-                    value="yes"
-                    checked={newCompliance.yesNo === "yes"}
-                    onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
-                  />
-                  <span>Yes</span>
-                </Label>
-                <Label className="flex items-center space-x-1">
-                  <input
-                    type="radio"
-                    name="new-yesNo"
-                    disabled
-                    value="no"
-                    checked={newCompliance.yesNo === "no"}
-                    onChange={(e) => setNewCompliance({ ...newCompliance, yesNo: e.target.value })}
-                  />
-                  <span>No</span>
-                </Label>
-              </div>
-            </TableCell>
-            <TableCell>
-              <input
+            </div>
+            <div>
+              <Label htmlFor="yesNo" className="text-right">Yes/No</Label>
+              <Select
+                value={newCompliance.yesNo}
+                onValueChange={(value) => setNewCompliance({ ...newCompliance, yesNo: value })}
+              >
+                <SelectTrigger id="yesNo" className="col-span-3">
+                  <SelectValue placeholder="Select Yes/No" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="date" className="text-right">Date</Label>
+              <Input
+                id="date"
                 type="date"
-                disabled
                 value={newCompliance.date}
                 onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
-                className="h-5 border-none focus:outline-none"
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <input
-                type="text"
-                disabled
+            </div>
+            <div>
+              <Label htmlFor="description" className="text-right">Description</Label>
+              <Textarea
+                id="description"
                 value={newCompliance.description}
                 onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
-                placeholder="Description"
-                className="w-full h-5 border-none focus:outline-none"
+                className="col-span-3"
               />
-            </TableCell>
-            <TableCell>
-              <button onClick={handleAddComplianceData} className="text-black rounded-full transition">
-                <div className="relative group">
-                    <PlusCircle size={20} />
-                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                          Add Row
-                      </span>
-                </div>
-              </button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleAddComplianceData}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {editingCompliance && (
+        <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
+          <DialogContent className="w-full max-w-5xl p-6">
+            <DialogHeader>
+              <DialogTitle>Edit Compliance</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-4 gap-4 py-4">
+              <div>
+                <Label htmlFor="edit-query" className="text-right">Form Query</Label>
+                <Textarea
+                  id="edit-query"
+                  value={editingCompliance.query}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, query: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-yesNo" className="text-right">Yes/No</Label>
+                <Select
+                  value={editingCompliance.yesNo}
+                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, yesNo: value })}
+                >
+                  <SelectTrigger id="edit-yesNo" className="col-span-3">
+                    <SelectValue placeholder="Select Yes/No" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-date" className="text-right">Date</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={editingCompliance.date}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description" className="text-right">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingCompliance.description}
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, description: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleDeleteCompliance} variant="destructive">Delete</Button>
+              <Button onClick={handleSaveCompliance} className="mr-2">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
