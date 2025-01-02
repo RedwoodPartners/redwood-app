@@ -11,7 +11,7 @@ const HomePage = () => {
     <>
     <div className="">
     <StartupStats />
-    <div className="flex flex-grow gap-4 p-4">
+    <div className="flex flex-cols-3 gap-4 p-4">
       <NoUsers />
       <NoStartups />
       <Domain />
