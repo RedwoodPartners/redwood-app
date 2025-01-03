@@ -38,6 +38,8 @@ const StartupsPage: React.FC = () => {
   const [selectedStartups, setSelectedStartups] = useState<string[]>([]);
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [year, setYear] = useState("");
+
   const router = useRouter();
   const { toast } = useToast();
 
@@ -83,7 +85,7 @@ const StartupsPage: React.FC = () => {
     const formattedBrandName = newStartupData.brandName?.replace(/\s+/g, '') || '';
     const customId = `${formattedBrandName}-${Math.floor(1000 + Math.random() * 9000)}`;
     try {
-      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, newStartupData);
+      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, { ...newStartupData, year: year });
       setShowAddDialog(false);
       router.push(`/startup/${createdStartup.$id}`);
     } catch (error) {
@@ -123,6 +125,7 @@ const StartupsPage: React.FC = () => {
 
   const handleEditStartup = (startup: Startup) => {
     setEditingStartup(startup);
+    setYear(startup.year);
     setShowEditDialog(true);
   };
 
@@ -130,12 +133,15 @@ const StartupsPage: React.FC = () => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
     try {
-      await databases.updateDocument(DATABASE_ID, STARTUP_ID, updatedStartupData.id, updatedStartupData);
+      await databases.updateDocument(DATABASE_ID, STARTUP_ID, updatedStartupData.id, {
+        ...updatedStartupData,
+        year
+      });
       setStartups((prev) =>
-        prev.map((startup) => (startup.id === updatedStartupData.id ? updatedStartupData : startup))
+        prev.map((startup) => (startup.id === updatedStartupData.id ? { ...updatedStartupData, year } : startup))
       );
       setFilteredStartups((prev) =>
-        prev.map((startup) => (startup.id === updatedStartupData.id ? updatedStartupData : startup))
+        prev.map((startup) => (startup.id === updatedStartupData.id ? { ...updatedStartupData, year } : startup))
       );
       setShowEditDialog(false);
       setEditingStartup(null);
@@ -194,18 +200,18 @@ const StartupsPage: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="year">Year</Label>
-                <Select>
-                <SelectTrigger id="year" name="year" className="w-full p-2 mb-2 border rounded">
-                  <SelectValue placeholder="Select a year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year}
-                  </SelectItem>
-                  ))}
-                </SelectContent>
-                </Select>
+                <Select value={year} onValueChange={(selectedYear) => setYear(selectedYear)}>
+                    <SelectTrigger id="year" name="year" className="w-full p-2 mb-2 border rounded">
+                      <SelectValue placeholder="Select a year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((yearOption) => (
+                        <SelectItem key={yearOption} value={String(yearOption)}>
+                          {yearOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
               </div>
 
               <div>
@@ -312,11 +318,30 @@ const StartupsPage: React.FC = () => {
                 handleSaveChanges(updatedStartupData);
               }}
             >
+              <Label>Startup Name</Label>
               <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.name} required />
+              <Label>Brand Name</Label>
               <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.brandName} required />
+              <Label>Revenue</Label>
               <Input type="text" name="revenue" placeholder="Revenue" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.revenue} />
-              <Input type="text" name="year" placeholder="Year" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.year} required />
-              <Textarea name="description" placeholder="Description" className="w-full p-2 mb-2 border rounded" rows={3} defaultValue={editingStartup.description}></Textarea>
+
+              <Label>Year</Label>
+              <Select value={year} onValueChange={(selectedYear) => setYear(selectedYear)}>
+              <SelectTrigger id="edit-year" name="year" className="w-full p-2 mb-2 border rounded">
+                <SelectValue placeholder="Select a year" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((yearOption) => (
+                  <SelectItem key={yearOption} value={String(yearOption)}>
+                    {yearOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+              </Select>
+
+              
+              <Label>Remarks</Label>
+              <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3} defaultValue={editingStartup.description}></Textarea>
               <div className="flex justify-end mt-4">
                 <Button type="submit">Save Changes</Button>
               </div>

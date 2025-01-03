@@ -209,8 +209,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     <SelectValue placeholder="Partner/Director" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Partner">Yes</SelectItem>
-                    <SelectItem value="Director">No</SelectItem>
+                    <SelectItem value="Yes">Yes</SelectItem>
+                    <SelectItem value="No">No</SelectItem>
                   </SelectContent>
                   </Select>
                 </div>
