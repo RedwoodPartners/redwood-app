@@ -1,12 +1,11 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -91,6 +90,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       await databases.updateDocument(DATABASE_ID, STARTUP_ID, startupId, updatedData);
       setStartupData(updatedData);
       setIsEditing(false);
+      toast({ title: "Company Details saved!!" });
     } catch (error) {
       console.error("Error saving updated data:", error);
       setError("Failed to save changes. Please try again later.");
@@ -99,9 +99,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const handleChange = (key: keyof StartupData, value: string) => {
     if (updatedData) {
-      setUpdatedData({ ...updatedData, [key]: value });
+      let newValue = value;
+      if (key === 'subDomain' || key === 'registeredCountry' || key === 'registeredState') {
+        newValue = validateCharacterInput(value);
+      }
+      setUpdatedData({ ...updatedData, [key]: newValue });
     }
   };
+  
 
   const dropdownOptions: { [key: string]: string[] } = {
     companyStage: [
@@ -229,6 +234,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       </SelectContent>
     </Select>
   );
+
+  const validateCharacterInput = (value: string) => {
+    return value.replace(/[^a-zA-Z\s]/g, '');
+  };
   
 
   const fieldLabels: { [key in keyof StartupData]: string } = {
@@ -273,32 +282,24 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
         <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
         {isEditing ? (
           <div className="relative group ml-3">
-          <SaveIcon
-            size={25}
-            className="cursor-pointer text-green-500"
-            onClick={() => {
-              handleSaveClick();
-              toast({ title: "Company Details saved!!" });
-            }}
-          />
+            <SaveIcon
+              size={25}
+              className="cursor-pointer text-green-500"
+              onClick={handleSaveClick}
+            />
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
               Save
             </span>
           </div>
         ) : (
-            <div className="relative group">
-              <EditIcon
-                  size={25}
-                  className="cursor-pointer"
-                  onClick={handleEditClick}
-              />
-              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                  Edit
-              </span>
-            </div>
+          <div className="relative group">
+            <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+              Edit
+            </span>
+          </div>
         )}
       </div>
-
       <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg shadow-lg border border-gray-300">
         {Object.entries(startupData).map(([key, value]) => (
           <div key={key} className="space-y-4">
@@ -306,6 +307,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
               <Label className="font-semibold text-gray-700">
                 {fieldLabels[key as keyof StartupData] || key}
               </Label>
+              
               {key === "dateOfIncorporation" ? (
                 <Input
                   type="date"
@@ -314,7 +316,35 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   value={updatedData?.[key as keyof StartupData] || ""}
                   onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
                 />
-              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications",].includes(key) ? (
+              ) : key === "revenue" ? (
+                <Input
+                  type="text"
+                  className="text-black"
+                  placeholder="0 INR"
+                  disabled={!isEditing}
+                  value={updatedData?.[key as keyof StartupData] || ""}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/[^0-9,]/g, "");
+                    const formattedValue = numericValue.replace(/,/g, "");
+                    const parsedValue = parseInt(formattedValue, 10);
+                    const finalValue = isNaN(parsedValue) ? "0" : parsedValue.toLocaleString("en-IN");
+                    handleChange(key as keyof StartupData, finalValue);
+                  }}
+                />
+              ) : key === "employees" ? (
+                <Input
+                  type="number"
+                  className="text-black"
+                  placeholder="0"
+                  disabled={!isEditing}
+                  value={updatedData?.[key as keyof StartupData] || ""}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/[^0-9]/g, "0");
+                    handleChange(key as keyof StartupData, numericValue);
+                  }}
+                  min="0"
+                />
+              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
                 renderDropdown(key as keyof StartupData)
               ) : (
                 <Input
@@ -322,6 +352,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   disabled={!isEditing}
                   value={updatedData?.[key as keyof StartupData] || ""}
                   onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
+                  onKeyPress={(e) => {
+                    if ((key === 'subDomain' || key === 'registeredCountry' || key === 'registeredState') && !/[a-zA-Z\s]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
               )}
             </div>

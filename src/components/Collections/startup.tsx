@@ -53,7 +53,7 @@ const StartupsPage: React.FC = () => {
           id: doc.$id,
           name: doc.name || "",
           brandName: doc.brandName || "",
-          revenue: doc.revenue || "",
+          revenue: doc.revenue || "0",
           year: doc.year || "",
           description: doc.description || "",
         }));
@@ -189,7 +189,7 @@ const StartupsPage: React.FC = () => {
                 createAndRedirect(newStartupData as Partial<Startup>);
               }}
             >
-              <div className="grid grid-rows-1 gap-4">
+              <div className="grid grid-rows-1 gap-1">
               <div>
                 <Label>Startup Name</Label>
                 <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" required />
@@ -323,7 +323,7 @@ const StartupsPage: React.FC = () => {
               <Label>Brand Name</Label>
               <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.brandName} required />
               <Label>Revenue</Label>
-              <Input type="text" name="revenue" placeholder="Revenue" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.revenue} />
+              <Input type="number" name="revenue" placeholder="Revenue" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.revenue} />
 
               <Label>Year</Label>
               <Select value={year} onValueChange={(selectedYear) => setYear(selectedYear)}>

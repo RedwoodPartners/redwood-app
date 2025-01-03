@@ -12,10 +12,10 @@ const InfoBox: React.FC<InfoBoxProps> = ({ name }) => {
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
-        <span className="font-semibold text-gray-700 text-sm sm:text-base">
+        <span className="font-normal text-gray-700 text-xs sm:text-base">
           ₹2 Cr
         </span>
-        <span className="font-semibold text-gray-700 text-sm sm:text-base">
+        <span className="font-normal text-gray-700 text-xs sm:text-base">
           20 Jun 2024 - 12 Nov 2024
         </span>
         <span className="flex items-center space-x-2">
