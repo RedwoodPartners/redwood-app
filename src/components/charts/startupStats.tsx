@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Client, Databases } from 'appwrite';
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from '@/appwrite/config';
 
@@ -8,10 +9,12 @@ interface StatCardProps {
   mainValue: string | number;
   subValue: string;
   icon: React.ReactNode;
+  onClick?: () => void;
 }
 
 const StartupStats: React.FC = () => {
   const [startupCount, setStartupCount] = useState<number>(0);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchStartupCount = async () => {
@@ -30,11 +33,12 @@ const StartupStats: React.FC = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
       <StatCard
         title="Total Startups"
         mainValue={startupCount}
         subValue="+1% from last month"
+        onClick={() => router.push("/startup")}
         icon={
           <svg
             className="w-6 h-5"
@@ -51,6 +55,7 @@ const StartupStats: React.FC = () => {
             />
           </svg>
         }
+        
       />
       <StatCard
         title="Pipeline Startups"
@@ -119,15 +124,15 @@ const StartupStats: React.FC = () => {
   );
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon, onClick }) => {
   return (
-    <div className="bg-white rounded-xl p-3 shadow-md border border-gray-200 max-w-full sm:max-w-sm">
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 max-w-full h-24 sm:max-w-sm" onClick={onClick}>
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
-        <span className="text-gray-600">{icon}</span>
+        <h3 className="text-sm font-medium text-gray-600 p-2">{title}</h3>
+        <span className="text-gray-600 mr-2">{icon}</span>
       </div>
-      <h2 className="text-2xl font-semibold mb-2">{mainValue}</h2>
-      <p className="text-sm text-gray-500">{subValue}</p>
+      <h2 className="text-xl font-semibold mb-2 ml-3 -mt-4">+{mainValue}</h2>
+      <p className="text-sm text-gray-500 ml-3">{subValue}</p>
     </div>
   );
 };
