@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -30,6 +31,7 @@ const chartConfig = {
 
 export function NoStartups() {
   const [chartData, setChartData] = useState<{ year: string; Startups: number }[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchStartups = async () => {
@@ -59,6 +61,13 @@ export function NoStartups() {
     fetchStartups();
   }, []);
 
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const year = data.activePayload[0].payload.year;
+      router.push(`/home/${year}`);
+    }
+  };
+
   return (
     <Card className="flex flex-col shadow-none w-[300px] h-auto">
       <CardHeader>
@@ -77,6 +86,7 @@ export function NoStartups() {
             margin={{
               top: 25,
             }}
+            onClick={handleBarClick}
           >
             <CartesianGrid vertical={false} />
             <XAxis
@@ -90,7 +100,7 @@ export function NoStartups() {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="Startups" fill="var(--color-desktop)" radius={8}>
+            <Bar dataKey="Startups" fill="var(--color-desktop)" radius={8} cursor="pointer">
               <LabelList
                 position="top"
                 offset={12}
