@@ -76,7 +76,7 @@ export function Domain() {
 
   
   return (
-      <Card className="flex flex-col w-[300px]">
+      <Card className="flex flex-col w-[280px]">
         <CardHeader className="items-center pb-0">
           <CardTitle>Top 5 Domains</CardTitle>
           <CardDescription>Current Data</CardDescription>
@@ -110,20 +110,18 @@ export function Domain() {
         </CardContent>
         <CardFooter className="flex-col gap-2 text-sm">
           
-          <div className="flex flex-col gap-1 mt-2">
+          <div className="flex flex-col text-xs gap-1">
             {chartData.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: item.fill }}
                 ></div>
                 <span>{item.browser}</span>
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 font-medium leading-none">
-            Showing top 5 domains <TrendingUp className="h-4 w-4" />
-          </div>
+          
         </CardFooter>
       </Card>
     )
