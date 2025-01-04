@@ -154,9 +154,48 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
   onSave,
   onDelete,
 }) => {
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
   const handleChange = (field: string, value: string) => {
     onChange({ ...testimonial, [field]: value });
+    validateField(field, value);
   };
+
+  const validateField = (field: string, value: string) => {
+    let error = '';
+    switch (field) {
+      case 'phone':
+        if (!/^\d{10}$/.test(value)) {
+          error = 'Phone number must be 10 digits';
+        }
+        break;
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Invalid email format';
+        }
+        break;
+    }
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
+  const handleSave = () => {
+    const allFields = ['customerName', 'designation', 'phone', 'email', 'query1', 'query2', 'query3', 'query4'];
+    const newErrors: {[key: string]: string} = {};
+    
+    allFields.forEach(field => {
+      if (!testimonial[field]) {
+        newErrors[field] = 'This field is required';
+      } else {
+        validateField(field, testimonial[field]);
+      }
+    });
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).every(error => !error)) {
+      onSave();
+    }
+  };
+
 
   return (
     <div className="space-y-4 w-full">
@@ -182,11 +221,13 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
           <Input
+            type="number"
             id="phone"
             placeholder="Enter phone number"
             value={testimonial.phone || ""}
             onChange={(e) => handleChange("phone", e.target.value)}
           />
+          {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -196,6 +237,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             value={testimonial.email || ""}
             onChange={(e) => handleChange("email", e.target.value)}
           />
+          {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
