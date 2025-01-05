@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger
@@ -24,7 +25,13 @@ import { Client, Databases, Query } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
 import { PlusCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
@@ -40,6 +47,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [allShareholders, setAllShareholders] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingShareholder, setEditingShareholder] = useState<any>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -64,12 +72,12 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     } else {
       setData({});
     }
+    setErrors({});
   }, [editingShareholder]);
 
   const handleSave = async () => {
     try {
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = data;
-      
       if (editingShareholder) {
         await databases.updateDocument(
           DATABASE_ID,
@@ -85,10 +93,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           { startupId, ...dataToUpdate }
         );
       }
-
       setData({});
       setEditingShareholder(null);
       setIsDialogOpen(false);
+      setErrors({});
       fetchData();
     } catch (error) {
       console.error("Error saving data:", error);
@@ -97,6 +105,20 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
 
   const handleChange = (field: string, value: string) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
+    setErrors((prevErrors) => ({ ...prevErrors, [field]: "" }));
+
+    if (field === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setErrors((prevErrors) => ({ ...prevErrors, email: "Invalid email format" }));
+      }
+    }
+    if (field === "phone") {
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(value)) {
+        setErrors((prevErrors) => ({ ...prevErrors, phone: "Phone number must be 10 digits" }));
+      }
+    }
   };
 
   const handleDelete = async () => {
@@ -115,7 +137,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       }
     }
   };
-  
 
   const handleDoubleTap = (shareholder: any) => {
     setEditingShareholder(shareholder);
@@ -128,7 +149,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
         <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
-          if (!open) setEditingShareholder(null);
+          if (!open) {
+            setEditingShareholder(null);
+            setErrors({});
+          }
         }}>
           <DialogTrigger asChild>
             <button>
@@ -143,6 +167,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>{editingShareholder ? 'Edit Shareholder' : 'Add Shareholder'}</DialogTitle>
+              <DialogDescription aria-describedby={undefined}>
+              </DialogDescription>
             </DialogHeader>
             <form>
               <div className="grid grid-cols-4 gap-4">
@@ -177,14 +203,14 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     value={data["gender"] || ""}
                     onValueChange={(value) => handleChange("gender", value)}
                   >
-                  <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
-                    <SelectValue placeholder="Select Gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
+                    <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                      <SelectValue placeholder="Select Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div>
@@ -205,13 +231,13 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     value={data["isPartner"] || ""}
                     onValueChange={(value) => handleChange("isPartner", value)}
                   >
-                  <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
-                    <SelectValue placeholder="Partner/Director" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
+                    <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                      <SelectValue placeholder="Partner/Director" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div>
@@ -228,11 +254,12 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   <Label>Phone</Label>
                   <Input
                     id="phone"
-                    type="tel"
+                    type="number"
                     placeholder="Phone"
                     value={data["phone"] || ""}
                     onChange={(e) => handleChange("phone", e.target.value)}
                   />
+                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
                 <div>
                   <Label>Email</Label>
@@ -243,6 +270,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     value={data["email"] || ""}
                     onChange={(e) => handleChange("email", e.target.value)}
                   />
+                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-4 mt-4">
@@ -280,7 +308,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 </Button>
                 {editingShareholder && (
                   <Button type="button" onClick={handleDelete} variant="destructive">
-                      Delete
+                    Delete
                   </Button>
                 )}
               </div>
@@ -300,14 +328,11 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               <TableHead>Is Partner/Director</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
-              {/*<TableHead>Educational Qualifications</TableHead>
-              <TableHead>Work Experience</TableHead>
-              <TableHead>Associated Companies</TableHead>*/}
             </TableRow>
           </TableHeader>
           <TableBody>
             {allShareholders.map((shareholder) => (
-              <TableRow 
+              <TableRow
                 key={shareholder.$id}
                 onDoubleClick={() => handleDoubleTap(shareholder)}
                 style={{ cursor: 'pointer' }}
@@ -332,9 +357,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 <TableCell>{shareholder.isPartner || "N/A"}</TableCell>
                 <TableCell>{shareholder.email || "N/A"}</TableCell>
                 <TableCell>{shareholder.phone || "N/A"}</TableCell>
-                {/*<TableCell>{shareholder.educationalQualifications || "N/A"}</TableCell>
-                <TableCell>{shareholder.workExperience || "N/A"}</TableCell>
-                <TableCell>{shareholder.associatedCompanies || "N/A"}</TableCell>*/}
               </TableRow>
             ))}
           </TableBody>

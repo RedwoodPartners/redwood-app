@@ -134,6 +134,7 @@ const ProjectsPage: React.FC = () => {
         </Button>
       </div>
 
+      <div className="bg-white shadow-md rounded-lg border border-gray-300">
       <Table>
         <TableHeader>
           <TableRow>
@@ -165,6 +166,7 @@ const ProjectsPage: React.FC = () => {
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent>
