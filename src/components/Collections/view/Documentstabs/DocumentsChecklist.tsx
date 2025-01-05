@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, SaveIcon, TrashIcon, UploadCloud } from "lucide-react";
+import { Info, InfoIcon, PlusCircle, SaveIcon, Trash2, TrashIcon, UploadCloud } from "lucide-react";
 import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -37,6 +38,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const databases = useMemo(() => new Databases(client), [client]);
   const storage = useMemo(() => new Storage(client), [client]);
   const { toast } = useToast();
+  const [activeInfoIcon, setActiveInfoIcon] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -164,6 +167,32 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     }
   };
 
+  const handleDeleteFile = async (documentId: string, fileId: string) => {
+    try {
+      await storage.deleteFile(BUCKET_ID, fileId);
+      await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
+        fileId: null,
+        fileName: null
+      });
+      const updatedDocData = docData.map(doc => 
+        doc.$id === documentId ? { ...doc, fileId: null, fileName: null } : doc
+      );
+      setDocData(updatedDocData);
+      toast({
+        title: "File deleted",
+        description: "The file has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+
   return (
     <div>
       <div className="flex justify-between items-center">
@@ -257,9 +286,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <TableCell>{row.docType}</TableCell>
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.description}</TableCell>
-                <TableCell>
+                <TableCell className="w-24">
                   <div className="flex items-center justify-start space-x-2">
                     {row.fileId ? (
+                      <>
                       <a href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/view?project=${PROJECT_ID}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                         <div className="relative group">
                           <FaEye size={20} className="inline" />
@@ -268,6 +298,24 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                           </span>
                         </div>
                       </a>
+                      <span className="text-xs text-gray-500">{row.fileName}</span>
+                      <Popover>
+                        <PopoverTrigger>
+                          <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteFile(row.$id, row.fileId)}
+                          className="flex items-center"
+                        >
+                        <Trash2 size={16} className="mr-2" />
+                          Delete File
+                        </Button>
+                        </PopoverContent>
+                      </Popover>
+                      </>
                    ) : (
                     <label className="ml-2">
                       <div className="relative group">
