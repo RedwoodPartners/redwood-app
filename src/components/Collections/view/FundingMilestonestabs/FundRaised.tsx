@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, UploadCloud } from "lucide-react";
+import { InfoIcon, PlusCircle, Trash2, UploadCloud } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Client, Databases, Storage, ID } from "appwrite";
 import { Query } from "appwrite";
@@ -14,6 +14,7 @@ import { FaEye } from "react-icons/fa";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const FUND_RAISED_ID = "6731e2fb000d9580025f";
 const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
@@ -179,6 +180,29 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     }, 0);
   };
 
+  const handleDeleteFile = async (documentId: string, fileId: string) => {
+    try {
+      await storage.deleteFile(FUND_DOCUMENTS_ID, fileId);
+      await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, documentId, {
+        fileId: null,
+        fileName: null,
+      });
+      fetchInvestments();
+      toast({
+        title: "File deleted",
+        description: "The file has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+
   return (
     <div>
       <div className="flex">
@@ -198,7 +222,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableHead>Investment Date</TableHead>
               <TableHead>Investment Amount (INR)</TableHead>
               <TableHead className="w-96">Description</TableHead>
-              <TableHead>Document</TableHead>
+              <TableHead className="w-24">Document</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,6 +237,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     {investment.fileId ? (
+                      <>
                       <a
                         href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${investment.fileId}/view?project=${PROJECT_ID}`}
                         target="_blank"
@@ -226,6 +251,24 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                           </span>
                         </div>
                       </a>
+                      <span className="text-xs text-gray-500">{investment.fileName}</span>
+                      <Popover>
+                        <PopoverTrigger>
+                          <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteFile(investment.$id!, investment.fileId!)}
+                          className="flex items-center"
+                        >
+                        <Trash2 size={16} className="mr-2" />
+                         Delete File
+                        </Button>
+                        </PopoverContent>
+                      </Popover>
+                      </>
                     ) : (
                       <label className="cursor-pointer">
                         <input
