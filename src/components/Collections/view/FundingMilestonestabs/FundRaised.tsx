@@ -313,7 +313,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <div>
                 <Label className="block text-sm font-medium text-gray-700">Investment Amount (INR)</Label>
                 <Input
-                  type="text"
+                  type="number"
                   placeholder="Enter the amount"
                   value={selectedInvestment?.amount || ""}
                   onChange={(e) => setSelectedInvestment({ ...selectedInvestment, amount: e.target.value } as Investment)}
