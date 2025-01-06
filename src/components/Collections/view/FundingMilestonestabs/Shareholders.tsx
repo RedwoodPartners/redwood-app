@@ -302,15 +302,15 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   />
                 </div>
               </div>
-              <div className="mt-4 space-x-2">
-                <Button type="button" onClick={handleSave}>
-                  Save
-                </Button>
+              <div className="flex justify-end mt-4 space-x-2">
                 {editingShareholder && (
-                  <Button type="button" onClick={handleDelete} variant="destructive">
+                  <Button type="button" onClick={handleDelete} className="bg-white text-black border border-black hover:bg-neutral-200">
                     Delete
                   </Button>
                 )}
+                <Button type="button" onClick={handleSave}>
+                  Save
+                </Button>
               </div>
             </form>
           </DialogContent>

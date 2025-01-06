@@ -250,7 +250,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             </div>
           )}
           <div className="flex space-x-3 justify-end">
-            <Button onClick={handleDeleteMilestone} variant="destructive">
+            <Button onClick={handleDeleteMilestone} className="bg-white text-black border border-black hover:bg-neutral-200">
               Delete
             </Button>
             <Button onClick={handleEditMilestone}>Save</Button>

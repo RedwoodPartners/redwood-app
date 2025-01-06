@@ -105,7 +105,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   };
 
   const roleOptions = [
-    "Founder", "Co-Founder", "Employee", "Advisor", "Angel Investor", "Venture Capitalist",
+    "Select", "Founder", "Co-Founder", "Employee", "Advisor", "Angel Investor", "Venture Capitalist",
     "Board Member", "Institutional Investor", "Seed Investor", "Series A Investor",
     "Series B Investor", "Series C and Beyond Investors", "Convertible Note Holder",
     "Preferred Stock Holder", "Common Stock Holder", "Employee Stock Option Plan (ESOP) Holder",
@@ -175,7 +175,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             </div>
             <div className="flex justify-end space-x-2 mt-4">
               {editingRow?.$id && (
-                <Button type="button" variant="destructive" onClick={() => handleDeleteRow(editingRow.$id)}>
+                <Button type="button" onClick={() => handleDeleteRow(editingRow.$id)} className="bg-white text-black border border-black hover:bg-neutral-200">
                   Delete
                 </Button>
               )}

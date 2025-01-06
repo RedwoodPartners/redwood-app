@@ -176,6 +176,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Select">Select</SelectItem>
                   <SelectItem value="Applied">Applied</SelectItem>
                   <SelectItem value="Incubated">Incubated</SelectItem>
                   <SelectItem value="Exited">Exited</SelectItem>
@@ -232,6 +233,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Select">Select</SelectItem>
                     <SelectItem value="Applied">Applied</SelectItem>
                     <SelectItem value="Incubated">Incubated</SelectItem>
                     <SelectItem value="Exited">Exited</SelectItem>
@@ -256,7 +258,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDeleteIncubation} variant="destructive">Delete</Button>
+              <Button onClick={handleDeleteIncubation} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
               <Button onClick={handleSaveIncubation} className="mr-2">Save</Button>
             </DialogFooter>
           </DialogContent>

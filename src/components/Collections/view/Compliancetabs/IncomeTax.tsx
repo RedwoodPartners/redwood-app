@@ -206,7 +206,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDeleteCompliance} variant="destructive">Delete</Button>
+              <Button onClick={handleDeleteCompliance} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
               <Button onClick={handleSaveCompliance} className="mr-2">Save</Button>
             </DialogFooter>
           </DialogContent>
