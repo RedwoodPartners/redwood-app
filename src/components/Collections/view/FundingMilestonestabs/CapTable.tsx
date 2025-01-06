@@ -147,10 +147,10 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             handleSaveInvestment(editingRow);
           }}>
             <div className="flex flex-row gap-4 py-4">
-              <div className="flex-1">
+              {/*<div className="flex-1">
                 <Label htmlFor="round" className="block mb-2">Round Name</Label>
                 <Input id="round" placeholder="Round Name" value={editingRow?.round || ""} onChange={(e) => setEditingRow({ ...editingRow, round: e.target.value })} />
-              </div>
+              </div>*/}
               <div className="flex-1">
                 <Label htmlFor="shareholderName" className="block mb-2">Shareholder Name</Label>
                 <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} onChange={(e) => setEditingRow({ ...editingRow, shareholderName: e.target.value })} />
@@ -189,7 +189,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           <TableCaption>A list of capital contributions.</TableCaption>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead>Round Name</TableHead>
+              {/*<TableHead>Round Name</TableHead>*/}
               <TableHead>Shareholder Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Capital Structure (%)</TableHead>
@@ -201,7 +201,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 setEditingRow(row);
                 setIsDialogOpen(true);
               }} className="cursor-pointer hover:bg-gray-100">
-                <TableCell>{row.round}</TableCell>
+                {/*<TableCell>{row.round}</TableCell>*/}
                 <TableCell>{row.shareholderName}</TableCell>
                 <TableCell>{row.role}</TableCell>
                 <TableCell>{row.capitalStructure}</TableCell>

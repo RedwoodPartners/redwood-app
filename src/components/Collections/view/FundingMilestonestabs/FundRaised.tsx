@@ -216,8 +216,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           <TableCaption>A list of recent investments.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>Investment Stage</TableHead>
-              <TableHead>Round Name</TableHead>
+              {/*<TableHead>Investment Stage</TableHead>
+              <TableHead>Round Name</TableHead>*/}
               <TableHead>Mode of Investment</TableHead>
               <TableHead>Investment Date</TableHead>
               <TableHead>Investment Amount (INR)</TableHead>
@@ -228,8 +228,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           <TableBody>
             {investments.map((investment, index) => (
               <TableRow key={investment.$id} onDoubleClick={() => openDialog(investment, true)}>
-                <TableCell>{investment.stage}</TableCell>
-                <TableCell>{investment.round}</TableCell>
+                {/*<TableCell>{investment.stage}</TableCell>
+                <TableCell>{investment.round}</TableCell>*/}
                 <TableCell>{investment.mode}</TableCell>
                 <TableCell>{investment.date}</TableCell>
                 <TableCell>{investment.amount}</TableCell>
@@ -303,7 +303,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mt-4">
-              <div>
+              {/*<div>
                 <Label className="block text-sm font-medium text-gray-700">Investment Stage</Label>
                 <Input
                   type="text"
@@ -322,7 +322,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   onChange={(e) => setSelectedInvestment({ ...selectedInvestment, round: e.target.value } as Investment)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
-              </div>
+              </div>*/}
               <div>
               <Label className="">Mode of Investment</Label>
               <Select
@@ -343,8 +343,6 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   </SelectContent>
               </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
                 <Label className="block text-sm font-medium text-gray-700">Investment Date</Label>
                 <Input
