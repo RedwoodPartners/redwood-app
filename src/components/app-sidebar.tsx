@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Home,
   Inbox,
@@ -77,6 +78,8 @@ const items = [
 export function AppSidebar() {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -162,7 +165,9 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                    <Link href={item.url}
+                    className={pathname === item.url ? "bg-sidebar-active text-sidebar-active-foreground bg-slate-100" : ""}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>

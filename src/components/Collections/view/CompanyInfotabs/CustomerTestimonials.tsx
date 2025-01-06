@@ -276,7 +276,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
       </div>
       <div className="flex justify-end space-x-2">
         {testimonial.$id && (
-          <Button variant="destructive" onClick={onDelete}>
+          <Button onClick={onDelete} className="bg-white text-black border border-black hover:bg-neutral-200">
             Delete
           </Button>
         )}

@@ -34,10 +34,14 @@ const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
 
 const calculateTotal = (funds: FundItem[]): number => {
   return funds.reduce((total, fund) => {
-    const cleanAmount = fund.amount.replace(/,/g, '');
-    return total + (parseFloat(cleanAmount) || 0);
+    if (fund && fund.amount) {
+      const cleanAmount = fund.amount.replace(/,/g, '');
+      return total + (parseFloat(cleanAmount) || 0);
+    }
+    return total;
   }, 0);
 };
+
 
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [proposedFunds, setProposedFunds] = useState<FundItem[]>([]);
@@ -195,7 +199,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
           </div>
           <DialogFooter>
             {editingFund?.$id && (
-              <Button variant="destructive" onClick={handleDeleteItem}>Delete</Button>
+              <Button onClick={handleDeleteItem} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             )}
             <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem}>
               {editingFund?.$id ? "Save" : "Save"}

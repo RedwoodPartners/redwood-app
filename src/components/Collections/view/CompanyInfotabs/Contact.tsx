@@ -65,7 +65,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const [phone1Error, setPhone1Error] = useState<string | null>(null);
   const [phone2Error, setPhone2Error] = useState<string | null>(null);
   const [postalCodeError, setPostalCodeError] = useState<string | null>(null);
-
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,6 +94,13 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
             postalCode2: document.postalCode2 || "",
           });
           setDocumentId(document.$id);
+          const isSame = 
+          document.address1 === document.address21 &&
+          document.address2 === document.address22 &&
+          document.city === document.city2 &&
+          document.state === document.state2 &&
+          document.postalCode === document.postalCode2;
+        setIsSameAddress(isSame);
         }
       } catch (error) {
         console.error("Error fetching contact data:", error);

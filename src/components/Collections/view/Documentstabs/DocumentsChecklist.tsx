@@ -225,6 +225,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Select">Select</SelectItem>
                   <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
                   <SelectItem value="Legal">Legal</SelectItem>
                   <SelectItem value="Financial">Financial</SelectItem>
@@ -365,6 +366,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <SelectValue placeholder="Select Type" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Select">Select</SelectItem>
                 <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
                 <SelectItem value="Legal">Legal</SelectItem>
                 <SelectItem value="Financial">Financial</SelectItem>
@@ -396,7 +398,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="destructive" onClick={handleDeleteDocument}>Delete</Button>
+            <Button onClick={handleDeleteDocument} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             <Button onClick={handleEditDocument}>Save</Button>
           </DialogFooter>
         </DialogContent>

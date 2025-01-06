@@ -183,6 +183,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Select">Select</SelectItem>
                 <SelectItem value="Filed">Filed</SelectItem>
                 <SelectItem value="Published">Published</SelectItem>
                 <SelectItem value="Granted">Granted</SelectItem>
@@ -265,6 +266,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Select">Select</SelectItem>
                   <SelectItem value="Filed">Filed</SelectItem>
                   <SelectItem value="Published">Published</SelectItem>
                   <SelectItem value="Granted">Granted</SelectItem>
@@ -322,7 +324,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDeletePatent} variant="destructive">Delete</Button>
+              <Button onClick={handleDeletePatent} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
               <Button onClick={handleSavePatent} className="mr-2">Save</Button>
             </DialogFooter>
           </DialogContent>

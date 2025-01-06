@@ -333,6 +333,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   <SelectValue placeholder="Select Mode" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="select">Select</SelectItem>
                   <SelectItem value="Equity">Equity</SelectItem>
                   <SelectItem value="CCPS">CCPS</SelectItem>
                   <SelectItem value="CCD">CCD</SelectItem>
@@ -376,12 +377,12 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           </div>
           <DialogFooter>
             {isEditMode && (
-              <Button onClick={handleDeleteInvestment} variant="destructive">
+              <Button onClick={handleDeleteInvestment} className="bg-white text-black border border-black hover:bg-neutral-200">
                 Delete
               </Button>
             )}
             <Button onClick={handleAddOrUpdateInvestment}>
-              {isEditMode ? "Update" : "Save"}
+              {isEditMode ? "Save" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

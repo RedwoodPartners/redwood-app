@@ -110,6 +110,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const dropdownOptions: { [key: string]: string[] } = {
     companyStage: [
+      "Select",
       "Ideation",
       "POC",
       "MVP",
@@ -117,6 +118,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Growth",
     ],
     businessType: [
+      "Select",
       "Business Model Trading",
       "Services",
       "Product Manufacturing",
@@ -127,6 +129,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Service",
     ],
     natureOfCompany: [
+      "Select",
       "Pvt Ltd",
       "LLP",
       "Partnership",
@@ -135,6 +138,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Entity Not Incorporated",
     ],
     domain: [
+      "Select",
       "IOT",
       "Space Tech",
       "Sustainability",
