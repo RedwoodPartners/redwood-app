@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { Info, InfoIcon, PlusCircle, SaveIcon, Trash2, TrashIcon, UploadCloud } from "lucide-react";
+import { Info, InfoIcon, PlusCircle, SaveIcon, Trash, Trash2, TrashIcon, UploadCloud } from "lucide-react";
 import { Query, ID, Client, Databases, Storage } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
@@ -302,7 +302,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       <span className="text-xs text-gray-500">{row.fileName}</span>
                       <Popover>
                         <PopoverTrigger>
-                          <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
+                          <Trash2 size={16} className="text-gray-500 cursor-pointer" />
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
                         <Button
