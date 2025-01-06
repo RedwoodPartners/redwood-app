@@ -270,7 +270,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <TableHead>Document Type</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[500px]">Description</TableHead>
-              <TableHead>File</TableHead>
+              <TableHead className="w-36">Documents</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -286,7 +286,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <TableCell>{row.docType}</TableCell>
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.description}</TableCell>
-                <TableCell className="w-24">
+                <TableCell>
                   <div className="flex items-center justify-start space-x-2">
                     {row.fileId ? (
                       <>

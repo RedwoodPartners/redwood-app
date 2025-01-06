@@ -19,7 +19,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,6 +180,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Add New Compliance</DialogTitle>
+            <DialogDescription aria-describedby={undefined}>
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 py-4">
             <div>
@@ -220,6 +223,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>Edit Compliance</DialogTitle>
+              <DialogDescription aria-describedby={undefined}>
+              </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-3 gap-4 py-4">
               <div>

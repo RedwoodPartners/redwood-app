@@ -5,7 +5,7 @@ import { PlusCircle, Trash2Icon } from "lucide-react";
 import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,6 +165,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingFund?.$id ? "Edit Fund Item" : "Add New Fund Item"}</DialogTitle>
+            <DialogDescription aria-describedby={undefined}>
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -183,6 +185,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
                 Amount
               </Label>
               <Input
+                type="number"
                 id="amount"
                 value={editingFund?.amount || ""}
                 onChange={(e) => setEditingFund({ ...editingFund!, amount: e.target.value })}
