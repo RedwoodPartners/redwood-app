@@ -7,7 +7,7 @@ import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -138,6 +138,8 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Add New Compliance</DialogTitle>
+            <DialogDescription aria-describedby={undefined}>
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-4 gap-4 py-4">
             <div>

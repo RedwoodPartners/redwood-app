@@ -7,7 +7,7 @@ import { Client, Databases } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -110,6 +110,8 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>Add New Tranche & Milestone</DialogTitle>
+              <DialogDescription aria-describedby={undefined}>
+              </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
@@ -139,6 +141,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               <div>
               <Label>Amount</Label>
               <Input
+                type="number"
                 placeholder="Amount"
                 value={newMilestone.amount}
                 onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
@@ -198,6 +201,8 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Edit Tranche & Milestone</DialogTitle>
+            <DialogDescription aria-describedby={undefined}>
+              </DialogDescription>
           </DialogHeader>
           {editingMilestone && (
             <div className="grid grid-cols-4 gap-4 py-4">
@@ -228,6 +233,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               <div>
               <Label>Amount</Label>
               <Input
+                type="number"
                 placeholder="Amount"
                 value={editingMilestone.amount}
                 onChange={(e) => setEditingMilestone({ ...editingMilestone, amount: e.target.value })}
