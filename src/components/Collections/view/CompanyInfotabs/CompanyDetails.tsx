@@ -10,15 +10,6 @@ import { Client, Databases } from "appwrite";
 import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
 interface StartupData {
   brandName: string;
   dateOfIncorporation: string;
@@ -47,7 +38,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
@@ -79,7 +69,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
         } catch (error) {
           console.error("Error fetching startup details:", error);
           setError("Failed to fetch startup details. Please try again later.");
-          setIsDialogOpen(true);
         }
       }
     };
@@ -91,44 +80,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     setIsEditing(true);
   };
 
-  const validateDuplicates = async (newData: StartupData) => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    
-    try {
-        const existingCompanies = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
-        const isDuplicate = existingCompanies.documents.some(company => 
-            company.brandName === newData.brandName &&
-            company.businessType === newData.businessType &&
-            company.natureOfCompany === newData.natureOfCompany &&
-            company.domain === newData.domain
-        );
-
-        return isDuplicate;
-    } catch (error) {
-        console.error("Error checking for duplicates:", error);
-        setError("Failed to check for duplicates. Please try again later.");
-        return false;
-    }
-  };
-  
-  const ErrorPopover = ({ message }: { message: string }) => (
-    <div className="absolute z-10 bg-red-600 text-white text-xs rounded-md p-2">
-        {message}
-    </div>
-);
-
   const handleSaveClick = async () => {
     if (!updatedData || !startupId) return;
 
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-
-    const isDuplicate = await validateDuplicates(updatedData);
-        if (isDuplicate) {
-            setError("A Startup with the same details already exists.");
-            return;
-        }
 
     try {
       await databases.updateDocument(DATABASE_ID, STARTUP_ID, startupId, updatedData);
@@ -138,7 +94,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     } catch (error) {
       console.error("Error saving updated data:", error);
       setError("Failed to save changes. Please try again later.");
-      setIsDialogOpen(true);
     }
   };
 
@@ -329,7 +284,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     <>
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
-        {error && <div className="error-message text-red-500">{error}</div>}
         {isEditing ? (
           <div className="relative group ml-3">
             <SaveIcon
