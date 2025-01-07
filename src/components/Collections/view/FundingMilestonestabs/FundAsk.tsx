@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, Trash2Icon } from "lucide-react";
+import { PlusCircle, Trash2Icon, Save, Edit } from "lucide-react";
 import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -42,6 +43,11 @@ const calculateTotal = (funds: FundItem[]): number => {
   }, 0);
 };
 
+const formatINR = (value: string): string => {
+  const number = parseFloat(value.replace(/,/g, ''));
+  if (isNaN(number)) return '';
+  return number.toLocaleString('en-IN');
+};
 
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [proposedFunds, setProposedFunds] = useState<FundItem[]>([]);
@@ -49,6 +55,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTable, setActiveTable] = useState<"proposed" | "validated">("proposed");
   const [editingFund, setEditingFund] = useState<FundItem | null>(null);
+  const [proposedFundAsk, setProposedFundAsk] = useState("");
+  const [validatedFundAsk, setValidatedFundAsk] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
   const databases = useMemo(() => new Databases(client), [client]);
@@ -64,12 +73,42 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             Query.equal("startupId", startupId),
           ]),
         ]);
+
         setProposedFunds(proposedResponse.documents.map(mapDocumentToFundItem));
         setValidatedFunds(validatedResponse.documents.map(mapDocumentToFundItem));
+
+        try {
+          const proposedFundAskDoc = await databases.getDocument(DATABASE_ID, PROPOSED_FUND_ASK_ID, startupId);
+          setProposedFundAsk(proposedFundAskDoc.proposedFund || "");
+        } catch (error) {
+          if (error instanceof Error) {
+            console.log("Proposed Fund Ask document not found");
+            setProposedFundAsk("");
+          } else {
+            throw error;
+          }
+        }
+
+        try {
+          const validatedFundAskDoc = await databases.getDocument(DATABASE_ID, VALIDATED_FUND_ASK_ID, startupId);
+          setValidatedFundAsk(validatedFundAskDoc.validatedFund || "");
+        } catch (error) {
+          if (error instanceof Error) {
+            console.log("Validated Fund Ask document not found");
+            setValidatedFundAsk("");
+          } else {
+            throw error;
+          }
+        }
       } catch (error) {
         console.error("Error fetching funds:", error);
+        setProposedFunds([]);
+        setValidatedFunds([]);
+        setProposedFundAsk("");
+        setValidatedFundAsk("");
       }
     };
+
     fetchFunds();
   }, [startupId, databases]);
 
@@ -140,10 +179,111 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     setIsDialogOpen(true);
   };
 
+  const handleSave = async () => {
+    try {
+      // Handle Proposed Fund Ask
+      try {
+        await databases.updateDocument(
+          DATABASE_ID,
+          PROPOSED_FUND_ASK_ID,
+          startupId,
+          { proposedFund: proposedFundAsk }
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          await databases.createDocument(
+            DATABASE_ID,
+            PROPOSED_FUND_ASK_ID,
+            startupId,
+            { proposedFund: proposedFundAsk }
+          );
+        } else {
+          throw error;
+        }
+      }
+
+      // Handle Validated Fund Ask
+      try {
+        await databases.updateDocument(
+          DATABASE_ID,
+          VALIDATED_FUND_ASK_ID,
+          startupId,
+          { validatedFund: validatedFundAsk }
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          await databases.createDocument(
+            DATABASE_ID,
+            VALIDATED_FUND_ASK_ID,
+            startupId,
+            { validatedFund: validatedFundAsk }
+          );
+        } else {
+          throw error;
+        }
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving fund asks:", error);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
   return (
     <>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Ask</h3>
       <div className="container mx-auto space-y-4">
+        <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+          <div className="flex justify-end space-x-2">
+            {isEditing ? (
+              <div onClick={handleSave}>
+                <Save size={20} className="mr-2 cursor-pointer" />
+              </div>
+            ) : (
+              <div onClick={handleEdit}>
+                <Edit size={20} className="mr-2 cursor-pointer" />
+              </div>
+            )}
+          </div>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell>Proposed Fund Ask</TableCell>
+                <TableCell>
+                  <div className="flex items-center w-52">
+                    <span className="text-black pr-2">₹</span>
+                    <Input
+                      type="text"
+                      className="w-full"
+                      value={proposedFundAsk}
+                      onChange={(e) => setProposedFundAsk(formatINR(e.target.value))}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Validated Fund Ask</TableCell>
+                <TableCell>
+                  <div className="flex items-center w-52">
+                    <span className="text-black pr-2">₹</span>
+                    <Input
+                      type="text"
+                      className="w-full"
+                      value={validatedFundAsk}
+                      onChange={(e) => setValidatedFundAsk(formatINR(e.target.value))}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
         <FundTable
           title="Proposed Fund Ask"
           funds={proposedFunds}
@@ -173,9 +313,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="">
               <Label htmlFor="description" className="text-right">
-               Utilization Description
+                Utilization Description
               </Label>
               <Textarea
                 id="description"
@@ -184,15 +324,15 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
                 className="col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="">
               <Label htmlFor="amount" className="text-right">
                 Amount
               </Label>
               <Input
-                type="number"
+                type="text"
                 id="amount"
                 value={editingFund?.amount || ""}
-                onChange={(e) => setEditingFund({ ...editingFund!, amount: e.target.value })}
+                onChange={(e) => setEditingFund({ ...editingFund!, amount: formatINR(e.target.value) })}
                 className="col-span-3"
               />
             </div>
@@ -256,7 +396,7 @@ const FundTable: React.FC<FundTableProps> = ({
             {funds.map((item) => (
               <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
                 <TableCell>{item.description}</TableCell>
-                <TableCell>{item.amount}</TableCell>
+                <TableCell>₹ {item.amount}</TableCell>
               </TableRow>
             ))}
             <TableRow className="font-bold">
