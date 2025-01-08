@@ -101,7 +101,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
         <div className="relative group">
           <EditIcon
             size={25}
-            className="-mt-6 cursor-pointer"
+            className="cursor-pointer"
             onClick={handleEdit}
           />
           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
@@ -110,7 +110,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
         </div>
 
         {isEditing && (
-          <div onClick={handleSave} className="flex -mt-6 ml-4 cursor-pointer">
+          <div onClick={handleSave} className="flex ml-4 cursor-pointer">
             <div className="relative group ml-3">
               <SaveIcon size={25} 
                 className="cursor-pointer text-green-500"

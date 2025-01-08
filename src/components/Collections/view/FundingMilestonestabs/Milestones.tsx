@@ -105,7 +105,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <PlusCircle size={20} className="cursor-pointer mb-2" />
+            <PlusCircle size={20} className="cursor-pointer mb-2 mr-2" />
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>

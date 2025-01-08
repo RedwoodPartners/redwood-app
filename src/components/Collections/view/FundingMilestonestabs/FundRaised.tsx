@@ -207,8 +207,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     <div>
       <div className="flex">
         <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Raised So Far</h3>
-        <div className="justify-end mb-2">
-          <PlusCircle size={20} className="mr-3 cursor-pointer" onClick={() => openDialog()} />
+        <div className="justify-end">
+          <PlusCircle size={20} className="ml-4 mr-3 mb-2 cursor-pointer" onClick={() => openDialog()} />
         </div>
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
