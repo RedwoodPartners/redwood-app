@@ -141,11 +141,21 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               <div>
               <Label>Amount</Label>
               <Input
-                type="number"
-                placeholder="Amount"
+                type="text"
+                placeholder="Enter amount in INR"
                 value={newMilestone.amount}
-                onChange={(e) => setNewMilestone({ ...newMilestone, amount: e.target.value })}
+                onChange={(e) => {
+                const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                const formattedValue = new Intl.NumberFormat('en-IN', {
+                  style: 'currency',
+                  currency: 'INR',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }).format(Number(rawValue) || 0);
+                setNewMilestone({ ...newMilestone, amount: formattedValue });
+                }}
               />
+
               </div>
               <div>
               <Label>Milestones</Label>
@@ -233,11 +243,21 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               <div>
               <Label>Amount</Label>
               <Input
-                type="number"
-                placeholder="Amount"
+                type="text"
+                placeholder="Enter amount in INR"
                 value={editingMilestone.amount}
-                onChange={(e) => setEditingMilestone({ ...editingMilestone, amount: e.target.value })}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                  const formattedValue = new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                    }).format(Number(rawValue) || 0);
+                    setEditingMilestone({ ...editingMilestone, amount: formattedValue });
+                    }}
               />
+
               </div>
               <div>
               <Label>Milestones</Label>

@@ -179,7 +179,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       return total + (isNaN(amount) ? 0 : amount);
     }, 0);
   };
-
+  
   const handleDeleteFile = async (documentId: string, fileId: string) => {
     try {
       await storage.deleteFile(FUND_DOCUMENTS_ID, fileId);
@@ -355,10 +355,19 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <div>
                 <Label className="block text-sm font-medium text-gray-700">Investment Amount (INR)</Label>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Enter the amount"
                   value={selectedInvestment?.amount || ""}
-                  onChange={(e) => setSelectedInvestment({ ...selectedInvestment, amount: e.target.value } as Investment)}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                    const formattedValue = new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(Number(rawValue) || 0);
+                  setSelectedInvestment({ ...selectedInvestment, amount: formattedValue } as Investment);
+                  }}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>

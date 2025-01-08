@@ -331,10 +331,21 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <Input
                 type="text"
                 id="amount"
+                placeholder="Enter amount in INR"
                 value={editingFund?.amount || ""}
-                onChange={(e) => setEditingFund({ ...editingFund!, amount: formatINR(e.target.value) })}
+                onChange={(e) => {
+                const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                const formattedValue = new Intl.NumberFormat('en-IN', {
+                  style: 'currency',
+                  currency: 'INR',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }).format(Number(rawValue) || 0);
+                  setEditingFund({ ...editingFund!, amount: formattedValue });
+                }}
                 className="col-span-3"
               />
+
             </div>
           </div>
           <DialogFooter>
@@ -396,7 +407,7 @@ const FundTable: React.FC<FundTableProps> = ({
             {funds.map((item) => (
               <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
                 <TableCell>{item.description}</TableCell>
-                <TableCell>₹ {item.amount}</TableCell>
+                <TableCell>{item.amount}</TableCell>
               </TableRow>
             ))}
             <TableRow className="font-bold">
