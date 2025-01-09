@@ -5,6 +5,7 @@ import { Client, Databases, Account, Models, Query } from "appwrite";
 import { PROJECT_ID, API_ENDPOINT, DATABASE_ID } from "@/appwrite/config";
 import { Button } from "@/components/ui/button";
 import { RealtimeResponseEvent } from 'appwrite';
+import { Label } from "./ui/label";
 
 const MESSAGES_COLLECTION_ID = "6770e11a0008b9a32f6c";
 
@@ -79,7 +80,7 @@ const SendMessage: React.FC = () => {
 
   const fetchMessages = async (receiverEmail: string) => {
     if (!currentUserEmail) return;
-  
+
     try {
       const response = await databases.listDocuments(
         DATABASE_ID,
@@ -149,67 +150,72 @@ const SendMessage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex">
-      <div className="flex-grow mr-4">
-        <h1 className="text-xl font-semibold mb-4">Messages</h1>
+    <div className="flex bg-gray-100 h-screen">
 
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
-
-        {selectedReceiver ? (
-          <>
-            <div 
-              className="mb-4 h-96 overflow-y-auto border border-gray-300 rounded p-4"
-              onScroll={markMessagesAsRead}
-            >
-              {messages.map((message) => (
-                <div key={message.$id} className={`mb-2 p-2 rounded ${message.senderEmail === currentUserEmail ? 'bg-blue-100 text-right' : 'bg-gray-100'}`}>
-                  <p className="font-semibold">{message.senderEmail === currentUserEmail ? 'You' : message.senderEmail}</p>
-                  <p>{message.content}</p>
-                  <p className="text-xs text-gray-500">{new Date(message.timestamp).toLocaleString()}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-4">
-              <textarea
-                value={messageContent}
-                onChange={(e) => setMessageContent(e.target.value)}
-                placeholder="Type your message here..."
-                className="w-full border border-gray-300 rounded p-2"
-                rows={3}
-              />
-            </div>
-
-            <Button onClick={handleSendMessage}>
-              Send Message
-            </Button>
-          </>
-        ) : (
-          <p>Select a user to start messaging</p>
-        )}
-      </div>
-
-      <div className="w-64">
+      <div className="w-1/4 border-r border-gray-300 p-2 shadow-lg overflow-y-auto">
         <h2 className="text-lg font-semibold mb-4">Users</h2>
-        <div className="space-y-2">
+        
+        <div className="space-y-2 h-20">
           {users.map((user) => (
             <div
               key={user.$id}
-              className={`p-2 rounded cursor-pointer ${selectedReceiver === user.email ? 'bg-blue-100' : 'hover:bg-gray-100'} flex justify-between items-center`}
+              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center transition-colors duration-200 ${selectedReceiver === user.email ? 'bg-blue-100' : 'hover:bg-gray-200'}`}
               onClick={() => handleSelectUser(user.email)}
             >
               <div>
-                <p className="font-semibold">{user.name}</p>
+                <Label className="font-semibold">{user.name}</Label>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
               {unreadMessages[user.email] && unreadMessages[user.email].size > 0 && (
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
               )}
             </div>
           ))}
         </div>
       </div>
+
+      
+      <div className="flex-grow p-4 max-h-[700px] flex flex-col shadow-lg">
+        
+        <header className="flex items-center justify-between bg-green-600 text-white p-4 rounded-t-lg">
+          <h1 className="text-xl font-semibold">{selectedReceiver ? selectedReceiver : 'Select a User'}</h1>
+          <button className="text-white hover:text-gray-200">...</button>
+        </header>
+
+        
+        <div 
+          className="flex-grow overflow-y-auto border border-gray-300 rounded-lg p-4"
+          onScroll={markMessagesAsRead}
+        >
+          {messages.map((message) => (
+            <div key={message.$id} className={`mb-2 p-2 rounded-lg ${message.senderEmail === currentUserEmail ? 'bg-blue-100 text-right' : 'bg-gray-200'}`}>
+              <p className="font-semibold">{message.senderEmail === currentUserEmail ? 'You' : message.senderEmail}</p>
+              <p>{message.content}</p>
+              <p className="text-xs text-gray-500">{new Date(message.timestamp).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+
+        
+        <div className="mt-auto mb-4">
+          <textarea
+            value={messageContent}
+            onChange={(e) => setMessageContent(e.target.value)}
+            placeholder="Type your message here..."
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring focus:ring-green-500"
+            rows={3}
+          />
+          
+          <Button onClick={handleSendMessage} className="mt-2 w-full bg-green-600 hover:bg-green-700 transition-colors duration-200">
+            Send Message
+          </Button>
+          
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+          {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
+        </div>
+        
+      </div>
+      
     </div>
   );
 };

@@ -120,7 +120,16 @@ const ContactsTable: React.FC = () => {
               {filteredContacts.map((contact) => (
                 <TableRow key={contact.$id}>
                   <TableCell>{contact.startupId}</TableCell>
-                  <TableCell>{contact.companyWebsite}</TableCell>
+                  <TableCell>
+                    <a
+                      href={contact.companyWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      {contact.companyWebsite}
+                    </a>
+                  </TableCell>
                   <TableCell>{contact.email}</TableCell>
                   <TableCell>{contact.phone1}</TableCell>
                   <TableCell>{contact.phone2}</TableCell>
