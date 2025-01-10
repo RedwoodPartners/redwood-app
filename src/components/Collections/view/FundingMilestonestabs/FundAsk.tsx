@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, Trash2Icon, Save, Edit } from "lucide-react";
+import { PlusCircle, Save, Edit } from "lucide-react";
 import { Client, Databases, Models } from "appwrite";
 import { Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
@@ -35,18 +35,20 @@ const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
 
 const calculateTotal = (funds: FundItem[]): number => {
   return funds.reduce((total, fund) => {
-    if (fund && fund.amount) {
-      const cleanAmount = fund.amount.replace(/,/g, '');
-      return total + (parseFloat(cleanAmount) || 0);
-    }
-    return total;
+    const cleanAmount = fund.amount.replace(/[^0-9.]/g, '');
+    return total + (parseFloat(cleanAmount) || 0);
   }, 0);
 };
 
 const formatINR = (value: string): string => {
-  const number = parseFloat(value.replace(/,/g, ''));
+  const number = parseFloat(value.replace(/[^0-9.]/g, ''));
   if (isNaN(number)) return '';
-  return number.toLocaleString('en-IN');
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(number);
 };
 
 const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
@@ -57,7 +59,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [editingFund, setEditingFund] = useState<FundItem | null>(null);
   const [proposedFundAsk, setProposedFundAsk] = useState("");
   const [validatedFundAsk, setValidatedFundAsk] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingProposed, setIsEditingProposed] = useState(false);
+  const [isEditingValidated, setIsEditingValidated] = useState(false);
 
   const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
   const databases = useMemo(() => new Databases(client), [client]);
@@ -66,12 +69,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     const fetchFunds = async () => {
       try {
         const [proposedResponse, validatedResponse] = await Promise.all([
-          databases.listDocuments(DATABASE_ID, PROPOSED_FUND_ASK_ID, [
-            Query.equal("startupId", startupId),
-          ]),
-          databases.listDocuments(DATABASE_ID, VALIDATED_FUND_ASK_ID, [
-            Query.equal("startupId", startupId),
-          ]),
+          databases.listDocuments(DATABASE_ID, PROPOSED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
+          databases.listDocuments(DATABASE_ID, VALIDATED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
         ]);
 
         setProposedFunds(proposedResponse.documents.map(mapDocumentToFundItem));
@@ -81,24 +80,16 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
           const proposedFundAskDoc = await databases.getDocument(DATABASE_ID, PROPOSED_FUND_ASK_ID, startupId);
           setProposedFundAsk(proposedFundAskDoc.proposedFund || "");
         } catch (error) {
-          if (error instanceof Error) {
-            console.log("Proposed Fund Ask document not found");
-            setProposedFundAsk("");
-          } else {
-            throw error;
-          }
+          console.log("Proposed Fund Ask document not found");
+          setProposedFundAsk("");
         }
 
         try {
           const validatedFundAskDoc = await databases.getDocument(DATABASE_ID, VALIDATED_FUND_ASK_ID, startupId);
           setValidatedFundAsk(validatedFundAskDoc.validatedFund || "");
         } catch (error) {
-          if (error instanceof Error) {
-            console.log("Validated Fund Ask document not found");
-            setValidatedFundAsk("");
-          } else {
-            throw error;
-          }
+          console.log("Validated Fund Ask document not found");
+          setValidatedFundAsk("");
         }
       } catch (error) {
         console.error("Error fetching funds:", error);
@@ -115,12 +106,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const handleAddItem = async () => {
     try {
       const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-      const response = await databases.createDocument(
-        DATABASE_ID,
-        collectionId,
-        "unique()",
-        { ...editingFund, startupId }
-      );
+      const response = await databases.createDocument(DATABASE_ID, collectionId, "unique()", { ...editingFund, startupId });
       const newFundItem = mapDocumentToFundItem(response);
       if (activeTable === "proposed") {
         setProposedFunds([...proposedFunds, newFundItem]);
@@ -179,111 +165,32 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (type: "proposed" | "validated") => {
     try {
-      // Handle Proposed Fund Ask
+      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
+      const fundAsk = type === "proposed" ? proposedFundAsk : validatedFundAsk;
+      const data = type === "proposed" ? { proposedFund: fundAsk } : { validatedFund: fundAsk };
+
       try {
-        await databases.updateDocument(
-          DATABASE_ID,
-          PROPOSED_FUND_ASK_ID,
-          startupId,
-          { proposedFund: proposedFundAsk }
-        );
+        await databases.updateDocument(DATABASE_ID, collectionId, startupId, data);
       } catch (error) {
-        if (error instanceof Error) {
-          await databases.createDocument(
-            DATABASE_ID,
-            PROPOSED_FUND_ASK_ID,
-            startupId,
-            { proposedFund: proposedFundAsk }
-          );
-        } else {
-          throw error;
-        }
+        await databases.createDocument(DATABASE_ID, collectionId, startupId, data);
       }
 
-      // Handle Validated Fund Ask
-      try {
-        await databases.updateDocument(
-          DATABASE_ID,
-          VALIDATED_FUND_ASK_ID,
-          startupId,
-          { validatedFund: validatedFundAsk }
-        );
-      } catch (error) {
-        if (error instanceof Error) {
-          await databases.createDocument(
-            DATABASE_ID,
-            VALIDATED_FUND_ASK_ID,
-            startupId,
-            { validatedFund: validatedFundAsk }
-          );
-        } else {
-          throw error;
-        }
+      if (type === "proposed") {
+        setIsEditingProposed(false);
+      } else {
+        setIsEditingValidated(false);
       }
-
-      setIsEditing(false);
     } catch (error) {
-      console.error("Error saving fund asks:", error);
+      console.error(`Error saving ${type} fund ask:`, error);
     }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
   };
 
   return (
     <>
       <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Ask</h3>
       <div className="container mx-auto space-y-4">
-        <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
-          <div className="flex justify-end space-x-2">
-            {isEditing ? (
-              <div onClick={handleSave}>
-                <Save size={20} className="mr-2 cursor-pointer" />
-              </div>
-            ) : (
-              <div onClick={handleEdit}>
-                <Edit size={20} className="mr-2 cursor-pointer" />
-              </div>
-            )}
-          </div>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell>Proposed Fund Ask</TableCell>
-                <TableCell>
-                  <div className="flex items-center w-52">
-                    <span className="text-black pr-2">₹</span>
-                    <Input
-                      type="text"
-                      className="w-full"
-                      value={proposedFundAsk}
-                      onChange={(e) => setProposedFundAsk(formatINR(e.target.value))}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Validated Fund Ask</TableCell>
-                <TableCell>
-                  <div className="flex items-center w-52">
-                    <span className="text-black pr-2">₹</span>
-                    <Input
-                      type="text"
-                      className="w-full"
-                      value={validatedFundAsk}
-                      onChange={(e) => setValidatedFundAsk(formatINR(e.target.value))}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
         <FundTable
           title="Proposed Fund Ask"
           funds={proposedFunds}
@@ -293,6 +200,11 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             setEditingFund({ description: "", amount: "", startupId });
             setIsDialogOpen(true);
           }}
+          fundAsk={proposedFundAsk}
+          setFundAsk={setProposedFundAsk}
+          isEditing={isEditingProposed}
+          setIsEditing={setIsEditingProposed}
+          onSave={() => handleSave("proposed")}
         />
         <FundTable
           title="Validated Fund Ask"
@@ -303,6 +215,11 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             setEditingFund({ description: "", amount: "", startupId });
             setIsDialogOpen(true);
           }}
+          fundAsk={validatedFundAsk}
+          setFundAsk={setValidatedFundAsk}
+          isEditing={isEditingValidated}
+          setIsEditing={setIsEditingValidated}
+          onSave={() => handleSave("validated")}
         />
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -313,10 +230,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="">
-              <Label htmlFor="description" className="text-right">
-                Utilization Description
-              </Label>
+            <div>
+              <Label htmlFor="description">Utilization Description</Label>
               <Textarea
                 id="description"
                 value={editingFund?.description || ""}
@@ -324,28 +239,19 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
                 className="col-span-3"
               />
             </div>
-            <div className="">
-              <Label htmlFor="amount" className="text-right">
-                Amount
-              </Label>
+            <div>
+              <Label htmlFor="amount">Amount</Label>
               <Input
                 type="text"
                 id="amount"
                 placeholder="Enter amount in INR"
                 value={editingFund?.amount || ""}
                 onChange={(e) => {
-                const rawValue = e.target.value.replace(/[^0-9]/g, '');
-                const formattedValue = new Intl.NumberFormat('en-IN', {
-                  style: 'currency',
-                  currency: 'INR',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(Number(rawValue) || 0);
+                  const formattedValue = formatINR(e.target.value);
                   setEditingFund({ ...editingFund!, amount: formattedValue });
                 }}
                 className="col-span-3"
               />
-
             </div>
           </div>
           <DialogFooter>
@@ -353,7 +259,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
               <Button onClick={handleDeleteItem} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             )}
             <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem}>
-              {editingFund?.$id ? "Save" : "Save"}
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -367,6 +273,11 @@ interface FundTableProps {
   funds: FundItem[];
   onRowDoubleTap: (fund: FundItem) => void;
   onOpenDialog: () => void;
+  fundAsk: string;
+  setFundAsk: (value: string) => void;
+  isEditing: boolean;
+  setIsEditing: (value: boolean) => void;
+  onSave: () => void;
 }
 
 const FundTable: React.FC<FundTableProps> = ({
@@ -374,6 +285,11 @@ const FundTable: React.FC<FundTableProps> = ({
   funds,
   onRowDoubleTap,
   onOpenDialog,
+  fundAsk,
+  setFundAsk,
+  isEditing,
+  setIsEditing,
+  onSave,
 }) => {
   const total = calculateTotal(funds);
 
@@ -387,36 +303,51 @@ const FundTable: React.FC<FundTableProps> = ({
   };
 
   return (
-    <div>
-      <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-semibold">{title}</h4>
-          <div onClick={onOpenDialog}>
-            <PlusCircle size={20} className="mr-2 cursor-pointer" />
-          </div>
+    <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="text-lg font-semibold">{title}</h4>
+        <div onClick={onOpenDialog}>
+          <PlusCircle size={20} className="mr-2 cursor-pointer" />
         </div>
-        <Table>
-          <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-1/2">Utilization Description</TableHead>
-              <TableHead>Budgeted Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {funds.map((item) => (
-              <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
-                <TableCell>{item.description}</TableCell>
-                <TableCell>{item.amount}</TableCell>
-              </TableRow>
-            ))}
-            <TableRow className="font-bold">
-              <TableCell>Total</TableCell>
-              <TableCell>{formatCurrency(total)}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       </div>
+      <div className="flex items-center mb-4">
+        <span className="mr-2 text-xs">{title}:</span>
+        <div className="flex items-center">
+          <Input
+            type="text"
+            className="w-52"
+            value={fundAsk}
+            onChange={(e) => setFundAsk(formatINR(e.target.value))}
+            disabled={!isEditing}
+          />
+          {isEditing ? (
+            <Save size={20} className="ml-2 cursor-pointer" onClick={onSave} />
+          ) : (
+            <Edit size={20} className="ml-2 cursor-pointer" onClick={() => setIsEditing(true)} />
+          )}
+        </div>
+      </div>
+      <Table>
+        <TableCaption>{`A list of ${title.toLowerCase()}.`}</TableCaption>
+        <TableHeader>
+          <TableRow className="bg-gray-50">
+            <TableHead className="w-1/2">Utilization Description</TableHead>
+            <TableHead>Budgeted Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {funds.map((item) => (
+            <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
+              <TableCell>{item.description}</TableCell>
+              <TableCell>{item.amount}</TableCell>
+            </TableRow>
+          ))}
+          <TableRow className="font-bold">
+            <TableCell>Total</TableCell>
+            <TableCell>{formatCurrency(total)}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 };

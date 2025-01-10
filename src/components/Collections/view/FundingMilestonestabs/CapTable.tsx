@@ -56,6 +56,12 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   const handleSaveInvestment = async (row: any) => {
     try {
+      // Check if shareholderName is provided
+      if (!row.shareholderName || row.shareholderName.trim() === "") {
+        setError("Shareholder Name is required.");
+        return;
+      }
+      
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, $permissions, ...fieldsToUpdate } = row;
       const newCapitalStructure = fieldsToUpdate.capitalStructure ? parseFloat(fieldsToUpdate.capitalStructure.replace("%", "")) || 0 : null;
       
@@ -154,6 +160,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               <div className="flex-1">
                 <Label htmlFor="shareholderName" className="block mb-2">Shareholder Name</Label>
                 <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} onChange={(e) => setEditingRow({ ...editingRow, shareholderName: e.target.value })} />
+                
               </div>
               <div className="flex-1">
                 <Label htmlFor="role" className="block mb-2">Role</Label>
