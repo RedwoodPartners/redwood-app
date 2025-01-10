@@ -76,6 +76,13 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   }, [editingShareholder]);
 
   const handleSave = async () => {
+    if (!data["shareholderName"]) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        shareholderName: "Shareholder Name is required",
+      }));
+      return;
+    }
     try {
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = data;
       if (editingShareholder) {
@@ -181,6 +188,9 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     value={data["shareholderName"] || ""}
                     onChange={(e) => handleChange("shareholderName", e.target.value)}
                   />
+                  {errors.shareholderName && (
+                    <p className="text-red-500 text-sm mt-1">{errors.shareholderName}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Is Community Certificate Holder?</Label>
