@@ -18,17 +18,17 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "2020", Startups: 186, mobile: 80 },
+  { month: "2021", Startups: 305, mobile: 200 },
+  { month: "2022", Startups: 237, mobile: 120 },
+  { month: "2023", Startups: 73, mobile: 190 },
+  { month: "2024", Startups: 209, mobile: 130 },
+  { month: "2025", Startups: 214, mobile: 140 },
 ]
 
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "Startups",
     color: "hsl(var(--chart-1))",
   },
   mobile: {
@@ -41,8 +41,8 @@ export function LineChartPortfolio() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Line Chart - Dots</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Total Startups - Year wise</CardTitle>
+        <CardDescription>2020 - 2025</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -60,14 +60,14 @@ export function LineChartPortfolio() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => value.slice(0, 4)}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
             <Line
-              dataKey="desktop"
+              dataKey="Startups"
               type="natural"
               stroke="var(--color-desktop)"
               strokeWidth={2}
@@ -81,14 +81,6 @@ export function LineChartPortfolio() {
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
   )
 }

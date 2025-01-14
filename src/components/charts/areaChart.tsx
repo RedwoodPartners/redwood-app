@@ -18,17 +18,17 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+  { month: "2020", desktop: 186 },
+  { month: "2021", desktop: 305 },
+  { month: "2022", desktop: 237 },
+  { month: "2023", desktop: 73 },
+  { month: "2024", desktop: 209 },
+  { month: "2025", desktop: 214 },
 ]
 
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "Startups",
     color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
@@ -37,9 +37,9 @@ export function AreaChartPortfolio() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Area Chart</CardTitle>
+        <CardTitle>Investment Rased - Year wise</CardTitle>
         <CardDescription>
-          Showing total visitors for the last 6 months
+          Amount crores
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,7 +58,7 @@ export function AreaChartPortfolio() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => value.slice(0, 4)}
             />
             <ChartTooltip
               cursor={false}
@@ -74,18 +74,6 @@ export function AreaChartPortfolio() {
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              January - June 2024
-            </div>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   )
 }

@@ -16,21 +16,21 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { date: "2024-07-15", running: 450, swimming: 300 },
-  { date: "2024-07-16", running: 380, swimming: 420 },
-  { date: "2024-07-17", running: 520, swimming: 120 },
-  { date: "2024-07-18", running: 140, swimming: 550 },
-  { date: "2024-07-19", running: 600, swimming: 350 },
-  { date: "2024-07-20", running: 480, swimming: 400 },
+  { date: "2024-07-15", IOT: 450, BioTech: 300 },
+  { date: "2024-07-16", IOT: 380, BioTech: 420 },
+  { date: "2024-07-17", IOT: 520, BioTech: 120 },
+  { date: "2024-07-18", IOT: 140, BioTech: 550 },
+  { date: "2024-07-19", IOT: 600, BioTech: 350 },
+  { date: "2024-07-20", IOT: 480, BioTech: 400 },
 ]
 
 const chartConfig = {
   running: {
-    label: "Running",
+    label: "IOT",
     color: "hsl(var(--chart-1))",
   },
   swimming: {
-    label: "Swimming",
+    label: "BioTech",
     color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
@@ -39,9 +39,9 @@ export function BarChartPortfolio() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tooltip - Default</CardTitle>
+        <CardTitle>Domain Distribution - year wise</CardTitle>
         <CardDescription>
-          Default tooltip with ChartTooltipContent.
+          50+ Domains
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,13 +59,13 @@ export function BarChartPortfolio() {
               }}
             />
             <Bar
-              dataKey="running"
+              dataKey="IOT"
               stackId="a"
               fill="var(--color-running)"
               radius={[0, 0, 4, 4]}
             />
             <Bar
-              dataKey="swimming"
+              dataKey="BioTech"
               stackId="a"
               fill="var(--color-swimming)"
               radius={[4, 4, 0, 0]}
