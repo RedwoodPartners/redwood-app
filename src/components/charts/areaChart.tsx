@@ -48,8 +48,8 @@ export function AreaChartPortfolio() {
             accessibilityLayer
             data={chartData}
             margin={{
-              left: 12,
-              right: 12,
+              left: 15,
+              right: 15,
             }}
           >
             <CartesianGrid vertical={false} />
@@ -58,6 +58,7 @@ export function AreaChartPortfolio() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              interval={0}
               tickFormatter={(value) => value.slice(0, 4)}
             />
             <ChartTooltip

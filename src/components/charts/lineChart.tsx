@@ -1,8 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
-
+import React, { useState, useEffect } from "react";
+import { Client, Databases } from "appwrite";
 import {
   Card,
   CardContent,
@@ -10,39 +9,65 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-const chartData = [
-  { month: "2020", Startups: 186, mobile: 80 },
-  { month: "2021", Startups: 305, mobile: 200 },
-  { month: "2022", Startups: 237, mobile: 120 },
-  { month: "2023", Startups: 73, mobile: 190 },
-  { month: "2024", Startups: 209, mobile: 130 },
-  { month: "2025", Startups: 214, mobile: 140 },
-]
+} from "@/components/ui/chart";
+import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
+import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 
 const chartConfig = {
   desktop: {
     label: "Startups",
     color: "hsl(var(--chart-1))",
   },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
+};
 
 export function LineChartPortfolio() {
+  const [chartData, setChartData] = useState<{ year: string; Startups: number }[]>([]);
+
+  useEffect(() => {
+    const fetchStartups = async () => {
+      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+      const databases = new Databases(client);
+
+      try {
+        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const startups = response.documents;
+
+        // Process data to group startups by year
+        const startupsByYear: { [key: string]: number } = startups.reduce((acc, startup) => {
+          const year = startup.year || "Unknown";
+          acc[year] = (acc[year] || 0) + 1;
+          return acc;
+        }, {} as { [key: string]: number });
+
+        // Format data for the chart
+        const formattedData = Object.entries(startupsByYear)
+          .map(([year, count]) => ({ year, Startups: count }))
+          .sort((a, b) => a.year.localeCompare(b.year));
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching startups:", error);
+      }
+    };
+
+    fetchStartups();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Total Startups - Year wise</CardTitle>
-        <CardDescription>2020 - 2025</CardDescription>
+        <CardDescription>
+          {chartData.length > 0
+            ? `${chartData[0].year} - ${chartData[chartData.length - 1].year}`
+            : "No data available"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -50,16 +75,18 @@ export function LineChartPortfolio() {
             accessibilityLayer
             data={chartData}
             margin={{
-              left: 12,
-              right: 12,
+              top: 20,
+              left: 15,
+              right: 15,
             }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="year"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              interval={0}
               tickFormatter={(value) => value.slice(0, 4)}
             />
             <ChartTooltip
@@ -82,5 +109,5 @@ export function LineChartPortfolio() {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }
