@@ -52,11 +52,11 @@ const ProjectsPage: React.FC = () => {
     const databases = new Databases(client);
 
     const newProject: Partial<Project> = {
-      name: "New Project",
-      manager: "Manager Name",
+      name: "",
+      manager: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: "",
-      description: "Project Description",
+      description: "",
     };
 
     try {
