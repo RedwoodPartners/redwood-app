@@ -17,7 +17,7 @@ const Dashboard = () => {
     <>
       <Tabs defaultValue="dashboard" className="">
         {/* Tabs List */}
-        <TabsList className="grid w-[250px] grid-cols-3">
+        <TabsList className="grid w-[250px] grid-cols-3 text-black">
           <TabsTrigger value="dashboard">
             Dashboard
           </TabsTrigger>
@@ -31,20 +31,11 @@ const Dashboard = () => {
 
         {/* Tabs Content */}
         <TabsContent value="dashboard">
-          {/* Startup Statistics Section */}
-          <div>
             <StartupStats />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 mx-auto">
-            <div>
-              <NoUsers />
-            </div>
-            <div>
-              <NoStartups />
-            </div>
-            <div>
-              <Domain />
-            </div>
+          <div className="grid grid-cols-3 gap-4 p-2">
+            <NoUsers />
+            <NoStartups />
+            <Domain />
           </div>
         </TabsContent>
 

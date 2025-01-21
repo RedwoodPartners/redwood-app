@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Client, Databases } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -53,10 +53,9 @@ export function AreaChartPortfolio() {
       const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID);
       const documents: any[] = response.documents;
 
-      // Validate and extract investment data
       const investments: Investment[] = documents.filter(isInvestment);
 
-      // Group investments by year
+      // Group investments by year and count unique startups per year
       const yearWiseData: Record<string, { totalAmount: number; startups: Set<string> }> = {};
       investments.forEach((investment) => {
         const year = new Date(investment.date).getFullYear();
@@ -65,20 +64,18 @@ export function AreaChartPortfolio() {
           yearWiseData[year] = { totalAmount: 0, startups: new Set() };
         }
         yearWiseData[year].totalAmount += isNaN(amount) ? 0 : amount;
-        yearWiseData[year].startups.add(investment.startupId);
+        yearWiseData[year].startups.add(investment.startupId); 
       });
 
-      // Prepare chart data
       const chartDataArray = Object.keys(yearWiseData)
         .sort()
         .map((year) => ({
           year,
-          totalAmount: yearWiseData[year].totalAmount / 1e7, // Convert to crores
-          startupsCount: yearWiseData[year].startups.size,
+          totalAmount: yearWiseData[year].totalAmount,
+          startupsCount: yearWiseData[year].startups.size, // Count unique startups per year
         }));
 
-      // Calculate overall totals
-      const totalAmountAllYears = chartDataArray.reduce((sum, data) => sum + data.totalAmount * 1e7, 0); // Convert back to original scale
+      const totalAmountAllYears = chartDataArray.reduce((sum, data) => sum + data.totalAmount, 0);
       const uniqueStartupsAllYears = new Set(
         investments.map((investment) => investment.startupId)
       ).size;
@@ -99,7 +96,7 @@ export function AreaChartPortfolio() {
 
   const chartConfig = {
     totalAmount: {
-      label: "Total Amount (in Crores)",
+      label: "Total Amount (in INR):",
       color: "hsl(var(--chart-1))",
     },
     startupsCount: {
@@ -113,8 +110,8 @@ export function AreaChartPortfolio() {
       <CardHeader>
         <CardTitle>Investment Raised - Year Wise</CardTitle>
         <CardDescription>
-          Total investments {totalAmount.toLocaleString("en-IN", { style: "currency", currency: "INR" })}
-          <p>Number of Startups Funded: {uniqueStartupsCount}</p>
+          Total investments: <span className="font-bold">{totalAmount.toLocaleString("en-IN", { style: "currency", currency: "INR" })}</span>
+          <p>Startups Funded: <span className="font-bold">{uniqueStartupsCount}</span></p>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -150,6 +147,13 @@ export function AreaChartPortfolio() {
                   fill="var(--color-totalAmount)"
                   fillOpacity={0.4}
                   stroke="var(--color-totalAmount)"
+                />
+                <Area
+                  dataKey="startupsCount"
+                  type="natural"
+                  fill="var(--color-startupsCount)"
+                  fillOpacity={0.4}
+                  stroke="var(--color-startupsCount)"
                 />
               </AreaChart>
             </ChartContainer>

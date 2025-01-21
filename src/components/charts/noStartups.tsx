@@ -69,7 +69,7 @@ export function NoStartups() {
   };
 
   return (
-    <Card className="flex flex-col shadow-none w-[300px] h-auto">
+    <Card>
       <CardHeader>
         <CardTitle>Startups</CardTitle>
         <CardDescription>
@@ -111,12 +111,6 @@ export function NoStartups() {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        
-        <div className="leading-none text-muted-foreground">
-          Showing total Startups by Year
-        </div>
-      </CardFooter>
     </Card>
   );
 }

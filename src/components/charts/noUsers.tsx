@@ -100,21 +100,20 @@ export function NoUsers() {
   }
 
   return (
-    <div className="flex justify-center">
-      <Card className="flex flex-col shadow-none w-[300px] h-auto">
-        <CardHeader className="items-center">
+      <Card >
+        <CardHeader>
           <CardTitle>Registered Users</CardTitle>
           <CardDescription>Current Statistics</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1">
-          <ChartContainer config={chartConfig} className="">
+        <CardContent>
+          <ChartContainer config={chartConfig}>
             <PieChart>
               <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
               <Pie
                 data={chartData}
                 dataKey="visitors"
                 nameKey="browser"
-                innerRadius={40}
+                innerRadius={50}
                 strokeWidth={5}
               >
                 <Label
@@ -150,13 +149,6 @@ export function NoUsers() {
             </PieChart>
           </ChartContainer>
         </CardContent>
-        <CardFooter className="flex-col gap-2 text-sm">
-          <div className="flex items-center gap-2 font-medium">
-            Total registered users
-            <TrendingUp className="h-4 w-4" />
-          </div>
-        </CardFooter>
       </Card>
-    </div>
   );
 }
