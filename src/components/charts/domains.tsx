@@ -88,35 +88,31 @@ export function Domain() {
   
 
   return (
-    <Card className="flex flex-col w-[280px]">
-      <CardHeader className="items-center pb-0">
+    <Card>
+      <CardHeader>
         <CardTitle>Top 5 Domains</CardTitle>
         <CardDescription>Click on a domain to see startups</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer config={chartConfig}>
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="startups"
-              nameKey="domain"
-              innerRadius={40}
-              strokeWidth={5}
-              activeIndex={0}
-              activeShape={({ outerRadius = 0, ...props }: any) => (
-                <Sector {...props} outerRadius={outerRadius + 10} />
-              )}
-              onClick={handlePieClick}
-            />
-          </PieChart>
+      <CardContent className="flex mt-5 gap-5">
+        <ChartContainer config={chartConfig} className="w-[150px] h-[150px]">
+        <PieChart width={300} height={300}>
+          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+          <Pie
+            className="cursor-pointer"
+            data={chartData}
+            dataKey="startups"
+            nameKey="domain"
+            innerRadius={40}
+            strokeWidth={5}
+            activeIndex={0}
+            activeShape={({ outerRadius = 0, ...props }: any) => (
+              <Sector {...props} outerRadius={outerRadius + 10} />
+            )}
+            onClick={handlePieClick}
+          />
+        </PieChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex flex-col text-xs gap-1">
+        <div className="flex flex-col text-xs gap-1 mt-5">
           {chartData.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               <div
@@ -127,7 +123,7 @@ export function Domain() {
             </div>
           ))}
         </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }
