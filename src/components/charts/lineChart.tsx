@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Client, Databases } from "appwrite";
 import {
   Card,
@@ -28,6 +29,7 @@ const chartConfig = {
 
 export function LineChartPortfolio() {
   const [chartData, setChartData] = useState<{ year: string; Startups: number }[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchStartups = async () => {
@@ -59,6 +61,13 @@ export function LineChartPortfolio() {
     fetchStartups();
   }, []);
 
+  const handleLineClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const year = data.activePayload[0].payload.year;
+      router.push(`/home/${year}`);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -79,6 +88,7 @@ export function LineChartPortfolio() {
               left: 15,
               right: 15,
             }}
+            onClick={handleLineClick}
           >
             <CartesianGrid vertical={false} />
             <XAxis
