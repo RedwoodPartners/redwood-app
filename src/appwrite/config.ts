@@ -19,8 +19,6 @@ type LoginUserAccount = {
   password: string,
 }
 
-
-
 const appwriteClient = new Client()
   .setEndpoint(API_ENDPOINT)
   .setProject(PROJECT_ID);
@@ -28,7 +26,6 @@ const appwriteClient = new Client()
 const account = new Account(appwriteClient);
 const storageClient = new Storage(appwriteClient);
 export const databases = new Databases(appwriteClient);
-
 
 export class AppwriteService {
   async createUserAccount({ email, password, name }: CreateUserAccount) {
@@ -61,7 +58,6 @@ export class AppwriteService {
     }
  }
 
-  
   async isLoggedIn(): Promise<boolean> {
     try {
       const user = await this.getCurrentUser();
@@ -82,9 +78,6 @@ export class AppwriteService {
   
     return null;
   }
-  
-
-
 
   async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
     try {
@@ -172,14 +165,7 @@ export class AppwriteService {
     }
   }
   
-  
-
-
-  
 }
-
-
-
 
 const appwriteService = new AppwriteService();
 export default appwriteService;
