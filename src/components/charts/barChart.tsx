@@ -75,9 +75,8 @@ export function BarChartPortfolio() {
     <Card>
       <CardHeader>
         <CardTitle>Top Domains</CardTitle>
-        <CardDescription>Domain Distribution in Startups</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2">
         <ChartContainer config={chartConfig}>
           <BarChart
             width={500}
@@ -85,7 +84,6 @@ export function BarChartPortfolio() {
             data={chartData}
             layout="vertical"
             margin={{
-              top: 1,
               right: 15,
               left: 20,
             }}
