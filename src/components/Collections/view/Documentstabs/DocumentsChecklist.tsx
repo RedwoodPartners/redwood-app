@@ -291,7 +291,14 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   <div className="flex items-center justify-start space-x-2">
                     {row.fileId ? (
                       <>
-                      <a href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/view?project=${PROJECT_ID}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      <a href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/view?project=${PROJECT_ID}`} target="_blank" rel="noopener noreferrer"
+                        onClick={(e) => {
+                        if (row.fileName.endsWith('.zip')) {
+                          e.preventDefault();
+                          window.location.href = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/download?project=${PROJECT_ID}`;
+                        }
+                       }} 
+                        className="text-blue-600 underline">
                         <div className="relative group">
                           <FaEye size={20} className="inline" />
                           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">

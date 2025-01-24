@@ -116,11 +116,21 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
               <Label>Tranche Type</Label>
-              <Input
-                placeholder="Tranche Type"
+              <Select
                 value={newMilestone.trancheType}
-                onChange={(e) => setNewMilestone({ ...newMilestone, trancheType: e.target.value })}
-              />
+                onValueChange={(value) => setNewMilestone({ ...newMilestone, trancheType: value })}
+               >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Tranche Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tranche 1">Tranche 1</SelectItem>
+                  <SelectItem value="Tranche 2">Tranche 2</SelectItem>
+                  <SelectItem value="Tranche 3">Tranche 3</SelectItem>
+                  <SelectItem value="Tranche 4">Tranche 4</SelectItem>
+                  <SelectItem value="Tranche 5">Tranche 5</SelectItem>
+                </SelectContent>
+              </Select>
               </div>
               <div>
                 <Label>Status</Label>
@@ -217,13 +227,23 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
           {editingMilestone && (
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
-              <Label>Tranche Type</Label>
-              <Input
-                placeholder="Tranche Type"
-                value={editingMilestone.trancheType}
-                onChange={(e) => setEditingMilestone({ ...editingMilestone, trancheType: e.target.value })}
-              />
-              </div>
+                <Label>Tranche Type</Label>
+                <Select
+                  value={editingMilestone.trancheType}
+                  onValueChange={(value) => setEditingMilestone({ ...editingMilestone, trancheType: value })}
+                >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Tranche Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tranche 1">Tranche 1</SelectItem>
+                  <SelectItem value="Tranche 2">Tranche 2</SelectItem>
+                  <SelectItem value="Tranche 3">Tranche 3</SelectItem>
+                  <SelectItem value="Tranche 4">Tranche 4</SelectItem>
+                  <SelectItem value="Tranche 5">Tranche 5</SelectItem>
+                </SelectContent>
+                </Select>
+                </div>
               <div>
                 <Label>Status</Label>
                 <Select

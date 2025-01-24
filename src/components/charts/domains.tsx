@@ -93,8 +93,8 @@ export function Domain() {
         <CardTitle>Top 5 Domains</CardTitle>
         <CardDescription>Click on a domain to see startups</CardDescription>
       </CardHeader>
-      <CardContent className="flex mt-5 gap-5">
-        <ChartContainer config={chartConfig} className="w-[150px] h-[150px]">
+      <CardContent className="flex mt-3 gap-5">
+        <ChartContainer config={chartConfig} className="w-[120px] h-[120px]">
         <PieChart width={300} height={300}>
           <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
           <Pie
@@ -102,7 +102,7 @@ export function Domain() {
             data={chartData}
             dataKey="startups"
             nameKey="domain"
-            innerRadius={40}
+            innerRadius={30}
             strokeWidth={5}
             activeIndex={0}
             activeShape={({ outerRadius = 0, ...props }: any) => (
@@ -112,7 +112,7 @@ export function Domain() {
           />
         </PieChart>
         </ChartContainer>
-        <div className="flex flex-col text-xs gap-1 mt-5">
+        <div className="flex flex-col text-xs gap-1 mt-3">
           {chartData.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               <div
