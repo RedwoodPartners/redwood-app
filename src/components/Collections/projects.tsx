@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Client, Databases } from "appwrite";
 import {
   DATABASE_ID,
@@ -60,6 +61,8 @@ const ProjectsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editedProject, setEditedProject] = useState<Project | null>(null);
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
+
+  const router = useRouter();
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -142,14 +145,14 @@ const ProjectsPage: React.FC = () => {
     if (editedProject) {
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
-
+  
       try {
         if (isAddingNewProject) {
           // Add a new project
           const response = await databases.createDocument(
             DATABASE_ID,
             PROJECTS_ID,
-            "unique()",
+            "unique()", // Generate unique ID
             {
               name: editedProject.name,
               startDate: editedProject.startDate,
@@ -159,11 +162,22 @@ const ProjectsPage: React.FC = () => {
               stage: editedProject.stage,
             }
           );
-
+  
           setProjects((prev) => [
             ...prev,
             { ...editedProject, id: response.$id },
           ]);
+  
+          // Use the selected startup's ID for redirection
+          const selectedStartup = startups.find(
+            (startup) => startup.name === editedProject.name
+          );
+  
+          if (selectedStartup) {
+            router.push(`/startup/${selectedStartup.id}`);
+          } else {
+            console.error("Startup not found for redirection.");
+          }
         } else {
           // Update an existing project
           await databases.updateDocument(
@@ -179,14 +193,14 @@ const ProjectsPage: React.FC = () => {
               stage: editedProject.stage,
             }
           );
-
+  
           setProjects((prev) =>
             prev.map((project) =>
               project.id === editedProject.id ? editedProject : project
             )
           );
         }
-
+  
         setEditedProject(null);
         setShowModal(false);
         setIsAddingNewProject(false);
@@ -195,6 +209,7 @@ const ProjectsPage: React.FC = () => {
       }
     }
   };
+  
 
   // Delete a project
   const handleDeleteProject = async () => {
@@ -226,7 +241,7 @@ const ProjectsPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Startup Name</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Received Date</TableHead>
               <TableHead>Applied For?</TableHead>
