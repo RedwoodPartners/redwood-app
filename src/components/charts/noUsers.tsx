@@ -113,7 +113,7 @@ export function NoUsers() {
                 data={chartData}
                 dataKey="visitors"
                 nameKey="browser"
-                innerRadius={50}
+                innerRadius={40}
                 strokeWidth={5}
               >
                 <Label

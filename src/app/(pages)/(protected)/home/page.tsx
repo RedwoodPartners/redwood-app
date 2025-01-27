@@ -31,7 +31,7 @@ const Dashboard = () => {
 
         {/* Tabs Content */}
         <TabsContent value="dashboard">
-            <StartupStats />
+        <StartupStats showInvestmentCard={true} />
           <div className="grid grid-cols-3 gap-4 p-2">
             <NoUsers />
             <NoStartups />
@@ -40,7 +40,7 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="portfolio">
-        <StartupStats />
+        <StartupStats showInvestmentCard={false} />
         <div className="grid grid-cols-3 gap-4 p-2">
           <LineChartPortfolio />
           <AreaChartPortfolio />
@@ -49,7 +49,7 @@ const Dashboard = () => {
         </TabsContent>
         
         <TabsContent value="projects">
-          <StartupStats />
+        <StartupStats showInvestmentCard={false} />
         </TabsContent>
       </Tabs>
     </>
