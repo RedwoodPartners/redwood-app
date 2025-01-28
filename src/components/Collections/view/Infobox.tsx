@@ -1,38 +1,98 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Mail, MessageCircle, Globe } from "lucide-react";
+import { Client, Databases, Query } from "appwrite";
+import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
+
+type Project = {
+  startDate: string;
+  projectEndDate: string;
+  projectTemplate: string;
+  stage: string;
+  startupStatus: string;
+};
 
 interface InfoBoxProps {
-  name: string;
+  startupId: string; // Prop passed from the detailed page
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ name }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
+  const [projectData, setProjectData] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+    const databases = new Databases(client);
+
+    const fetchProjectData = async () => {
+      try {
+        // Query projects collection for matching startupId
+        const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
+          Query.equal("startupId", startupId),
+        ]);
+
+        if (response.documents.length > 0) {
+          // Assuming we display the first matching project
+          const project = response.documents[0];
+          setProjectData({
+            startDate: project.startDate || "",
+            projectEndDate: project.projectEndDate || "",
+            projectTemplate: project.projectTemplate || "",
+            stage: project.stage || "",
+            startupStatus: project.startupStatus || "",
+          });
+        } else {
+          console.warn("No projects found for this startup.");
+        }
+      } catch (error) {
+        console.error("Error fetching project data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectData();
+  }, [startupId]);
+
+  if (loading) {
+    return <div className="p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
+      Loading...</div>;
+  }
+
+  if (!projectData) {
+    return (
+      <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
+        No projects found for this startup.
+        {/* Right Section */}
+        <div className="flex items-center space-x-4 sm:space-x-6 text-black hover:text-gray-700 transition-colors duration-200 ease-in-out">
+          <Mail className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
+          <MessageCircle className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
+          <Globe className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
         <span className="font-normal text-gray-700 text-xs sm:text-base">
-          ₹2 Cr
+          ₹NA
         </span>
         <span className="font-normal text-gray-700 text-xs sm:text-base">
-          20 Jun 2024 - 12 Nov 2024
-        </span>
-        <span className="flex items-center space-x-2">
-          <span className="bg-red-500 h-2 w-2 rounded-full"></span>
-          <span className="text-gray-700 text-sm sm:text-base">TANSIM</span>
+          {new Date(projectData.startDate).toLocaleDateString()} -{" "}
+          {new Date(projectData.projectEndDate).toLocaleDateString()}
         </span>
         <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-          Equity
+          {projectData.projectTemplate}
         </span>
         <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-          Deep Dive
+          {projectData.stage}
         </span>
         <button className="border border-blue-500 text-blue-500 px-3 py-1 rounded-full text-xs sm:text-sm hover:bg-blue-500 hover:text-white transition">
-          Pipeline
-        </button>
-        <button className="text-blue-500 underline text-xs sm:text-sm hover:text-blue-700 transition">
-          Add Profile Info
+          {projectData.startupStatus}
         </button>
       </div>
 

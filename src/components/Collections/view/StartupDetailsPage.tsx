@@ -171,7 +171,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           </div>
 
           {/* Render InfoBox */}
-          <InfoBox name={startupData.name} />
+          <InfoBox startupId={startupId} />
 
           {/* Tabs for Navigation */}
           <NavigationMenu className="-ml-2">

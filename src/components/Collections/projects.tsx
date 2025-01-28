@@ -42,6 +42,7 @@ import { FaEye } from "react-icons/fa";
 type Project = {
   id: string;
   name: string;
+  startupId: string;
   startDate: string;
   receivedDate: string;
   projectEndDate: string;
@@ -78,6 +79,7 @@ const ProjectsPage: React.FC = () => {
         const projectData = response.documents.map((doc: any) => ({
           id: doc.$id,
           name: doc.name || "",
+          startupId: doc.startupId || "",
           startDate: doc.startDate || "",
           receivedDate: doc.receivedDate || "",
           projectEndDate: doc.projectEndDate || "",
@@ -128,6 +130,7 @@ const ProjectsPage: React.FC = () => {
     setEditedProject({
       id: "",
       name: "",
+      startupId: "",
       startDate: "",
       receivedDate: "",
       projectEndDate: "",
@@ -162,6 +165,7 @@ const ProjectsPage: React.FC = () => {
             "unique()", // Generate unique ID
             {
               name: editedProject.name,
+              startupId: editedProject.startupId,
               startDate: editedProject.startDate,
               receivedDate: editedProject.receivedDate,
               projectEndDate: editedProject.projectEndDate,
@@ -195,6 +199,7 @@ const ProjectsPage: React.FC = () => {
             editedProject.id,
             {
               name: editedProject.name,
+              startupId: editedProject.startupId,
               startDate: editedProject.startDate,
               receivedDate: editedProject.receivedDate,
               projectEndDate: editedProject.projectEndDate,
@@ -324,9 +329,14 @@ const ProjectsPage: React.FC = () => {
             <Label htmlFor="name">Startup Name</Label>
             <Select
               value={editedProject?.name || ""}
-              onValueChange={(value) =>
-                setEditedProject({ ...editedProject!, name: value })
-              }
+              onValueChange={(value) => {
+              const selectedStartup = startups.find((startup) => startup.name === value);
+              setEditedProject({
+              ...editedProject!,
+              name: value,
+              startupId: selectedStartup ? selectedStartup.id : "", // Save startupId
+              });
+            }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a startup" />
