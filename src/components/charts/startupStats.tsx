@@ -218,7 +218,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
 
 const StatCard: React.FC<StatCardProps> = ({ title, mainValue, subValue, icon, onClick }) => {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 max-w-full h-20 sm:max-w-sm" onClick={onClick}>
+    <div className="bg-white rounded-xl border border-gray-200 max-w-full h-20 sm:max-w-sm cursor-pointer" onClick={onClick}>
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-gray-600 p-2">{title}</h3>
         <span className="text-gray-600 mr-2">{icon}</span>
