@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT, databases } from "@/appwrite/config";
+import { Client, Databases, Query } from "appwrite";
+import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT, databases, PROJECTS_ID } from "@/appwrite/config";
 
 interface StatCardProps {
   title: string;
@@ -19,6 +19,9 @@ interface StartupStatsProps {
 const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
   const [startupCount, setStartupCount] = useState<number>(0);
   const [totalInvestment, setTotalInvestment] = useState<number>(0);
+  const [pipelineCount, setPipelineCount] = useState<number>(0);
+  const [rejectedCount, setRejectedCount] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,6 +34,36 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
         setStartupCount(response.total);
       } catch (error) {
         console.error("Error fetching startups count:", error);
+      }
+    };
+    // Fetch counts for specific statuses
+    const fetchStatusCounts = async () => {
+      try {
+        // Pipeline
+        const pipelineResponse = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [Query.equal("startupStatus", "Pipeline")]
+        );
+        setPipelineCount(pipelineResponse.total);
+
+        // Rejected
+        const rejectedResponse = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [Query.equal("startupStatus", "Rejected")]
+        );
+        setRejectedCount(rejectedResponse.total);
+
+        // Completed
+        const completedResponse = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [Query.equal("startupStatus", "Completed")]
+        );
+        setCompletedCount(completedResponse.total);
+      } catch (error) {
+        console.error("Error fetching status counts:", error);
       }
     };
 
@@ -51,6 +84,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     };
 
     fetchStartupCount();
+    fetchStatusCounts();
     fetchTotalInvestment();
   }, []);
 
@@ -106,7 +140,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     <StatCard
       key="pipeline-startups"
       title="Pipeline Startups"
-      mainValue="0"
+      mainValue={`+${pipelineCount}`}
       subValue="+0% from last month"
       icon={
         <svg
@@ -128,7 +162,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     <StatCard
       key="rejected-startups"
       title="Rejected Startups"
-      mainValue="0"
+      mainValue={`+${rejectedCount}`}
       subValue="+0% from last year"
       icon={
         <svg
@@ -150,7 +184,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     <StatCard
       key="completed-startups"
       title="Completed Startups"
-      mainValue="0"
+      mainValue={`+${completedCount}`}
       subValue="+0 since last year"
       icon={
         <svg

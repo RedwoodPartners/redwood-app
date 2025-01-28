@@ -37,13 +37,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
+import { FaEye } from "react-icons/fa";
 
 type Project = {
   id: string;
   name: string;
   startDate: string;
   receivedDate: string;
+  projectEndDate: string;
   appliedFor: string;
+  projectTemplate: string;
   startupStatus: string;
   stage: string;
 };
@@ -77,7 +80,9 @@ const ProjectsPage: React.FC = () => {
           name: doc.name || "",
           startDate: doc.startDate || "",
           receivedDate: doc.receivedDate || "",
+          projectEndDate: doc.projectEndDate || "",
           appliedFor: doc.appliedFor || "",
+          projectTemplate: doc.projectTemplate || "",
           startupStatus: doc.startupStatus || "",
           stage: doc.stage || "",
         }));
@@ -125,7 +130,9 @@ const ProjectsPage: React.FC = () => {
       name: "",
       startDate: "",
       receivedDate: "",
+      projectEndDate: "",
       appliedFor: "",
+      projectTemplate: "",
       startupStatus: "",
       stage: "",
     });
@@ -157,7 +164,9 @@ const ProjectsPage: React.FC = () => {
               name: editedProject.name,
               startDate: editedProject.startDate,
               receivedDate: editedProject.receivedDate,
+              projectEndDate: editedProject.projectEndDate,
               appliedFor: editedProject.appliedFor,
+              projectTemplate: editedProject.projectTemplate,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
             }
@@ -188,7 +197,9 @@ const ProjectsPage: React.FC = () => {
               name: editedProject.name,
               startDate: editedProject.startDate,
               receivedDate: editedProject.receivedDate,
+              projectEndDate: editedProject.projectEndDate,
               appliedFor: editedProject.appliedFor,
+              projectTemplate: editedProject.projectTemplate,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
             }
@@ -209,7 +220,6 @@ const ProjectsPage: React.FC = () => {
       }
     }
   };
-  
 
   // Delete a project
   const handleDeleteProject = async () => {
@@ -241,35 +251,59 @@ const ProjectsPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>View</TableHead>
               <TableHead>Startup Name</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Received Date</TableHead>
+              <TableHead>Project End Date</TableHead>
               <TableHead>Applied For?</TableHead>
+              <TableHead>Project Template</TableHead>
               <TableHead>Startup Status</TableHead>
               <TableHead>Stage</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
-              <TableRow
-                key={project.id}
-                onDoubleClick={() => handleEditProject(project)}
-              >
-                <TableCell>{project.name}</TableCell>
-                <TableCell>
-                  {new Date(project.startDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {project.receivedDate
-                    ? new Date(project.receivedDate).toLocaleDateString()
-                    : "-"}
-                </TableCell>
-                <TableCell>{project.appliedFor}</TableCell>
-                <TableCell>{project.startupStatus}</TableCell>
-                <TableCell>{project.stage}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {projects.map((project) => {
+    // Find the corresponding startup for the project
+    const startup = startups.find((s) => s.name === project.name);
+    return (
+      <TableRow key={project.id} onDoubleClick={() => handleEditProject(project)}>
+        <TableCell>
+          <button
+            className="bg-transparent text-gray-600 hover:text-blue-700 px-2 py-1 border border-transparent transition-colors duration-200 ease-in-out disabled:opacity-50"
+            title="View Startup"
+            onClick={() => {
+              if (startup) {
+                router.push(`/startup/${startup.id}`);
+              } else {
+                console.error("Startup not found for redirection.");
+              }
+            }}
+          >
+            <FaEye size={18} />
+          </button>
+        </TableCell>
+        <TableCell>{project.name}</TableCell>
+        <TableCell>{new Date(project.startDate).toLocaleDateString()}</TableCell>
+        <TableCell>
+          {project.receivedDate
+            ? new Date(project.receivedDate).toLocaleDateString()
+            : "-"}
+        </TableCell>
+        <TableCell>
+          {project.projectEndDate
+            ? new Date(project.projectEndDate).toLocaleDateString()
+            : "-"}
+        </TableCell>
+        <TableCell>{project.appliedFor}</TableCell>
+        <TableCell>{project.projectTemplate}</TableCell>
+        <TableCell>{project.startupStatus}</TableCell>
+        <TableCell>{project.stage}</TableCell>
+      </TableRow>
+    );
+  })}
+</TableBody>
+
         </Table>
       </div>
 
@@ -346,6 +380,21 @@ const ProjectsPage: React.FC = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="projectEndDate">Project End Date</Label>
+                <Input
+                  id="projectEndDate"
+                  type="date"
+                  value={editedProject.projectEndDate}
+                  onChange={(e) =>
+                    setEditedProject({
+                      ...editedProject!,
+                      projectEndDate: e.target.value,
+                    })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div>
                 <Label htmlFor="appliedFor">Applied For?</Label>
                 <Select
                   value={editedProject.appliedFor}
@@ -358,6 +407,27 @@ const ProjectsPage: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {["Equity", "Grant", "Debt"].map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="projectTemplate">Project Template</Label>
+                <Select
+                  value={editedProject.projectTemplate}
+                  onValueChange={(value) =>
+                    setEditedProject({ ...editedProject!, projectTemplate: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Others", "TANSIM"].map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
