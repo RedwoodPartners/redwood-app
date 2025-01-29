@@ -245,6 +245,12 @@ const ProjectsPage: React.FC = () => {
       }
     }
   };
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-GB").format(date); // Formats as DD/MM/YYYY
+  };
+  
 
   return (
     <div className="p-2">
@@ -289,17 +295,9 @@ const ProjectsPage: React.FC = () => {
           </button>
         </TableCell>
         <TableCell>{project.name}</TableCell>
-        <TableCell>{new Date(project.startDate).toLocaleDateString()}</TableCell>
-        <TableCell>
-          {project.receivedDate
-            ? new Date(project.receivedDate).toLocaleDateString()
-            : "-"}
-        </TableCell>
-        <TableCell>
-          {project.projectEndDate
-            ? new Date(project.projectEndDate).toLocaleDateString()
-            : "-"}
-        </TableCell>
+        <TableCell>{formatDate(project.startDate)}</TableCell>
+        <TableCell>{formatDate(project.receivedDate)}</TableCell>
+        <TableCell>{formatDate(project.projectEndDate)}</TableCell>
         <TableCell>{project.appliedFor}</TableCell>
         <TableCell>{project.projectTemplate}</TableCell>
         <TableCell>{project.startupStatus}</TableCell>

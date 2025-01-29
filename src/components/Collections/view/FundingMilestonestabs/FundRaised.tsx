@@ -197,6 +197,11 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       });
     }
   };
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-GB").format(date);
+  };
   
 
   return (
@@ -223,7 +228,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             {investments.map((investment, index) => (
               <TableRow key={investment.$id} onDoubleClick={() => openDialog(investment, true)}>
                 <TableCell>{investment.mode}</TableCell>
-                <TableCell>{investment.date}</TableCell>
+                <TableCell>{formatDate(investment.date)}</TableCell>
                 <TableCell>{investment.amount}</TableCell>
                 <TableCell>{investment.description}</TableCell>
                 <TableCell>

@@ -55,6 +55,16 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
     fetchProjectData();
   }, [startupId]);
 
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  };
+
   if (loading) {
     return <div className="p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       Loading...</div>;
@@ -81,9 +91,9 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
         <span className="font-normal text-gray-700 text-xs sm:text-base">
           ₹NA
         </span>
-        <span className="font-normal text-gray-700 text-xs sm:text-base">
-          {new Date(projectData.startDate).toLocaleDateString()} -{" "}
-          {new Date(projectData.projectEndDate).toLocaleDateString()}
+        <span className="text-gray-700 text-xs sm:text-base">
+          {formatDate(projectData.startDate)} -{" "}
+          {formatDate(projectData.projectEndDate)}
         </span>
         <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
           {projectData.projectTemplate}
