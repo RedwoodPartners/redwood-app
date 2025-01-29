@@ -110,6 +110,11 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
       console.error("Error adding patents data:", error);
     }
   };
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-GB").format(date);
+  };
   
 
   return (
@@ -140,11 +145,11 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             <TableRow key={row.$id} onDoubleClick={() => setEditingPatent(row)}>
               <TableCell>{row.patent}</TableCell>
               <TableCell>{row.inventors}</TableCell>
-              <TableCell>{row.date}</TableCell>
+              <TableCell>{formatDate(row.date)}</TableCell>
               <TableCell>{row.status}</TableCell>
               <TableCell>{row.patentNumber}</TableCell>
-              <TableCell>{row.approvalDate}</TableCell>
-              <TableCell>{row.expiryDate}</TableCell>
+              <TableCell>{formatDate(row.approvalDate)}</TableCell>
+              <TableCell>{formatDate(row.expiryDate)}</TableCell>
               <TableCell>{row.patentOffice}</TableCell>
               <TableCell>{row.description}</TableCell>
             </TableRow>

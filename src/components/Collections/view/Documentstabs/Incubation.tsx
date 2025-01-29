@@ -111,6 +111,11 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
       console.error("Error adding incubation data:", error);
     }
   };
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-GB").format(date);
+  };
 
   return (
     <div>
@@ -137,8 +142,8 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             {incubationData.map((row) => (
               <TableRow key={row.$id} onDoubleClick={() => setEditingIncubation(row)}>
                 <TableCell>{row.program}</TableCell>
-                <TableCell>{row.date}</TableCell>
-                <TableCell>{row.exitDate}</TableCell>
+                <TableCell>{formatDate(row.date)}</TableCell>
+                <TableCell>{formatDate(row.exitDate)}</TableCell>
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.spocName}</TableCell>
                 <TableCell>{row.spocNumber}</TableCell>
