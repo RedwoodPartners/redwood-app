@@ -9,6 +9,7 @@ type Project = {
   startDate: string;
   projectEndDate: string;
   projectTemplate: string;
+  appliedFor: string;
   stage: string;
   startupStatus: string;
 };
@@ -39,6 +40,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
             startDate: project.startDate || "",
             projectEndDate: project.projectEndDate || "",
             projectTemplate: project.projectTemplate || "",
+            appliedFor: project.appliedFor || "",
             stage: project.stage || "",
             startupStatus: project.startupStatus || "",
           });
@@ -64,6 +66,13 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
       year: "numeric",
     }).format(date);
   };
+  // Determine border color based on the status
+  const getBorderColor = (): string => {
+    if (projectData?.startupStatus === "Completed") return "border-green-500 text-green-500";
+    if (projectData?.startupStatus === "Rejected") return "border-red-500 text-red-500";
+    if (projectData?.startupStatus === "Pipeline") return "border-blue-500 text-blue-500";
+    return "border-gray-300"; // Default border color
+  };
 
   if (loading) {
     return <div className="p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
@@ -88,22 +97,28 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
-        <span className="font-normal text-gray-700 text-xs sm:text-base">
+        <span className="font-medium text-gray-950 text-xs sm:text-base">
           ₹NA
         </span>
-        <span className="text-gray-700 text-xs sm:text-base">
+        <span className="text-gray-950 font-medium text-xs sm:text-base">
           {formatDate(projectData.startDate)} -{" "}
           {formatDate(projectData.projectEndDate)}
         </span>
-        <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+        <span className="text-gray-950 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
           {projectData.projectTemplate}
         </span>
-        <span className="text-gray-700 border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-          {projectData.stage}
+        <span className="text-gray-950 flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+        <div className="bg-blue-500 rounded-full text-sm h-3 w-3 mt-1" />{projectData.appliedFor}
         </span>
-        <button className="border border-blue-500 text-blue-500 px-3 py-1 rounded-full text-xs sm:text-sm hover:bg-blue-500 hover:text-white transition">
+        <span className="text-gray-950 flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+          <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />{projectData.stage}
+        </span>
+        <button className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}>
           {projectData.startupStatus}
         </button>
+        <span className="text-blue-700 font-semibold text-xs sm:text-sm cursor-pointer">
+          Add Profile Info
+        </span>
       </div>
 
       {/* Right Section */}

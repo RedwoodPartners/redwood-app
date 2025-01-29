@@ -65,6 +65,7 @@ const ProjectsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editedProject, setEditedProject] = useState<Project | null>(null);
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -153,6 +154,18 @@ const ProjectsPage: React.FC = () => {
   // Save changes to the edited or new project
   const handleConfirmChanges = async () => {
     if (editedProject) {
+      // Check for duplicate startup in existing projects
+      const isDuplicate = projects.some(
+        (project) =>
+          project.startupId === editedProject.startupId &&
+          project.id !== editedProject.id // Exclude the current project being edited
+      );
+
+      if (isDuplicate) {
+        setErrorMessage("A startup with the same record already exists.");
+        return;
+      }
+
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
   
@@ -220,6 +233,7 @@ const ProjectsPage: React.FC = () => {
         setEditedProject(null);
         setShowModal(false);
         setIsAddingNewProject(false);
+        setErrorMessage(null);
       } catch (error) {
         console.error("Error saving project:", error);
       }
@@ -319,6 +333,9 @@ const ProjectsPage: React.FC = () => {
               </DialogTitle>
               <DialogDescription aria-describedby={undefined}>
               </DialogDescription>
+              {errorMessage && (
+                  <p className="text-red-500">{errorMessage}</p> // Display error message here
+                )}
             </DialogHeader>
 
             {/* Form Fields */}
