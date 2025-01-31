@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChartPortfolio } from "@/components/charts/lineChart";
 import { AreaChartPortfolio } from "@/components/charts/areaChart";
 import { BarChartPortfolio } from "@/components/charts/barChart";
+import { ServicesChart } from "@/components/charts/services";
 
 
 const Dashboard = () => {
@@ -33,9 +34,9 @@ const Dashboard = () => {
         <TabsContent value="dashboard">
         <StartupStats showInvestmentCard={true} />
           <div className="grid grid-cols-3 gap-4 p-2">
+            <ServicesChart />
             <NoUsers />
             <NoStartups />
-            <Domain />
           </div>
         </TabsContent>
 
@@ -44,7 +45,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-3 gap-4 p-2">
           <LineChartPortfolio />
           <AreaChartPortfolio />
-          <BarChartPortfolio />
+          <Domain />
+          {/*<BarChartPortfolio />*/}
         </div>
         </TabsContent>
         
