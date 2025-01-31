@@ -47,6 +47,7 @@ type Project = {
   receivedDate: string;
   projectEndDate: string;
   appliedFor: string;
+  services: string;
   projectTemplate: string;
   startupStatus: string;
   stage: string;
@@ -85,6 +86,7 @@ const ProjectsPage: React.FC = () => {
           receivedDate: doc.receivedDate || "",
           projectEndDate: doc.projectEndDate || "",
           appliedFor: doc.appliedFor || "",
+          services: doc.services || "",
           projectTemplate: doc.projectTemplate || "",
           startupStatus: doc.startupStatus || "",
           stage: doc.stage || "",
@@ -136,6 +138,7 @@ const ProjectsPage: React.FC = () => {
       receivedDate: "",
       projectEndDate: "",
       appliedFor: "",
+      services: "",
       projectTemplate: "",
       startupStatus: "",
       stage: "",
@@ -154,6 +157,10 @@ const ProjectsPage: React.FC = () => {
   // Save changes to the edited or new project
   const handleConfirmChanges = async () => {
     if (editedProject) {
+      // Automatically set Project End Date if template is TANSIM
+    if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
+      editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
+    }
       // Check for duplicate startup in existing projects
       const isDuplicate = projects.some(
         (project) =>
@@ -183,6 +190,7 @@ const ProjectsPage: React.FC = () => {
               receivedDate: editedProject.receivedDate,
               projectEndDate: editedProject.projectEndDate,
               appliedFor: editedProject.appliedFor,
+              services: editedProject.services,
               projectTemplate: editedProject.projectTemplate,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
@@ -217,6 +225,7 @@ const ProjectsPage: React.FC = () => {
               receivedDate: editedProject.receivedDate,
               projectEndDate: editedProject.projectEndDate,
               appliedFor: editedProject.appliedFor,
+              services: editedProject.services,
               projectTemplate: editedProject.projectTemplate,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
@@ -264,6 +273,15 @@ const ProjectsPage: React.FC = () => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-GB").format(date); // Formats as DD/MM/YYYY
   };
+
+  const calculateEndDate = (startDate: string): string => {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 45); // Add 45 days
+    return end.toISOString().split("T")[0];
+  };
+  
+  
   
 
   return (
@@ -282,6 +300,7 @@ const ProjectsPage: React.FC = () => {
               <TableHead>Received Date</TableHead>
               <TableHead>Project End Date</TableHead>
               <TableHead>Applied For?</TableHead>
+              <TableHead>Services</TableHead>
               <TableHead>Project Template</TableHead>
               <TableHead>Startup Status</TableHead>
               <TableHead>Stage</TableHead>
@@ -313,6 +332,7 @@ const ProjectsPage: React.FC = () => {
         <TableCell>{formatDate(project.receivedDate)}</TableCell>
         <TableCell>{formatDate(project.projectEndDate)}</TableCell>
         <TableCell>{project.appliedFor}</TableCell>
+        <TableCell>{project.services}</TableCell>
         <TableCell>{project.projectTemplate}</TableCell>
         <TableCell>{project.startupStatus}</TableCell>
         <TableCell>{project.stage}</TableCell>
@@ -432,6 +452,26 @@ const ProjectsPage: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {["Equity", "Grant", "Debt"].map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="services">Services</Label>
+                <Select
+                  value={editedProject.services}
+                  onValueChange={(value) =>
+                    setEditedProject({ ...editedProject!, services: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Consulting", "BDD", "Business Structuring", "Events"].map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>

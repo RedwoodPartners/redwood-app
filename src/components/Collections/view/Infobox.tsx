@@ -9,6 +9,7 @@ type Project = {
   startDate: string;
   projectEndDate: string;
   projectTemplate: string;
+  services: string;
   appliedFor: string;
   stage: string;
   startupStatus: string;
@@ -41,6 +42,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
             projectEndDate: project.projectEndDate || "",
             projectTemplate: project.projectTemplate || "",
             appliedFor: project.appliedFor || "",
+            services: project.services || "",
             stage: project.stage || "",
             startupStatus: project.startupStatus || "",
           });
@@ -105,7 +107,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
           {formatDate(projectData.projectEndDate)}
         </span>
         <span className="text-gray-950 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-          {projectData.projectTemplate}
+          {projectData.services}
         </span>
         <span className="text-gray-950 flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
         <div className="bg-blue-500 rounded-full text-sm h-3 w-3 mt-1" />{projectData.appliedFor}
@@ -116,7 +118,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
         <button className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}>
           {projectData.startupStatus}
         </button>
-        <span className="text-blue-700 font-semibold text-xs sm:text-sm cursor-pointer">
+        <span className="text-blue-500 font-semibold text-xs sm:text-sm cursor-pointer">
           Add Profile Info
         </span>
       </div>
