@@ -353,7 +353,11 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 <TableCell>
                   {shareholder.linkedinProfile ? (
                     <a
-                      href={shareholder.linkedinProfile}
+                    href={
+                      shareholder.linkedinProfile.startsWith("http")
+                        ? shareholder.linkedinProfile
+                        : `https://${shareholder.linkedinProfile}`
+                    }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-500 underline"
