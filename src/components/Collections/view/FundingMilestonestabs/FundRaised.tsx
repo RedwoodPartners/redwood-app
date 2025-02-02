@@ -221,7 +221,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableHead>Investment Date</TableHead>
               <TableHead>Investment Amount (INR)</TableHead>
               <TableHead className="w-96">Description</TableHead>
-              <TableHead className="w-24">Document</TableHead>
+              <TableHead className="w-40">Document</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -281,11 +281,10 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               </TableRow>
             ))}
             <TableRow className="font-bold">
-              <TableCell colSpan={4}>Total Investment Amount</TableCell>
+              <TableCell colSpan={2}>Total Investment Amount</TableCell>
               <TableCell>
                 {calculateTotalInvestment(investments).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </TableCell>
-              <TableCell colSpan={2}></TableCell>
             </TableRow>
           </TableBody>
         </Table>

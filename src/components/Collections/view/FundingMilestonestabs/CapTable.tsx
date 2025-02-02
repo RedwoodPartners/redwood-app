@@ -177,7 +177,17 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div className="flex-1">
                 <Label htmlFor="capitalStructure" className="block mb-2">Capital Structure (%)</Label>
-                <Input id="capitalStructure" placeholder="Capital Structure (%)" value={editingRow?.capitalStructure || ""} onChange={(e) => setEditingRow({ ...editingRow, capitalStructure: e.target.value })} />
+                <Input
+                  id="capitalStructure"
+                  placeholder="Capital Structure (%)"
+                  value={editingRow?.capitalStructure || ""}
+                  onChange={(e) => {
+                  let value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and dots
+                  value = value ? `${value}%` : ""; // Append "%" symbol
+                  setEditingRow({ ...editingRow, capitalStructure: value });
+                  }}
+                />
+
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-4">
@@ -215,7 +225,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </TableRow>
             ))}
             <TableRow className={`font-semibold ${calculateTotalCapital() > 100 ? 'bg-red-100 text-red-700' : 'bg-gray-100'}`}>
-              <TableCell colSpan={3} className="text-right">Total Capital Structure:</TableCell>
+              <TableCell colSpan={2} className="text-right">Total Capital Structure:</TableCell>
               <TableCell className="text-left">{calculateTotalCapital().toFixed(2)}%</TableCell>
             </TableRow>
           </TableBody>

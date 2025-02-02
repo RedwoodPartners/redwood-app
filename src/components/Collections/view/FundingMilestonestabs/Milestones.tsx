@@ -208,11 +208,11 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                 <TableCell>{milestone.milestones}</TableCell>
               </TableRow>
             ))}
-            <TableRow className="font-semibold bg-gray-100 text-left">
-              <TableCell colSpan={3} className="">
+            <TableRow className="font-semibold bg-gray-100">
+              <TableCell colSpan={2} className="text-right">
                 Total:
               </TableCell>
-              <TableCell className="">₹{totalAmount.toLocaleString()}</TableCell>
+              <TableCell>₹{totalAmount.toLocaleString()}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
