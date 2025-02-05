@@ -334,7 +334,14 @@ const ProjectsPage: React.FC = () => {
             <FaEye size={18} />
           </button>
         </TableCell>
-        <TableCell>{project.name}</TableCell>
+        <TableCell>
+          <button
+            className="hover:text-blue-600"
+            onClick={() => router.push(`/projects/${project.id}`)}
+          >
+          {project.name}
+          </button>
+        </TableCell>
         <TableCell>{formatDate(project.startDate)}</TableCell>
         <TableCell>{formatDate(project.receivedDate)}</TableCell>
         <TableCell>{formatDate(project.projectEndDate)}</TableCell>
