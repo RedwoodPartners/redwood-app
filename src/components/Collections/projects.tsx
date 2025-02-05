@@ -175,14 +175,21 @@ const ProjectsPage: React.FC = () => {
 
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
-  
+
+      // Generate `projectId` from the startup name
+      const generatedStartupId = editedProject.name
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("");
+
+
       try {
         if (isAddingNewProject) {
           // Add a new project
           const response = await databases.createDocument(
             DATABASE_ID,
             PROJECTS_ID,
-            "unique()", // Generate unique ID
+            generatedStartupId,
             {
               name: editedProject.name,
               startupId: editedProject.startupId,
@@ -199,7 +206,7 @@ const ProjectsPage: React.FC = () => {
   
           setProjects((prev) => [
             ...prev,
-            { ...editedProject, id: response.$id },
+            { ...editedProject, id: response.$id, startupId: generatedStartupId },
           ]);
   
           // Use the selected startup's ID for redirection
@@ -208,7 +215,7 @@ const ProjectsPage: React.FC = () => {
           );
   
           if (selectedStartup) {
-            router.push(`/startup/${selectedStartup.id}`);
+            router.push(`/projects/${response.$id}`); // Redirect to the new project
           } else {
             console.error("Startup not found for redirection.");
           }
@@ -318,7 +325,7 @@ const ProjectsPage: React.FC = () => {
             title="View Startup"
             onClick={() => {
               if (startup) {
-                router.push(`/startup/${startup.id}`);
+                router.push(`/projects/${project.id}`); // Redirect to the project
               } else {
                 console.error("Startup not found for redirection.");
               }
