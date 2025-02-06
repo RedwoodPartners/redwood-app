@@ -304,7 +304,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg shadow-lg border border-gray-300">
+      <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg border border-gray-300">
         {Object.entries(startupData).map(([key, value]) => (
           <div key={key} className="space-y-4">
             <div className="flex flex-col space-y-1.5">
