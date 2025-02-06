@@ -87,7 +87,15 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
-        return <CompanyInformation startupId={startupId} activeTab={activeTab} setActiveTab={setActiveTab} />;
+        return (
+        <div className="space-y-5">
+        <div>
+        <CompanyInformation startupId={startupId} activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+        <div>
+        <RegulatoryInformation startupId={startupId} />
+        </div>
+        </div>);
       case "regulatoryInfo":
         return <RegulatoryInformation startupId={startupId} />;
       case "contact":
@@ -174,7 +182,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           <InfoBox startupId={startupId} />
 
           {/* Tabs for Navigation */}
-          <NavigationMenu className="-ml-2">
+          {/*<NavigationMenu className="-ml-2">
             <NavigationMenuList className="flex flex-wrap space-x-2 mt-2">
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="font-bold bg-transparent">
@@ -312,14 +320,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                         GSTR Compliance
                       </button>
                     </li>
-                    {/*<li>
-                      <button
-                        onClick={() => setActiveTab("audits")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        Auidt
-                      </button>
-                    </li>*/}
+                    
                     
                   </ul>
                 </NavigationMenuContent>
@@ -359,7 +360,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                 </NavigationMenuContent>
               </NavigationMenuItem>
             </NavigationMenuList>
-          </NavigationMenu>
+          </NavigationMenu>*/}
 
           {/* Render the active tab content */}
           <div className="mt-3 p-2">{renderTabContent()}</div>
