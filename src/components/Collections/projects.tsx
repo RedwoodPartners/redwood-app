@@ -36,8 +36,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash } from "lucide-react";
 import { FaEye } from "react-icons/fa";
+import { Checkbox } from "../ui/checkbox";
 
 type Project = {
   id: string;
@@ -68,6 +69,8 @@ const ProjectsPage: React.FC = () => {
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const router = useRouter();
 
   // Fetch projects on component mount
@@ -287,6 +290,28 @@ const ProjectsPage: React.FC = () => {
     end.setDate(start.getDate() + 45); // Add 45 days
     return end.toISOString().split("T")[0];
   };
+
+  const handleDeleteSelectedProjects = async () => {
+  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+  const databases = new Databases(client);
+
+  try {
+    await Promise.all(
+      selectedProjects.map((projectId) =>
+        databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId)
+      )
+    );
+
+    // Update state after deletion
+    setProjects((prev) =>
+      prev.filter((project) => !selectedProjects.includes(project.id))
+    );
+    setSelectedProjects([]); // Clear selection
+  } catch (error) {
+    console.error("Error deleting projects:", error);
+  }
+};
+
   
   
   
@@ -295,12 +320,27 @@ const ProjectsPage: React.FC = () => {
     <div className="p-2">
       <div className="flex space-x-3 mb-4">
         <h1 className="text-2xl font-semibold">Projects</h1>
-        <PlusCircle size={20} onClick={handleAddNewProject} className="cursor-pointer mt-2" />
+        <div className="flex items-center space-x-4">
+          <div>
+          <PlusCircle size={20} onClick={handleAddNewProject} className="cursor-pointer" />
+          </div>
+          <div>
+            <Trash
+              size={20}
+              className={`cursor-pointer ${
+              selectedProjects.length > 0 ? "text-red-500" : "text-black"
+              }`}
+              onClick={handleDeleteSelectedProjects}
+            />
+          </div>
+        
+        </div>
       </div>
       <div className="bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Select</TableHead>
               <TableHead>View</TableHead>
               <TableHead>Startup Name</TableHead>
               <TableHead>Start Date</TableHead>
@@ -319,6 +359,21 @@ const ProjectsPage: React.FC = () => {
     const startup = startups.find((s) => s.name === project.name);
     return (
       <TableRow key={project.id} onDoubleClick={() => handleEditProject(project)}>
+        <TableCell>
+          <Checkbox
+            checked={selectedProjects.includes(project.id)}
+            onCheckedChange={(isChecked) => {
+            if (isChecked) {
+              setSelectedProjects((prev) => [...prev, project.id]);
+            } else {
+              setSelectedProjects((prev) =>
+              prev.filter((id) => id !== project.id)
+            );
+            }
+          }}
+           />
+          </TableCell>
+
         <TableCell>
           <button
             className="bg-transparent text-gray-600 hover:text-blue-700 px-2 py-1 border border-transparent transition-colors duration-200 ease-in-out disabled:opacity-50"
