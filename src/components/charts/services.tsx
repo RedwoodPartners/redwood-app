@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 import { Client, Databases, Models } from "appwrite";
 import {
@@ -25,6 +26,7 @@ import {
 
 type ProjectDocument = Models.Document & {
   services: string | null;
+  name:string;
 };
 
 // Type for service counts
@@ -52,6 +54,7 @@ const chartConfig = {
 
 export function ServicesChart() {
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +99,10 @@ export function ServicesChart() {
 
     fetchData();
   }, []);
+  // Handle bar click to navigate to the dynamic route
+  const handleBarClick = (data: ChartData) => {
+    router.push(`/home/service/${data.service}`); 
+  };
 
   return (
     <Card>
@@ -132,6 +139,8 @@ export function ServicesChart() {
               layout="vertical"
               fill="hsl(var(--chart-1))"
               radius={4}
+              onClick={(data) => handleBarClick(data)}
+              className="cursor-pointer"
             >
               <LabelList
                 dataKey="service"
