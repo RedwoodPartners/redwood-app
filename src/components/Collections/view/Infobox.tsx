@@ -17,9 +17,10 @@ type Project = {
 
 interface InfoBoxProps {
   startupId: string; // Prop passed from the detailed page
+  projectId: string; // Prop passed from the detailed page
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [projectData, setProjectData] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +33,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
         // Query projects collection for matching startupId
         const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
           Query.equal("startupId", startupId),
+          Query.equal("$id", projectId),
         ]);
 
         if (response.documents.length > 0) {
@@ -57,7 +59,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId }) => {
     };
 
     fetchProjectData();
-  }, [startupId]);
+  }, [startupId, projectId]);
 
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "-";
