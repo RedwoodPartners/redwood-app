@@ -16,6 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
+import {nanoid} from "nanoid";
+
 type Startup = {
   id: string;
   name: string;
@@ -82,10 +84,10 @@ const StartupsPage: React.FC = () => {
   const createAndRedirect = async (newStartupData: Partial<Startup>) => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-    const formattedBrandName = newStartupData.brandName?.replace(/\s+/g, '') || '';
-    const customId = `${formattedBrandName}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const shortUUID = nanoid(6);
     try {
-      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, customId, { ...newStartupData, year: year });
+      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: year });
       setShowAddDialog(false);
       router.push(`/startup/${createdStartup.$id}`);
     } catch (error) {
@@ -255,7 +257,6 @@ const StartupsPage: React.FC = () => {
             <TableRow>
               <TableHead className="w-6">Select</TableHead>
               <TableHead className="w-10">View</TableHead>
-              <TableHead className="w-44">ID</TableHead>
               <TableHead className="w-auto">Startup Name</TableHead>
               <TableHead className="w-auto">Brand Name</TableHead>
               <TableHead>Revenue (last FY)</TableHead>
@@ -281,13 +282,11 @@ const StartupsPage: React.FC = () => {
                     <FaEye size={18} />
                   </button>
                 </TableCell>
+                
                 <TableCell
                   onClick={() => handleViewStartup(startup.id)}
                   className="cursor-pointer hover:text-blue-700"
-                >
-                 {startup.id}
-                </TableCell>
-                <TableCell>{startup.name}</TableCell>
+                >{startup.name}</TableCell>
                 <TableCell>{startup.brandName}</TableCell>
                 <TableCell>₹ {startup.revenue}</TableCell>
                 <TableCell>{startup.year}</TableCell>

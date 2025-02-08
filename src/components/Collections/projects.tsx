@@ -40,6 +40,8 @@ import { PlusCircle, Trash } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { Checkbox } from "../ui/checkbox";
 
+import { nanoid } from "nanoid";
+
 type Project = {
   id: string;
   name: string;
@@ -164,17 +166,6 @@ const ProjectsPage: React.FC = () => {
     if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
       editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
     }
-      // Check for duplicate startup in existing projects
-      const isDuplicate = projects.some(
-        (project) =>
-          project.startupId === editedProject.startupId &&
-          project.id !== editedProject.id // Exclude the current project being edited
-      );
-
-      if (isDuplicate) {
-        setErrorMessage("A startup with the same record already exists.");
-        return;
-      }
 
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
@@ -183,7 +174,7 @@ const ProjectsPage: React.FC = () => {
       const generatedStartupId = editedProject.name
         .split(" ")
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("");
+        .join("") +"-"+ nanoid(2);
 
 
       try {

@@ -209,7 +209,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
         )}
 
         {/* Render InfoBox */}
-        {project.startupId && <InfoBox startupId={project.startupId} />}
+        {project.startupId && <InfoBox startupId={project.startupId} projectId={project.id} />}
 
         {/* Tabs for Navigation */}
                   <NavigationMenu className="-ml-2">
