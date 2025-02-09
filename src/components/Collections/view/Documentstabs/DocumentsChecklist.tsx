@@ -27,6 +27,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newDoc, setNewDoc] = useState({
     docName: "",
     docType: "",
@@ -56,6 +57,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   }, [startupId, databases]);
 
   const handleSaveDocument = async () => {
+    if (isSubmitting) return; 
+    setIsSubmitting(true);
     try {
       const response = await databases.createDocument(DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
         ...newDoc,
@@ -75,6 +78,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         description: "Failed to add the new document.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -257,7 +262,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSaveDocument}>Save</Button>
+              <Button onClick={handleSaveDocument} disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
+                </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
