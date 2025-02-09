@@ -24,6 +24,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const[isSubmitting, setIsSubmitting] = useState(false);
+
   const databases = useMemo(() => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     return new Databases(client);
@@ -55,6 +57,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   };
 
   const handleSaveInvestment = async (row: any) => {
+    if (isSubmitting) return; 
+    setIsSubmitting(true);
     try {
       // Check if shareholderName is provided
       if (!row.shareholderName || row.shareholderName.trim() === "") {
@@ -95,6 +99,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
     } catch (error) {
       console.error("Error saving cap table data:", error);
       setError("An error occurred while saving the data");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -196,7 +202,9 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                   Delete
                 </Button>
               )}
-              <Button type="submit">Save</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
+                </Button>
             </div>
           </form>
         </DialogContent>

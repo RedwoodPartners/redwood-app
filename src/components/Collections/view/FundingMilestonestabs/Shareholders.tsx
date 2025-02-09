@@ -49,6 +49,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [editingShareholder, setEditingShareholder] = useState<any>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       const response = await databases.listDocuments(
@@ -76,6 +78,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   }, [editingShareholder]);
 
   const handleSave = async () => {
+
+    if (isSubmitting) return; // Prevent duplicate submission
+    setIsSubmitting(true);
+
     if (!data["shareholderName"]) {
       setErrors((prevErrors) => ({
         ...prevErrors,
@@ -107,6 +113,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       fetchData();
     } catch (error) {
       console.error("Error saving data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -318,8 +326,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     Delete
                   </Button>
                 )}
-                <Button type="button" onClick={handleSave}>
-                  Save
+                <Button type="button" onClick={handleSave} disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : "Save"}
                 </Button>
               </div>
             </form>

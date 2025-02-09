@@ -51,6 +51,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const storage = useMemo(() => new Storage(client), [client]);
   const { toast } = useToast();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const fetchInvestments = useCallback(async () => {
     try {
       const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID, [
@@ -73,6 +75,9 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   const handleAddOrUpdateInvestment = async () => {
     if (!selectedInvestment) return;
+
+    if (isSubmitting) return; // Prevent duplicate submission
+   setIsSubmitting(true);
 
     try {
       const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...cleanInvestment } = selectedInvestment;
@@ -109,6 +114,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         description: "Failed to add/update the investment. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false); // Ensure this runs after saving or if an error occurs
     }
   };
 
@@ -365,8 +372,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 Delete
               </Button>
             )}
-            <Button onClick={handleAddOrUpdateInvestment}>
-              {isEditMode ? "Save" : "Save"}
+            <Button onClick={handleAddOrUpdateInvestment} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

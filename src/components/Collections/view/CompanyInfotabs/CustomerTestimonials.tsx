@@ -45,6 +45,8 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const fetchTestimonials = useCallback(async () => {
     try {
       const response = await databases.listDocuments(
@@ -65,6 +67,9 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   }, [startupId, fetchTestimonials]);
 
   const handleSave = async () => {
+    if (isSubmitting) return; // Prevent duplicate submission
+    setIsSubmitting(true);
+    
     try {
       const testimonialData = Object.fromEntries(
         Object.entries(currentTestimonial).filter(([key]) => !key.startsWith('$'))
@@ -90,6 +95,8 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
     } catch (error) {
       console.error("Error saving testimonial:", error);
       toast({ title: "Error saving testimonial", variant: "destructive" });
+    }finally {
+      setIsSubmitting(false); // Ensure this runs after saving or if an error occurs
     }
   };
 
@@ -132,6 +139,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
               onChange={setCurrentTestimonial}
               onSave={handleSave}
               onDelete={handleDelete}
+              isSubmitting={isSubmitting}
             />
           </DialogContent>
         </Dialog>
@@ -146,6 +154,7 @@ interface TestimonialFormProps {
   onChange: (testimonial: any) => void;
   onSave: () => void;
   onDelete: () => void;
+  isSubmitting: boolean;
 }
 
 const TestimonialForm: React.FC<TestimonialFormProps> = ({
@@ -153,6 +162,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
   onChange,
   onSave,
   onDelete,
+  isSubmitting,
 }) => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
@@ -176,24 +186,6 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
         break;
     }
     setErrors(prev => ({ ...prev, [field]: error }));
-  };
-  const handleSave = () => {
-    const allFields = ['customerName', 'designation', 'phone', 'email', 'query1', 'query2', 'query3', 'query4'];
-    const newErrors: {[key: string]: string} = {};
-    
-    allFields.forEach(field => {
-      if (!testimonial[field]) {
-        newErrors[field] = 'This field is required';
-      } else {
-        validateField(field, testimonial[field]);
-      }
-    });
-
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).every(error => !error)) {
-      onSave();
-    }
   };
 
 
@@ -280,7 +272,9 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             Delete
           </Button>
         )}
-        <Button onClick={onSave}>Save</Button>
+        <Button onClick={onSave} disabled={isSubmitting}>
+        {isSubmitting ? "Saving..." : "Save"}
+          </Button>
       </div>
     </div>
   );
