@@ -41,6 +41,7 @@ const StartupsPage: React.FC = () => {
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [year, setYear] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -84,8 +85,10 @@ const StartupsPage: React.FC = () => {
   const createAndRedirect = async (newStartupData: Partial<Startup>) => {
     const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
     const databases = new Databases(client);
-
+    
     const shortUUID = nanoid(6);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: year });
       setShowAddDialog(false);
@@ -97,6 +100,8 @@ const StartupsPage: React.FC = () => {
         title: "Error",
         description: "Failed to create startup. Please try again.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -221,7 +226,9 @@ const StartupsPage: React.FC = () => {
                 <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3}></Textarea>
               </div>
               <div className="flex justify-end mt-4">
-                <Button type="submit">Save</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Adding..." : "Add Startup"}
+                </Button>
               </div>
               </div>
             </form>

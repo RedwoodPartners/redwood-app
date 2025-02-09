@@ -23,6 +23,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   const [incubationData, setIncubationData] = useState<any[]>([]);
   const [editingIncubation, setEditingIncubation] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newIncubation, setNewIncubation] = useState({
     program: "",
     date: "",
@@ -59,6 +60,9 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   }, [startupId, databases]);
 
   const handleSaveIncubation = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     if (!editingIncubation) return;
     try {
       const allowedFields = ['program', 'date', 'exitDate', 'status', 'spocName', 'spocNumber', 'spocEmail', 'description'];
@@ -71,6 +75,8 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
       setEditingIncubation(null);
     } catch (error) {
       console.error("Error saving incubation data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,6 +93,8 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   };
 
   const handleAddIncubationData = async () => {
+    if (isSubmitting) return; 
+    setIsSubmitting(true);
     try {
       const { program, date, exitDate, status, spocName, spocNumber, spocEmail, description } = newIncubation;
       const response = await databases.createDocument(
@@ -109,6 +117,8 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
       });
     } catch (error) {
       console.error("Error adding incubation data:", error);
+    } finally {
+      setIsSubmitting(false);   
     }
   };
   const formatDate = (dateString: string | null | undefined): string => {
@@ -206,7 +216,9 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddIncubationData}>Save</Button>
+            <Button type="submit" onClick={handleAddIncubationData} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -264,7 +276,9 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
             </div>
             <DialogFooter>
               <Button onClick={handleDeleteIncubation} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
-              <Button onClick={handleSaveIncubation} className="mr-2">Save</Button>
+              <Button onClick={handleSaveIncubation} className="mr-2" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

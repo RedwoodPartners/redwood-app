@@ -23,6 +23,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
   const [patentsData, setPatentsData] = useState<any[]>([]);
   const [editingPatent, setEditingPatent] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newPatent, setNewPatent] = useState({
     patent: "",
     inventors: "",
@@ -61,6 +62,9 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
   
 
   const handleSavePatent = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     if (!editingPatent) return;
     try {
       const allowedFields = ['patent', 'inventors', 'date', 'status', 'patentNumber', 'approvalDate', 'expiryDate', 'patentOffice', 'description'];
@@ -75,6 +79,8 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
       setEditingPatent(null);
     } catch (error) {
       console.error("Error saving patent data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -93,6 +99,8 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
   };
 
   const handleAddPatentsData = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { patent, inventors, date, status, patentNumber, approvalDate, expiryDate, patentOffice, description } = newPatent;
       const response = await databases.createDocument(
@@ -108,6 +116,8 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
       });
     } catch (error) {
       console.error("Error adding patents data:", error);
+    }finally {
+      setIsSubmitting(false);
     }
   };
   const formatDate = (dateString: string | null | undefined): string => {
@@ -219,7 +229,9 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddPatentsData}>Save</Button>
+            <Button type="submit" onClick={handleAddPatentsData} disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Patent"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -330,7 +342,9 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
             </div>
             <DialogFooter>
               <Button onClick={handleDeletePatent} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
-              <Button onClick={handleSavePatent} className="mr-2">Save</Button>
+              <Button onClick={handleSavePatent} className="mr-2" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
