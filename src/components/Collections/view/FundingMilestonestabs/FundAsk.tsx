@@ -35,10 +35,11 @@ const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
 
 const calculateTotal = (funds: FundItem[]): number => {
   return funds.reduce((total, fund) => {
-    const cleanAmount = fund.amount.replace(/[^0-9.]/g, '');
+    const cleanAmount = (fund.amount || '').replace(/[^0-9.]/g, ''); // Default to an empty string if amount is null/undefined
     return total + (parseFloat(cleanAmount) || 0);
   }, 0);
 };
+
 
 const formatINR = (value: string): string => {
   const number = parseFloat(value.replace(/[^0-9.]/g, ''));
@@ -61,6 +62,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   const [validatedFundAsk, setValidatedFundAsk] = useState("");
   const [isEditingProposed, setIsEditingProposed] = useState(false);
   const [isEditingValidated, setIsEditingValidated] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
   const databases = useMemo(() => new Databases(client), [client]);
@@ -104,6 +107,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
   }, [startupId, databases]);
 
   const handleAddItem = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
       const response = await databases.createDocument(DATABASE_ID, collectionId, "unique()", { ...editingFund, startupId });
@@ -117,6 +122,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error adding fund:", error);
+    }finally{
+      setIsSubmitting(false);
     }
   };
 
@@ -258,8 +265,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
             {editingFund?.$id && (
               <Button onClick={handleDeleteItem} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             )}
-            <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem}>
-              Save
+            <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

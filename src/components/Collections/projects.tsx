@@ -71,9 +71,10 @@ const ProjectsPage: React.FC = () => {
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const router = useRouter();
+
+  const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -161,6 +162,9 @@ const ProjectsPage: React.FC = () => {
 
   // Save changes to the edited or new project
   const handleConfirmChanges = async () => {
+    if (isSubmitting) return; // Prevent duplicate submission
+    setIsSubmitting(true);
+    
     if (editedProject) {
       // Automatically set Project End Date if template is TANSIM
     if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
@@ -246,6 +250,8 @@ const ProjectsPage: React.FC = () => {
         setErrorMessage(null);
       } catch (error) {
         console.error("Error saving project:", error);
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -636,8 +642,9 @@ const ProjectsPage: React.FC = () => {
                   Delete
                 </Button>
               )}
-              <Button onClick={handleConfirmChanges}>
+              <Button onClick={handleConfirmChanges} disabled={isSubmitting}>
                 {isAddingNewProject ? "Add Project" : "Save"}
+                {isSubmitting && "..."}
               </Button>
             </DialogFooter>
 

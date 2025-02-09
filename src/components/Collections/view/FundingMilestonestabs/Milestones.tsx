@@ -24,6 +24,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newMilestone, setNewMilestone] = useState({
     trancheType: "",
     status: "",
@@ -49,6 +50,8 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   }, [databases, startupId]);
 
   const handleAddMilestone = async () => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     try {
       const response = await databases.createDocument(
         DATABASE_ID,
@@ -66,6 +69,8 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Error adding milestone:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,7 +182,9 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
               </div>
             </div>
             <div className="flex justify-end">
-            <Button onClick={handleAddMilestone}>Save</Button>
+            <Button onClick={handleAddMilestone} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
