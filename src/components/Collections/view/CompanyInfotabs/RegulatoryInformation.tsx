@@ -20,6 +20,7 @@ type ErrorData = {
 };
 
 export const REGULATORY_COLLECTION_ID = "6731872d0023e52aebc3";
+export const REGULATORY_STAGING_ID = "6731872d0023e52aebc3";
 
 const client = new Client()
   .setEndpoint(API_ENDPOINT)

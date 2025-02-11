@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Mail, MessageCircle, Globe } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
+import { FUNDING_ID } from "./FundingMilestonestabs/FundAsk";
 
 type Project = {
   startDate: string;
@@ -16,12 +17,13 @@ type Project = {
 };
 
 interface InfoBoxProps {
-  startupId: string; // Prop passed from the detailed page
-  projectId: string; // Prop passed from the detailed page
+  startupId: string; 
+  projectId: string; 
 }
 
 const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [projectData, setProjectData] = useState<Project | null>(null);
+  const [validatedFund, setValidatedFund] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +52,18 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           });
         } else {
           console.warn("No projects found for this startup.");
+        }
+        // Fetch Funding Data
+        const fundingResponse = await databases.listDocuments(DATABASE_ID, FUNDING_ID, [
+          Query.equal("startupId", startupId),
+        ]);
+
+        if (fundingResponse.documents.length > 0) {
+          // Assuming we take the first matching funding document
+          const funding = fundingResponse.documents[0];
+          setValidatedFund(funding.validatedFund || null); // Set validatedFund value
+        } else {
+          console.warn("No funding data found for this startup.");
         }
       } catch (error) {
         console.error("Error fetching project data:", error);
@@ -102,7 +116,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
         <span className="font-medium text-gray-950 text-xs sm:text-base">
-          ₹NA
+        {validatedFund !== null ? validatedFund.toLocaleString() : "NA"}
         </span>
         <span className="text-gray-950 font-medium text-xs sm:text-base">
           {formatDate(projectData.startDate)} -{" "}
