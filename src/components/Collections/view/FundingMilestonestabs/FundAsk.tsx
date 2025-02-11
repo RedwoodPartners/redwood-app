@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
 export const VALIDATED_FUND_ASK_ID = "67694e77002cc9cd69c4";
+export const FUNDING_ID = "67ab9fd800164cfd7b09";
 
 interface FundAskProps {
   startupId: string;
@@ -79,19 +80,14 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
         setProposedFunds(proposedResponse.documents.map(mapDocumentToFundItem));
         setValidatedFunds(validatedResponse.documents.map(mapDocumentToFundItem));
 
-        try {
-          const proposedFundAskDoc = await databases.getDocument(DATABASE_ID, PROPOSED_FUND_ASK_ID, startupId);
-          setProposedFundAsk(proposedFundAskDoc.proposedFund || "");
-        } catch (error) {
-          console.log("Proposed Fund Ask document not found");
+        const fundingResponse = await databases.listDocuments(DATABASE_ID, FUNDING_ID, [Query.equal("startupId", startupId)]);
+        if (fundingResponse.documents.length > 0) {
+          const fundingDoc = fundingResponse.documents[0];
+          setProposedFundAsk(fundingDoc.proposedFund || "");
+          setValidatedFundAsk(fundingDoc.validatedFund || "");
+        } else {
+          console.log("Funding document not found");
           setProposedFundAsk("");
-        }
-
-        try {
-          const validatedFundAskDoc = await databases.getDocument(DATABASE_ID, VALIDATED_FUND_ASK_ID, startupId);
-          setValidatedFundAsk(validatedFundAskDoc.validatedFund || "");
-        } catch (error) {
-          console.log("Validated Fund Ask document not found");
           setValidatedFundAsk("");
         }
       } catch (error) {
@@ -174,16 +170,18 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 
   const handleSave = async (type: "proposed" | "validated") => {
     try {
-      const collectionId = type === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-      const fundAsk = type === "proposed" ? proposedFundAsk : validatedFundAsk;
-      const data = type === "proposed" ? { proposedFund: fundAsk } : { validatedFund: fundAsk };
-
+      const data = {
+        proposedFund: proposedFundAsk,
+        validatedFund: validatedFundAsk,
+        startupId: startupId,
+      };
+  
       try {
-        await databases.updateDocument(DATABASE_ID, collectionId, startupId, data);
+        await databases.updateDocument(DATABASE_ID, FUNDING_ID, startupId, data);
       } catch (error) {
-        await databases.createDocument(DATABASE_ID, collectionId, startupId, data);
+        await databases.createDocument(DATABASE_ID, FUNDING_ID, startupId, data);
       }
-
+  
       if (type === "proposed") {
         setIsEditingProposed(false);
       } else {
@@ -193,6 +191,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       console.error(`Error saving ${type} fund ask:`, error);
     }
   };
+  
 
   return (
     <>
