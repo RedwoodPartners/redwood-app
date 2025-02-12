@@ -9,17 +9,12 @@ import {
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon, XIcon } from "lucide-react";
-import { Client, Databases, Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { Query } from "appwrite";
+import { DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 export const ABOUT_COLLECTION_ID = "67207029001de651f13d";
-
-const client = new Client()
-  .setEndpoint(API_ENDPOINT)
-  .setProject(PROJECT_ID);
-
-const databases = new Databases(client);
 
 interface AboutBusinessProps {
   startupId: string; 
@@ -35,7 +30,6 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        
         const response = await databases.listDocuments(
           DATABASE_ID,
           ABOUT_COLLECTION_ID,

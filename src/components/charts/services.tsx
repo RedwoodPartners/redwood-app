@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
-import { Client, Databases, Models } from "appwrite";
+import { Models } from "appwrite";
 import {
   DATABASE_ID,
   PROJECT_ID,
   API_ENDPOINT,
   PROJECTS_ID,
 } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -58,9 +59,6 @@ export function ServicesChart() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments<ProjectDocument>(
           DATABASE_ID,

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { SaveIcon, XIcon, PlusCircleIcon, ChevronRightIcon } from "lucide-react";
-import { Client, Databases, Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { PlusCircleIcon, ChevronRightIcon } from "lucide-react";
+import { Query } from "appwrite";
+import { DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -28,12 +29,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const CUSTOMER_COLLECTION_ID = "6731d3a0001a04a8f849";
-
-const client = new Client()
-  .setEndpoint(API_ENDPOINT)
-  .setProject(PROJECT_ID);
-
-const databases = new Databases(client);
 
 interface CustomerTestimonialsProps {
   startupId: string;

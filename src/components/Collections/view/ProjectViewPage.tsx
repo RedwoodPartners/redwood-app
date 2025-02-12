@@ -2,14 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases } from "appwrite";
 import {
   DATABASE_ID,
   PROJECTS_ID,
   STARTUP_ID,
-  API_ENDPOINT,
-  PROJECT_ID,
 } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import InfoBox from "./Infobox";
 
 import {
@@ -74,9 +72,6 @@ const ProjectViewPage = ({ id }: { id: string }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-
     const fetchProjectDetails = async () => {
       try {
         // Fetch project details

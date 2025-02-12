@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
@@ -42,9 +42,6 @@ export function AreaChartPortfolio() {
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [uniqueStartupsCount, setUniqueStartupsCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
-  const databases = useMemo(() => new Databases(client), [client]);
 
   const fetchAndPrepareChartData = useCallback(async () => {
     try {
@@ -88,7 +85,7 @@ export function AreaChartPortfolio() {
     } finally {
       setLoading(false);
     }
-  }, [databases]);
+  }, []);
 
   useEffect(() => {
     fetchAndPrepareChartData();

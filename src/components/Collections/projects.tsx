@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases } from "appwrite";
 import {
   DATABASE_ID,
-  PROJECT_ID,
-  API_ENDPOINT,
   PROJECTS_ID,
   STARTUP_ID
 } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -80,9 +78,6 @@ const ProjectsPage: React.FC = () => {
 
   // Fetch projects on component mount
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-
     const fetchProjects = async () => {
       setLoading(true);
       try {
@@ -175,10 +170,6 @@ const ProjectsPage: React.FC = () => {
     if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
       editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
     }
-
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       // Generate `projectId` from the startup name
       const generatedStartupId = editedProject.name
         .split(" ")
@@ -264,9 +255,6 @@ const ProjectsPage: React.FC = () => {
   // Delete a project
   const handleDeleteProject = async () => {
     if (editedProject && !isAddingNewProject) {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, editedProject.id);
         setProjects((prev) =>
@@ -294,8 +282,6 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleDeleteSelectedProjects = async () => {
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
 
   try {
     await Promise.all(
@@ -313,10 +299,6 @@ const ProjectsPage: React.FC = () => {
     console.error("Error deleting projects:", error);
   }
 };
-
-  
-  
-  
 
   return (
     <div className="p-2">

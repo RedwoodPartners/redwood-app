@@ -1,6 +1,18 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { Client, Databases } from "appwrite";
+import { API_ENDPOINT, PROJECT_ID } from "@/appwrite/config";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
+
+/* Initialize the Appwrite client instance.*/
+const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+
+/*Initialize the Appwrite Databases instance.*/
+const databases = new Databases(client);
+
+/*Export the reusable instances and utility functions.*/
+export { client, databases };
