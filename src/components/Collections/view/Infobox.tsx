@@ -116,7 +116,9 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
       {/* Left Section */}
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
         <span className="font-medium text-gray-950 text-xs sm:text-base">
-        {validatedFund !== null ? validatedFund.toLocaleString() : "NA"}
+        {validatedFund !== null && !isNaN(Number(validatedFund.toString().replace(/[₹,]/g, "")))
+          ? `₹ ${(Number(validatedFund.toString().replace(/[₹,]/g, "")) / 10000000).toFixed(2)} Cr`
+          : "NA"}
         </span>
         <span className="text-gray-950 font-medium text-xs sm:text-base">
           {formatDate(projectData.startDate)} -{" "}
