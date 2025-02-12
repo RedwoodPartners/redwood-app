@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  DATABASE_ID,
+  STAGING_DATABASE_ID,
   PROJECTS_ID,
   STARTUP_ID
 } from "@/appwrite/config";
@@ -81,7 +81,7 @@ const ProjectsPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, PROJECTS_ID);
         const projectData = response.documents.map((doc: any) => ({
           id: doc.$id,
           name: doc.name || "",
@@ -106,7 +106,7 @@ const ProjectsPage: React.FC = () => {
     // Fetch startups and initialize filteredStartups
     const fetchStartups = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
         const startupData = response.documents.map((doc: any) => ({
           id: doc.$id,
           name: doc.name || "",
@@ -181,7 +181,7 @@ const ProjectsPage: React.FC = () => {
         if (isAddingNewProject) {
           // Add a new project
           const response = await databases.createDocument(
-            DATABASE_ID,
+            STAGING_DATABASE_ID,
             PROJECTS_ID,
             generatedStartupId,
             {
@@ -216,7 +216,7 @@ const ProjectsPage: React.FC = () => {
         } else {
           // Update an existing project
           await databases.updateDocument(
-            DATABASE_ID,
+            STAGING_DATABASE_ID,
             PROJECTS_ID,
             editedProject.id,
             {
@@ -256,7 +256,7 @@ const ProjectsPage: React.FC = () => {
   const handleDeleteProject = async () => {
     if (editedProject && !isAddingNewProject) {
       try {
-        await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, editedProject.id);
+        await databases.deleteDocument(STAGING_DATABASE_ID, PROJECTS_ID, editedProject.id);
         setProjects((prev) =>
           prev.filter((project) => project.id !== editedProject.id)
         );
@@ -286,7 +286,7 @@ const ProjectsPage: React.FC = () => {
   try {
     await Promise.all(
       selectedProjects.map((projectId) =>
-        databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId)
+        databases.deleteDocument(STAGING_DATABASE_ID, PROJECTS_ID, projectId)
       )
     );
 

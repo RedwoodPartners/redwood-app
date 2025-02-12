@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon } from "lucide-react";
@@ -66,7 +66,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
     const fetchData = async () => {
       try {
         const response = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           CONTACT_ID,
           [Query.equal("startupId", startupId)]
         );
@@ -235,10 +235,10 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   
       // saving the data
       if (documentId) {
-        await databases.updateDocument(DATABASE_ID, CONTACT_ID, documentId, contactData);
+        await databases.updateDocument(STAGING_DATABASE_ID, CONTACT_ID, documentId, contactData);
       } else {
         const response = await databases.createDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           CONTACT_ID,
           "unique()",
           { ...contactData, startupId }

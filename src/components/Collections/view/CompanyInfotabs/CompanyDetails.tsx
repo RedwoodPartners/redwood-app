@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { databases } from "@/lib/utils";
-import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StartupData {
@@ -37,13 +37,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
       if (startupId) {
         try {
-          const data = await databases.getDocument(DATABASE_ID, STARTUP_ID, startupId);
+          const data = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId);
           const parsedData = {
             brandName: data.brandName,
             dateOfIncorporation: data.dateOfIncorporation,
@@ -79,15 +80,19 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const handleSaveClick = async () => {
     if (!updatedData || !startupId) return;
+    if (isSubmitting) return; 
+    setIsSubmitting(true);
 
     try {
-      await databases.updateDocument(DATABASE_ID, STARTUP_ID, startupId, updatedData);
+      await databases.updateDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId, updatedData);
       setStartupData(updatedData);
       setIsEditing(false);
       toast({ title: "Company Details saved!!" });
     } catch (error) {
       console.error("Error saving updated data:", error);
       setError("Failed to save changes. Please try again later.");
+    }finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -283,10 +288,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             <SaveIcon
               size={25}
               className="cursor-pointer text-green-500"
-              onClick={handleSaveClick}
+              onClick={handleSaveClick} aria-disabled={isSubmitting}
             />
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </span>
           </div>
         ) : (

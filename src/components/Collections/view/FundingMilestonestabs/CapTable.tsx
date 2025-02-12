@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, Trash2 } from "lucide-react";
-import { Client, Databases } from "appwrite";
+import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,21 +26,16 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   const[isSubmitting, setIsSubmitting] = useState(false);
 
-  const databases = useMemo(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    return new Databases(client);
-  }, []);
-
   const fetchCapTableData = useCallback(async () => {
     try {
-      const response = await databases.listDocuments(DATABASE_ID, CAP_TABLE_ID, [
+      const response = await databases.listDocuments(STAGING_DATABASE_ID, CAP_TABLE_ID, [
         Query.equal("startupId", startupId),
       ]);
       setCapTableData(response.documents);
     } catch (error) {
       console.error("Error fetching cap table data:", error);
     }
-  }, [databases, startupId]);
+  }, [startupId]);
 
   useEffect(() => {
     fetchCapTableData();
@@ -84,9 +79,9 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
       }
   
       if ($id) {
-        await databases.updateDocument(DATABASE_ID, CAP_TABLE_ID, $id, fieldsToUpdate);
+        await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, $id, fieldsToUpdate);
       } else {
-        await databases.createDocument(DATABASE_ID, CAP_TABLE_ID, "unique()", {
+        await databases.createDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, "unique()", {
           ...fieldsToUpdate,
           startupId,
         });
@@ -107,7 +102,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
 
   const handleDeleteRow = async (id: string) => {
     try {
-      await databases.deleteDocument(DATABASE_ID, CAP_TABLE_ID, id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, id);
       fetchCapTableData();
       setIsDialogOpen(false);
       setEditingRow(null);

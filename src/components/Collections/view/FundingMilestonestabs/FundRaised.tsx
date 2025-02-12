@@ -4,9 +4,10 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { InfoIcon, PlusCircle, Trash2, UploadCloud } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Client, Databases, Storage, ID } from "appwrite";
+import { Storage, ID } from "appwrite";
 import { Query } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { databases, client } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,18 +45,14 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-
-  
-  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
-  const databases = useMemo(() => new Databases(client), [client]);
-  const storage = useMemo(() => new Storage(client), [client]);
   const { toast } = useToast();
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const storage = useMemo(() => new Storage(client), []);
 
   const fetchInvestments = useCallback(async () => {
     try {
-      const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID, [
+      const response = await databases.listDocuments(STAGING_DATABASE_ID, FUND_RAISED_ID, [
         Query.equal("startupId", startupId),
       ]);
       setInvestments(response.documents as Investment[]);
@@ -67,7 +64,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         variant: "destructive",
       });
     }
-  }, [databases, startupId, toast]);
+  }, [startupId, toast]);
 
   useEffect(() => {
     fetchInvestments();
@@ -84,7 +81,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       
       if (isEditMode && $id) {
         await databases.updateDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           FUND_RAISED_ID,
           $id,
           cleanInvestment
@@ -95,7 +92,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         });
       } else {
         await databases.createDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           FUND_RAISED_ID,
           ID.unique(),
           { ...cleanInvestment, startupId }
@@ -123,7 +120,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     if (!selectedInvestment || !selectedInvestment.$id) return;
 
     try {
-      await databases.deleteDocument(DATABASE_ID, FUND_RAISED_ID, selectedInvestment.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, FUND_RAISED_ID, selectedInvestment.$id);
       toast({
         title: "Investment deleted",
         description: "The investment has been successfully deleted.",
@@ -146,7 +143,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
     try {
       const uploadResponse = await storage.createFile(FUND_DOCUMENTS_ID, ID.unique(), file);
-      await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, documentId, {
+      await databases.updateDocument(STAGING_DATABASE_ID, FUND_RAISED_ID, documentId, {
         fileId: uploadResponse.$id,
         fileName: file.name,
       });
@@ -186,7 +183,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const handleDeleteFile = async (documentId: string, fileId: string) => {
     try {
       await storage.deleteFile(FUND_DOCUMENTS_ID, fileId);
-      await databases.updateDocument(DATABASE_ID, FUND_RAISED_ID, documentId, {
+      await databases.updateDocument(STAGING_DATABASE_ID, FUND_RAISED_ID, documentId, {
         fileId: null,
         fileName: null,
       });

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
@@ -49,7 +49,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     const fetchData = async () => {
       try {
         const response = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           REGULATORY_COLLECTION_ID,
           [Query.equal("startupId", startupId)]
         );
@@ -152,7 +152,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       const { dpiitNumber, cinNumber, tanNumber, panNumber } = regulatoryData;
       if (documentId) {
         await databases.updateDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           REGULATORY_COLLECTION_ID,
           documentId,
           {
@@ -164,7 +164,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         );
       } else {
         const response = await databases.createDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           REGULATORY_COLLECTION_ID,
           "unique()",
           {

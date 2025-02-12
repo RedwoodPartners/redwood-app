@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, Trash2Icon } from "lucide-react";
-import { Client, Databases } from "appwrite";
+import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,13 +32,10 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     milestones: "",
   });
 
-  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
-  const databases = useMemo(() => new Databases(client), [client]);
-
   useEffect(() => {
     const fetchMilestones = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, TRANCHES_MILESTONES_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, TRANCHES_MILESTONES_ID, [
           Query.equal("startupId", startupId),
         ]);
         setMilestones(response.documents);
@@ -47,14 +44,14 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
       }
     };
     fetchMilestones();
-  }, [databases, startupId]);
+  }, [startupId]);
 
   const handleAddMilestone = async () => {
     if (isSubmitting) return; // Prevent multiple submissions
     setIsSubmitting(true);
     try {
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         TRANCHES_MILESTONES_ID,
         "unique()",
         { ...newMilestone, startupId }
@@ -78,7 +75,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
     if (!editingMilestone) return;
     const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = editingMilestone;
     try {
-      await databases.updateDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, $id, dataToUpdate);
+      await databases.updateDocument(STAGING_DATABASE_ID, TRANCHES_MILESTONES_ID, $id, dataToUpdate);
       const updatedMilestones = milestones.map((m) => (m.$id === $id ? editingMilestone : m));
       setMilestones(updatedMilestones);
       setIsEditDialogOpen(false);
@@ -90,7 +87,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   const handleDeleteMilestone = async () => {
     if (!editingMilestone) return;
     try {
-      await databases.deleteDocument(DATABASE_ID, TRANCHES_MILESTONES_ID, editingMilestone.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, TRANCHES_MILESTONES_ID, editingMilestone.$id);
       const updatedMilestones = milestones.filter((m) => m.$id !== editingMilestone.$id);
       setMilestones(updatedMilestones);
       setIsEditDialogOpen(false);

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Client, Databases, Account, Models, Query } from "appwrite";
-import { PROJECT_ID, API_ENDPOINT, DATABASE_ID } from "@/appwrite/config";
+import { Client, Account, Models, Query } from "appwrite";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { RealtimeResponseEvent } from 'appwrite';
 import { Label } from "./ui/label";
@@ -10,8 +11,6 @@ import { Label } from "./ui/label";
 const MESSAGES_COLLECTION_ID = "6770e11a0008b9a32f6c";
 
 const client = new Client();
-client.setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-const databases = new Databases(client);
 const account = new Account(client);
 
 const SendMessage: React.FC = () => {
@@ -52,7 +51,7 @@ const SendMessage: React.FC = () => {
     fetchUsers();
 
     const unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
+      `databases.${STAGING_DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
       (response: RealtimeResponseEvent<Models.Document>) => {
         if (response.events.includes("databases.*.collections.*.documents.*.create")) {
           const newMessage = response.payload;
@@ -83,7 +82,7 @@ const SendMessage: React.FC = () => {
 
     try {
       const response = await databases.listDocuments(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         MESSAGES_COLLECTION_ID,
         [
           Query.or([
@@ -119,7 +118,7 @@ const SendMessage: React.FC = () => {
 
     try {
       const newMessage = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         MESSAGES_COLLECTION_ID,
         "unique()",
         {

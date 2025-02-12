@@ -2,8 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Client, Databases, Query, Models } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Query, Models } from "appwrite";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
@@ -26,17 +27,13 @@ export default function StartupsForDomain() {
         setLoading(false);
         return;
       }
-
       // Decode the URL-encoded domain
       const domain = decodeURIComponent(encodedDomain);
 
       setLoading(true);
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments<Startup>(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           STARTUP_ID,
           [Query.equal("domain", domain)]
         );

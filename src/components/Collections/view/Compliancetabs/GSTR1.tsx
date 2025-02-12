@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -42,16 +42,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
     gst3b: "",
   });
 
-  const { client, databases } = useMemo(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    return { client, databases };
-  }, []);
-
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, GSTR_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, GSTR_ID, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -67,7 +61,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
       }
     };
     fetchComplianceData();
-  }, [startupId, databases]);
+  }, [startupId]);
 
   const formatNumber = (value: string) => {
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -87,7 +81,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
         gst3b: formatNumber(gst3b), 
         difference: formatNumber(difference) 
       };
-      await databases.updateDocument(DATABASE_ID, GSTR_ID, editingCompliance.$id, updateData);
+      await databases.updateDocument(STAGING_DATABASE_ID, GSTR_ID, editingCompliance.$id, updateData);
       const updatedCompliances = complianceData.map(c => 
         c.$id === editingCompliance.$id ? {...c, ...updateData} : c
       );
@@ -101,7 +95,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
   const handleDeleteCompliance = async () => {
     if (!editingCompliance) return;
     try {
-      await databases.deleteDocument(DATABASE_ID, GSTR_ID, editingCompliance.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, GSTR_ID, editingCompliance.$id);
       const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
@@ -118,7 +112,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
       const difference = (gstr1Value - gst3bValue).toFixed(2);
 
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         GSTR_ID,
         "unique()",
         { 

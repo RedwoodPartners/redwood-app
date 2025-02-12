@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  DATABASE_ID,
+  STAGING_DATABASE_ID,
   PROJECTS_ID,
   STARTUP_ID,
 } from "@/appwrite/config";
@@ -75,7 +75,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
     const fetchProjectDetails = async () => {
       try {
         // Fetch project details
-        const response = await databases.getDocument(DATABASE_ID, PROJECTS_ID, id);
+        const response = await databases.getDocument(STAGING_DATABASE_ID, PROJECTS_ID, id);
         setProject({
           id: response.$id,
           name: response.name || "",
@@ -92,7 +92,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
 
         // Fetch startup details based on startupId
         if (response.startupId) {
-          const startupResponse = await databases.getDocument(DATABASE_ID, STARTUP_ID, response.startupId);
+          const startupResponse = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, response.startupId);
           setStartupData({
             id: startupResponse.$id,
             name: startupResponse.name || "Unknown Startup",

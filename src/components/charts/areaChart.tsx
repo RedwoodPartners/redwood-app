@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
@@ -47,7 +47,7 @@ export function AreaChartPortfolio() {
     try {
       setLoading(true);
 
-      const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID);
+      const response = await databases.listDocuments(STAGING_DATABASE_ID, FUND_RAISED_ID);
       const documents: any[] = response.documents;
 
       const investments: Investment[] = documents.filter(isInvestment);

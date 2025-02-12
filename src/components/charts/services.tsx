@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 import { Models } from "appwrite";
 import {
-  DATABASE_ID,
+  STAGING_DATABASE_ID,
   PROJECT_ID,
   API_ENDPOINT,
   PROJECTS_ID,
@@ -61,7 +61,7 @@ export function ServicesChart() {
     const fetchData = async () => {
       try {
         const response = await databases.listDocuments<ProjectDocument>(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           PROJECTS_ID
         );
         const projects = response.documents;

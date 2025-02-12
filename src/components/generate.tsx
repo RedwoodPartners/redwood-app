@@ -3,7 +3,7 @@
 import React from "react";
 import jsPDF from "jspdf";
 import { databases } from "@/appwrite/config";
-import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 
 interface GenerateReportProps {
   startupId: string;
@@ -12,7 +12,7 @@ interface GenerateReportProps {
 const GenerateReport: React.FC<GenerateReportProps> = ({ startupId }) => {
   const handleGenerateReport = async () => {
     try {
-      const startupData = await databases.getDocument(DATABASE_ID, STARTUP_ID, startupId);
+      const startupData = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId);
       const doc = new jsPDF();
 
       // Helper functions

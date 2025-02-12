@@ -17,7 +17,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
-import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 
 const chartConfig = {
@@ -34,7 +34,7 @@ export function LineChartPortfolio() {
   useEffect(() => {
     const fetchStartups = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
         const startups = response.documents;
 
         // Process data to group startups by year

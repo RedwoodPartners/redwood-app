@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Save, Edit } from "lucide-react";
-import { Client, Databases, Models } from "appwrite";
+import { Models } from "appwrite";
 import { Query } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,21 +68,18 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
-  const databases = useMemo(() => new Databases(client), [client]);
-
   useEffect(() => {
     const fetchFunds = async () => {
       try {
         const [proposedResponse, validatedResponse] = await Promise.all([
-          databases.listDocuments(DATABASE_ID, PROPOSED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
-          databases.listDocuments(DATABASE_ID, VALIDATED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
+          databases.listDocuments(STAGING_DATABASE_ID, PROPOSED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
+          databases.listDocuments(STAGING_DATABASE_ID, VALIDATED_FUND_ASK_ID, [Query.equal("startupId", startupId)]),
         ]);
 
         setProposedFunds(proposedResponse.documents.map(mapDocumentToFundItem));
         setValidatedFunds(validatedResponse.documents.map(mapDocumentToFundItem));
 
-        const fundingResponse = await databases.listDocuments(DATABASE_ID, FUNDING_ID, [Query.equal("startupId", startupId)]);
+        const fundingResponse = await databases.listDocuments(STAGING_DATABASE_ID, FUNDING_ID, [Query.equal("startupId", startupId)]);
         if (fundingResponse.documents.length > 0) {
           const fundingDoc = fundingResponse.documents[0];
           setProposedFundAsk(fundingDoc.proposedFund || "");
@@ -101,14 +99,14 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     };
 
     fetchFunds();
-  }, [startupId, databases]);
+  }, [startupId]);
 
   const handleAddItem = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-      const response = await databases.createDocument(DATABASE_ID, collectionId, "unique()", { ...editingFund, startupId });
+      const response = await databases.createDocument(STAGING_DATABASE_ID, collectionId, "unique()", { ...editingFund, startupId });
       const newFundItem = mapDocumentToFundItem(response);
       if (activeTable === "proposed") {
         setProposedFunds([...proposedFunds, newFundItem]);
@@ -129,7 +127,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     try {
       const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
       const { $id, ...updateData } = editingFund;
-      await databases.updateDocument(DATABASE_ID, collectionId, $id, updateData);
+      await databases.updateDocument(STAGING_DATABASE_ID, collectionId, $id, updateData);
       const updatedFunds = activeTable === "proposed" ? proposedFunds : validatedFunds;
       const updatedFundsList = updatedFunds.map(fund => fund.$id === $id ? editingFund : fund);
       if (activeTable === "proposed") {
@@ -148,7 +146,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
     if (!editingFund || !editingFund.$id) return;
     try {
       const collectionId = activeTable === "proposed" ? PROPOSED_FUND_ASK_ID : VALIDATED_FUND_ASK_ID;
-      await databases.deleteDocument(DATABASE_ID, collectionId, editingFund.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, collectionId, editingFund.$id);
       const updatedFunds = activeTable === "proposed" ? proposedFunds : validatedFunds;
       const updatedFundsList = updatedFunds.filter(fund => fund.$id !== editingFund.$id);
       if (activeTable === "proposed") {
@@ -178,9 +176,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       };
   
       try {
-        await databases.updateDocument(DATABASE_ID, FUNDING_ID, startupId, data);
+        await databases.updateDocument(STAGING_DATABASE_ID, FUNDING_ID, startupId, data);
       } catch (error) {
-        await databases.createDocument(DATABASE_ID, FUNDING_ID, startupId, data);
+        await databases.createDocument(STAGING_DATABASE_ID, FUNDING_ID, startupId, data);
       }
   
       if (type === "proposed") {

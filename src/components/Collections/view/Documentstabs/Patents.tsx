@@ -5,8 +5,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, Table
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,16 +36,10 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
     description: "",
   });
 
-  const { client, databases } = useMemo(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    return { client, databases };
-  }, []);
-
   useEffect(() => {
     const fetchPatentsData = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, PATENTS_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, PATENTS_ID, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -58,7 +52,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
       }
     };
     fetchPatentsData();
-  }, [startupId, databases]);
+  }, [startupId]);
   
 
   const handleSavePatent = async () => {
@@ -72,7 +66,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
         Object.entries(editingPatent).filter(([key]) => allowedFields.includes(key))
       );
       
-      await databases.updateDocument(DATABASE_ID, PATENTS_ID, editingPatent.$id, updateData);
+      await databases.updateDocument(STAGING_DATABASE_ID, PATENTS_ID, editingPatent.$id, updateData);
       
       const updatedPatents = patentsData.map(p => p.$id === editingPatent.$id ? {...p, ...updateData} : p);
       setPatentsData(updatedPatents);
@@ -89,7 +83,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
     if (!editingPatent) return;
 
     try {
-      await databases.deleteDocument(DATABASE_ID, PATENTS_ID, editingPatent.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, PATENTS_ID, editingPatent.$id);
       const updatedPatents = patentsData.filter(p => p.$id !== editingPatent.$id);
       setPatentsData(updatedPatents);
       setEditingPatent(null);
@@ -104,7 +98,7 @@ const Patents: React.FC<PatentsProps> = ({ startupId }) => {
     try {
       const { patent, inventors, date, status, patentNumber, approvalDate, expiryDate, patentOffice, description } = newPatent;
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         PATENTS_ID,
         "unique()",
         { patent, inventors, date, status, patentNumber, approvalDate, expiryDate, patentOffice, description, startupId }
