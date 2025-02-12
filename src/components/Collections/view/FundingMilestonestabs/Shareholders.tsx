@@ -21,8 +21,9 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Client, Databases, Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { Query } from "appwrite";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { PlusCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,9 +35,6 @@ import {
 } from "@/components/ui/select";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
-
-const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-const databases = new Databases(client);
 
 interface ShareholdersProps {
   startupId: string;
@@ -54,7 +52,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const fetchData = useCallback(async () => {
     try {
       const response = await databases.listDocuments(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         SHAREHOLDERS_ID,
         [Query.equal("startupId", startupId)]
       );
@@ -87,20 +85,21 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
         ...prevErrors,
         shareholderName: "Shareholder Name is required",
       }));
+      setIsSubmitting(false);
       return;
     }
     try {
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = data;
       if (editingShareholder) {
         await databases.updateDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           SHAREHOLDERS_ID,
           editingShareholder.$id,
           { ...dataToUpdate }
         );
       } else {
         await databases.createDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           SHAREHOLDERS_ID,
           "unique()",
           { startupId, ...dataToUpdate }
@@ -140,7 +139,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     if (editingShareholder) {
       try {
         await databases.deleteDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           SHAREHOLDERS_ID,
           editingShareholder.$id
         );

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { Info, InfoIcon, PlusCircle, SaveIcon, Trash, Trash2, TrashIcon, UploadCloud } from "lucide-react";
-import { Query, ID, Client, Databases, Storage } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { PlusCircle, Trash2, UploadCloud } from "lucide-react";
+import { Query, ID, Storage } from "appwrite";
+import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { databases, client } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
 import { Textarea } from "@/components/ui/textarea";
@@ -35,17 +36,13 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     description: "",
   });
 
-  const client = useMemo(() => new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID), []);
-  const databases = useMemo(() => new Databases(client), [client]);
-  const storage = useMemo(() => new Storage(client), [client]);
+  const storage = useMemo(() => new Storage(client), []);
   const { toast } = useToast();
-  const [activeInfoIcon, setActiveInfoIcon] = useState<string | null>(null);
-
 
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, DOC_CHECKLIST_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, [
           Query.equal("startupId", startupId),
         ]);
         setDocData(response.documents);
@@ -54,13 +51,13 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       }
     };
     fetchDocuments();
-  }, [startupId, databases]);
+  }, [startupId]);
 
   const handleSaveDocument = async () => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
     try {
-      const response = await databases.createDocument(DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
+      const response = await databases.createDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
         ...newDoc,
         startupId,
       });
@@ -86,7 +83,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const handleEditDocument = async () => {
     try {
       const { $id, $createdAt, $updatedAt, $permissions, $collectionId, $databaseId, ...validFields } = editingDoc;
-      await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, $id, validFields);
+      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, $id, validFields);
       const updatedData = docData.map(doc => doc.$id === editingDoc.$id ? { ...doc, ...validFields } : doc);
       setDocData(updatedData);
       setIsEditDialogOpen(false);
@@ -106,7 +103,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
   const handleDeleteDocument = async () => {
     try {
-      await databases.deleteDocument(DATABASE_ID, DOC_CHECKLIST_ID, editingDoc.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, editingDoc.$id);
       const updatedData = docData.filter(doc => doc.$id !== editingDoc.$id);
       setDocData(updatedData);
       setIsEditDialogOpen(false);
@@ -141,7 +138,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             fileId: uploadResponse.$id,
             fileName: file.name,
           };
-          await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedDoc);
+          await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedDoc);
           
           // Update the local state
           const updatedDocData = [...docData];
@@ -175,7 +172,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const handleDeleteFile = async (documentId: string, fileId: string) => {
     try {
       await storage.deleteFile(BUCKET_ID, fileId);
-      await databases.updateDocument(DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
+      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
         fileId: null,
         fileName: null
       });

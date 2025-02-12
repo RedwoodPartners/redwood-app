@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircleIcon, ChevronRightIcon } from "lucide-react";
 import { Query } from "appwrite";
-import { DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -45,7 +45,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   const fetchTestimonials = useCallback(async () => {
     try {
       const response = await databases.listDocuments(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         CUSTOMER_COLLECTION_ID,
         [Query.equal("startupId", startupId)]
       );
@@ -71,14 +71,14 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       );
       if (currentTestimonial.$id) {
         await databases.updateDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           CUSTOMER_COLLECTION_ID,
           currentTestimonial.$id,
           { ...testimonialData, startupId }
         );
       } else {
         await databases.createDocument(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           CUSTOMER_COLLECTION_ID,
           "unique()",
           { ...testimonialData, startupId }
@@ -102,7 +102,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
 
   const handleDelete = async () => {
     try {
-      await databases.deleteDocument(DATABASE_ID, CUSTOMER_COLLECTION_ID, currentTestimonial.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, CUSTOMER_COLLECTION_ID, currentTestimonial.$id);
       setIsDialogOpen(false);
       fetchTestimonials();
       toast({ title: "Testimonial deleted successfully!" });

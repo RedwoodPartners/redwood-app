@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 import { Models } from "appwrite";
-import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 
 import {
@@ -42,7 +42,7 @@ export function BarChartPortfolio() {
   useEffect(() => {
     const fetchDomains = async () => {
       try {
-        const response = await databases.listDocuments<Models.Document>(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments<Models.Document>(STAGING_DATABASE_ID, STARTUP_ID);
         const startups = response.documents;
 
         const domainCounts: { [key: string]: number } = startups.reduce((acc, startup) => {

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Query } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECTS_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID, PROJECTS_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 interface StatCardProps {
   title: string;
@@ -28,7 +28,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     const fetchStartupCount = async () => {
 
       try {
-        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
         setStartupCount(response.total);
       } catch (error) {
         console.error("Error fetching startups count:", error);
@@ -39,7 +39,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       try {
         // Pipeline
         const pipelineResponse = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           PROJECTS_ID,
           [Query.equal("startupStatus", "Pipeline")]
         );
@@ -47,7 +47,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
 
         // Rejected
         const rejectedResponse = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           PROJECTS_ID,
           [Query.equal("startupStatus", "Rejected")]
         );
@@ -55,7 +55,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
 
         // Completed
         const completedResponse = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           PROJECTS_ID,
           [Query.equal("startupStatus", "Completed")]
         );
@@ -68,7 +68,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     const fetchTotalInvestment = async () => {
       try {
         const FUND_RAISED_ID = "6731e2fb000d9580025f";
-        const response = await databases.listDocuments(DATABASE_ID, FUND_RAISED_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, FUND_RAISED_ID);
 
         const totalAmount = response.documents.reduce((sum: number, doc: any) => {
           const amount = parseFloat(doc.amount.replace(/[^0-9.-]+/g, ""));

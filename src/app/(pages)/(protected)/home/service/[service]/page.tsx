@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { Client, Databases, Models } from "appwrite";
 import {
-  DATABASE_ID,
-  PROJECT_ID,
-  API_ENDPOINT,
+  STAGING_DATABASE_ID,
   PROJECTS_ID,
 } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -40,12 +39,9 @@ export default function ServicePage() {
 
   useEffect(() => {
     const fetchStartups = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments<ProjectDocument>(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           PROJECTS_ID
         );
         const projects = response.documents;

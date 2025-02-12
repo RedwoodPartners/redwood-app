@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Mail, MessageCircle, Globe } from "lucide-react";
-import { Client, Databases, Query } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
+import { Query } from "appwrite";
+import { STAGING_DATABASE_ID, PROJECTS_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { FUNDING_ID } from "./FundingMilestonestabs/FundAsk";
 
@@ -31,7 +31,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
     const fetchProjectData = async () => {
       try {
         // Query projects collection for matching startupId
-        const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, PROJECTS_ID, [
           Query.equal("startupId", startupId),
           Query.equal("$id", projectId),
         ]);
@@ -52,7 +52,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           console.warn("No projects found for this startup.");
         }
         // Fetch Funding Data
-        const fundingResponse = await databases.listDocuments(DATABASE_ID, FUNDING_ID, [
+        const fundingResponse = await databases.listDocuments(STAGING_DATABASE_ID, FUNDING_ID, [
           Query.equal("startupId", startupId),
         ]);
 

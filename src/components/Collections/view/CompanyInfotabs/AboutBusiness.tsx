@@ -10,7 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { Query } from "appwrite";
-import { DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,7 +31,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
     const fetchData = async () => {
       try {
         const response = await databases.listDocuments(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           ABOUT_COLLECTION_ID,
           [Query.equal("startupId", startupId)] 
         );
@@ -65,10 +65,10 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   
       if (documentId) {
         // Update existing document with only user-defined fields
-        await databases.updateDocument(DATABASE_ID, ABOUT_COLLECTION_ID, documentId, userDefinedData);
+        await databases.updateDocument(STAGING_DATABASE_ID, ABOUT_COLLECTION_ID, documentId, userDefinedData);
       } else {
         // Create a new document for this startup with only user-defined fields
-        const response = await databases.createDocument(DATABASE_ID, ABOUT_COLLECTION_ID, "unique()", {
+        const response = await databases.createDocument(STAGING_DATABASE_ID, ABOUT_COLLECTION_ID, "unique()", {
           ...userDefinedData,
           startupId: startupId,
         });

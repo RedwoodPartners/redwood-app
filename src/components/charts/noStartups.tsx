@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import { databases } from "@/lib/utils";
-import { DATABASE_ID, STARTUP_ID} from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID} from "@/appwrite/config";
 
 import {
   Card,
@@ -35,7 +35,7 @@ export function NoStartups() {
   useEffect(() => {
     const fetchStartups = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
         const startups = response.documents;
 
         const startupsByYear: { [key: string]: number } = startups.reduce((acc, startup) => {

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,16 +30,10 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
     description: "",
   });
 
-  const { client, databases } = useMemo(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    return { client, databases };
-  }, []);
-
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, GST_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, GST_ID, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -52,7 +46,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       }
     };
     fetchComplianceData();
-  }, [startupId, databases]);
+  }, [startupId]);
 
   const handleSaveCompliance = async () => {
     if (!editingCompliance) return;
@@ -61,7 +55,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       const updateData = Object.fromEntries(
         Object.entries(editingCompliance).filter(([key]) => allowedFields.includes(key))
       );
-      await databases.updateDocument(DATABASE_ID, GST_ID, editingCompliance.$id, updateData);
+      await databases.updateDocument(STAGING_DATABASE_ID, GST_ID, editingCompliance.$id, updateData);
       const updatedCompliances = complianceData.map(c => c.$id === editingCompliance.$id ? {...c, ...updateData} : c);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
@@ -73,7 +67,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   const handleDeleteCompliance = async () => {
     if (!editingCompliance) return;
     try {
-      await databases.deleteDocument(DATABASE_ID, GST_ID, editingCompliance.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, GST_ID, editingCompliance.$id);
       const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
@@ -86,7 +80,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
     try {
       const { query, yesNo, date, description } = newCompliance;
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         GST_ID,
         "unique()",
         { query, yesNo, date, description, startupId }

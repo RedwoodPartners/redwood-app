@@ -5,8 +5,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, Table
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,16 +35,10 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
     description: "",
   });
 
-  const { client, databases } = useMemo(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-    return { client, databases };
-  }, []);
-
   useEffect(() => {
     const fetchIncubationData = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, INCUBATION_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, INCUBATION_ID, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -57,7 +51,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
       }
     };
     fetchIncubationData();
-  }, [startupId, databases]);
+  }, [startupId]);
 
   const handleSaveIncubation = async () => {
     if (isSubmitting) return;
@@ -69,7 +63,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
       const updateData = Object.fromEntries(
         Object.entries(editingIncubation).filter(([key]) => allowedFields.includes(key))
       );
-      await databases.updateDocument(DATABASE_ID, INCUBATION_ID, editingIncubation.$id, updateData);
+      await databases.updateDocument(STAGING_DATABASE_ID, INCUBATION_ID, editingIncubation.$id, updateData);
       const updatedIncubations = incubationData.map(i => i.$id === editingIncubation.$id ? {...i, ...updateData} : i);
       setIncubationData(updatedIncubations);
       setEditingIncubation(null);
@@ -83,7 +77,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
   const handleDeleteIncubation = async () => {
     if (!editingIncubation) return;
     try {
-      await databases.deleteDocument(DATABASE_ID, INCUBATION_ID, editingIncubation.$id);
+      await databases.deleteDocument(STAGING_DATABASE_ID, INCUBATION_ID, editingIncubation.$id);
       const updatedIncubations = incubationData.filter(i => i.$id !== editingIncubation.$id);
       setIncubationData(updatedIncubations);
       setEditingIncubation(null);
@@ -98,7 +92,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
     try {
       const { program, date, exitDate, status, spocName, spocNumber, spocEmail, description } = newIncubation;
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         INCUBATION_ID,
         "unique()",
         { program, date, exitDate, status, spocName, spocNumber, spocEmail, description, startupId }

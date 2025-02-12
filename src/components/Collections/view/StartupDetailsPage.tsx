@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 
-import { DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID, databases } from "@/appwrite/config";
 
 import FundingMilestones from "@/components/Collections/view/FundingMilestones";
 import Compliance from "@/components/Collections/view/Compliance";
@@ -64,7 +64,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
     const fetchStartupDetails = async () => {
       if (startupId) {
         try {
-          const data = await databases.getDocument(DATABASE_ID, STARTUP_ID, startupId);
+          const data = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId);
           setStartupData({ name: data.name });
         } catch (error) {
           console.error("Error fetching startup details:", error);

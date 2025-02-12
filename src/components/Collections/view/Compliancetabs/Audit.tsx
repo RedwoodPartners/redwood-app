@@ -14,8 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, SaveIcon } from "lucide-react";
 import { Query } from "appwrite";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 
 const AUDITS_ID = "673b1dc40027a277990a";
 
@@ -34,15 +34,10 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
     founderName: "",
   });
 
-  const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-  const databases = new Databases(client);
-
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(DATABASE_ID, AUDITS_ID, [
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, AUDITS_ID, [
           Query.equal("startupId", startupId),
         ]);
         setComplianceData(response.documents);
@@ -67,7 +62,7 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
 
 
     try {
-      await databases.updateDocument(DATABASE_ID, AUDITS_ID, $id, fieldsToUpdate);
+      await databases.updateDocument(STAGING_DATABASE_ID, AUDITS_ID, $id, fieldsToUpdate);
       console.log("Saved successfully");
       setEditingIndex(null);
     } catch (error) {
@@ -78,7 +73,7 @@ const Audits: React.FC<AuditsProps> = ({ startupId }) => {
   const handleAddComplianceData = async () => {
     try {
       const response = await databases.createDocument(
-        DATABASE_ID,
+        STAGING_DATABASE_ID,
         AUDITS_ID,
         "unique()",
         { ...newCompliance, startupId }

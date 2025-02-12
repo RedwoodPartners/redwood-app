@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaEye, FaSearch } from 'react-icons/fa';
 import { PlusCircle, Trash } from "lucide-react";
-import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -52,7 +52,7 @@ const StartupsPage: React.FC = () => {
     const fetchStartups = async () => {
       setLoading(true);
       try {
-        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
         const startupData = response.documents.map((doc: Document) => ({
           id: doc.$id,
           name: doc.name || "",
@@ -91,7 +91,7 @@ const StartupsPage: React.FC = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const createdStartup = await databases.createDocument(DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: year });
+      const createdStartup = await databases.createDocument(STAGING_DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: year });
       setShowAddDialog(false);
       router.push(`/startup/${createdStartup.$id}`);
     } catch (error) {
@@ -109,7 +109,7 @@ const StartupsPage: React.FC = () => {
   const handleRemoveSelected = async () => {
     try {
       await Promise.all(
-        selectedStartups.map((id) => databases.deleteDocument(DATABASE_ID, STARTUP_ID, id))
+        selectedStartups.map((id) => databases.deleteDocument(STAGING_DATABASE_ID, STARTUP_ID, id))
       );
       setStartups((prev) => prev.filter((startup) => !selectedStartups.includes(startup.id)));
       setFilteredStartups((prev) => prev.filter((startup) => !selectedStartups.includes(startup.id)));
@@ -137,7 +137,7 @@ const StartupsPage: React.FC = () => {
 
   const handleSaveChanges = async (updatedStartupData: Startup) => {
     try {
-      await databases.updateDocument(DATABASE_ID, STARTUP_ID, updatedStartupData.id, {
+      await databases.updateDocument(STAGING_DATABASE_ID, STARTUP_ID, updatedStartupData.id, {
         ...updatedStartupData,
         year
       });

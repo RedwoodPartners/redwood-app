@@ -3,7 +3,7 @@
 import { Models } from "appwrite";
 import React, { useEffect, useState } from "react";
 import { Client, Databases, Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
 import { useToast } from "@/hooks/use-toast";
 import { CONTACT_ID } from "./view/CompanyInfotabs/Contact";
 
@@ -50,7 +50,7 @@ const ContactsTable: React.FC = () => {
     const fetchContacts = async () => {
       try {
         const response = await databases.listDocuments<Contact>(
-          DATABASE_ID,
+          STAGING_DATABASE_ID,
           CONTACT_ID
         );
         setContacts(response.documents);
