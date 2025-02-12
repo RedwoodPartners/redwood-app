@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Mail, MessageCircle, Globe } from "lucide-react";
 import { Client, Databases, Query } from "appwrite";
 import { DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { FUNDING_ID } from "./FundingMilestonestabs/FundAsk";
 
 type Project = {
@@ -27,9 +28,6 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-
     const fetchProjectData = async () => {
       try {
         // Query projects collection for matching startupId

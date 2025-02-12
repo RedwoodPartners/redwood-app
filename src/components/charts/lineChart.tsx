@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases } from "appwrite";
 import {
   Card,
   CardContent,
@@ -18,7 +17,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 
 const chartConfig = {
   desktop: {
@@ -33,9 +33,6 @@ export function LineChartPortfolio() {
 
   useEffect(() => {
     const fetchStartups = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
         const startups = response.documents;

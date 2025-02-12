@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases } from "appwrite";
 import { FaEye, FaSearch } from 'react-icons/fa';
 import { PlusCircle, Trash } from "lucide-react";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -51,8 +51,6 @@ const StartupsPage: React.FC = () => {
   useEffect(() => {
     const fetchStartups = async () => {
       setLoading(true);
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
       try {
         const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
         const startupData = response.documents.map((doc: Document) => ({
@@ -88,8 +86,6 @@ const StartupsPage: React.FC = () => {
   };
 
   const createAndRedirect = async (newStartupData: Partial<Startup>) => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     
     const shortUUID = nanoid(6);
     if (isSubmitting) return;
@@ -111,8 +107,6 @@ const StartupsPage: React.FC = () => {
   };
 
   const handleRemoveSelected = async () => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     try {
       await Promise.all(
         selectedStartups.map((id) => databases.deleteDocument(DATABASE_ID, STARTUP_ID, id))
@@ -142,8 +136,6 @@ const StartupsPage: React.FC = () => {
   };
 
   const handleSaveChanges = async (updatedStartupData: Startup) => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
     try {
       await databases.updateDocument(DATABASE_ID, STARTUP_ID, updatedStartupData.id, {
         ...updatedStartupData,

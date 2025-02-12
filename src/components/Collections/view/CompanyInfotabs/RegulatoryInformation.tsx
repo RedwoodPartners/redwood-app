@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
-import { Client, Databases, Query } from "appwrite";
+import { DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
+import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,12 +22,6 @@ type ErrorData = {
 
 export const REGULATORY_COLLECTION_ID = "6731872d0023e52aebc3";
 export const REGULATORY_STAGING_ID = "6731872d0023e52aebc3";
-
-const client = new Client()
-  .setEndpoint(API_ENDPOINT)
-  .setProject(PROJECT_ID);
-
-const databases = new Databases(client);
 
 interface RegulatoryInformationProps {
   startupId: string;

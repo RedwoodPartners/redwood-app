@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
+import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StartupData {
@@ -40,9 +40,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
-
     const fetchStartupDetails = async () => {
       if (startupId) {
         try {
@@ -82,9 +79,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const handleSaveClick = async () => {
     if (!updatedData || !startupId) return;
-
-    const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-    const databases = new Databases(client);
 
     try {
       await databases.updateDocument(DATABASE_ID, STARTUP_ID, startupId, updatedData);

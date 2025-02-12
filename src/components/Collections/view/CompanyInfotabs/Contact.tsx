@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { API_ENDPOINT, PROJECT_ID, DATABASE_ID } from "@/appwrite/config";
-import { Client, Databases, Query } from "appwrite";
+import { DATABASE_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
+import { Query } from "appwrite";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,12 +27,6 @@ type ContactData = {
 };
 
 export const CONTACT_ID = "672bac4a0017528d75ae";
-
-const client = new Client()
-  .setEndpoint(API_ENDPOINT)
-  .setProject(PROJECT_ID);
-
-const databases = new Databases(client);
 
 interface ContactInformationProps {
   startupId: string;

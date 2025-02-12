@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Client, Databases, Query } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT, databases, PROJECTS_ID } from "@/appwrite/config";
-
+import { Query } from "appwrite";
+import { DATABASE_ID, STARTUP_ID, PROJECTS_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 interface StatCardProps {
   title: string;
   mainValue: string | number;
@@ -26,11 +26,9 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
 
   useEffect(() => {
     const fetchStartupCount = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const database = new Databases(client);
 
       try {
-        const response = await database.listDocuments(DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
         setStartupCount(response.total);
       } catch (error) {
         console.error("Error fetching startups count:", error);

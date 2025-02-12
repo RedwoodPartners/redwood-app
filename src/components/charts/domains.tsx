@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Pie, PieChart, Sector } from "recharts";
-import { Client, Databases, Models } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { Models } from "appwrite";
+import { DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
 
 import {
   Card,
@@ -39,9 +40,6 @@ export function Domain() {
 
   useEffect(() => {
     const fetchDomains = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments<Models.Document>(DATABASE_ID, STARTUP_ID);
         const startups = response.documents;

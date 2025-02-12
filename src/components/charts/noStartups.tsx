@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
-import { Client, Databases } from "appwrite";
-import { DATABASE_ID, STARTUP_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { databases } from "@/lib/utils";
+import { DATABASE_ID, STARTUP_ID} from "@/appwrite/config";
 
 import {
   Card,
@@ -35,9 +34,6 @@ export function NoStartups() {
 
   useEffect(() => {
     const fetchStartups = async () => {
-      const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
-      const databases = new Databases(client);
-
       try {
         const response = await databases.listDocuments(DATABASE_ID, STARTUP_ID);
         const startups = response.documents;
