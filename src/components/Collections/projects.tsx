@@ -41,6 +41,7 @@ import { FaEye } from "react-icons/fa";
 import { Checkbox } from "../ui/checkbox";
 
 import { nanoid } from "nanoid";
+import LoadingSpinner from "../ui/loading";
 
 type Project = {
   id: string;
@@ -74,6 +75,7 @@ const ProjectsPage: React.FC = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const router = useRouter();
 
+  const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
 
   // Fetch projects on component mount
@@ -82,6 +84,7 @@ const ProjectsPage: React.FC = () => {
     const databases = new Databases(client);
 
     const fetchProjects = async () => {
+      setLoading(true);
       try {
         const response = await databases.listDocuments(DATABASE_ID, PROJECTS_ID);
         const projectData = response.documents.map((doc: any) => ({
@@ -100,6 +103,8 @@ const ProjectsPage: React.FC = () => {
         setProjects(projectData);
       } catch (error) {
         console.error("Error fetching projects:", error);
+      }finally {
+        setLoading(false);
       }
     };
 
@@ -333,6 +338,12 @@ const ProjectsPage: React.FC = () => {
         
         </div>
       </div>
+      {/* Loading Indicator */}
+      {loading ? (
+        <div>
+          <LoadingSpinner />
+        </div>
+      ) : (
       <div className="bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
           <TableHeader>
@@ -409,7 +420,7 @@ const ProjectsPage: React.FC = () => {
 
         </Table>
       </div>
-
+      )}
       {editedProject && (
         <Dialog open={showModal} onOpenChange={setShowModal}>
           <DialogContent className="w-full max-w-5xl p-6">

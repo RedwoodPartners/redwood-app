@@ -17,6 +17,7 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 import {nanoid} from "nanoid";
+import LoadingSpinner from "../ui/loading";
 
 type Startup = {
   id: string;
@@ -42,12 +43,14 @@ const StartupsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [year, setYear] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchStartups = async () => {
+      setLoading(true);
       const client = new Client().setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
       const databases = new Databases(client);
       try {
@@ -64,6 +67,8 @@ const StartupsPage: React.FC = () => {
         setFilteredStartups(startupData);
       } catch (error) {
         console.error("Error fetching startups:", error);
+      }finally {
+        setLoading(false);
       }
     };
     fetchStartups();
@@ -257,7 +262,12 @@ const StartupsPage: React.FC = () => {
         />
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       </div>
-
+       {/* Loading Indicator */}
+      {loading ? (
+        <div>
+          <LoadingSpinner />
+        </div>
+      ) : (
       <div className="bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
           <TableHeader>
@@ -302,7 +312,7 @@ const StartupsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </div>)}
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>

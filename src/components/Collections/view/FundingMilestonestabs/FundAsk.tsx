@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
 export const VALIDATED_FUND_ASK_ID = "67694e77002cc9cd69c4";
@@ -327,9 +328,31 @@ const FundTable: React.FC<FundTableProps> = ({
             disabled={!isEditing}
           />
           {isEditing ? (
-            <Save size={20} className="ml-2 cursor-pointer" onClick={onSave} />
+            <>
+            <Tooltip>
+            <TooltipTrigger asChild>
+              <Save 
+                size={20} 
+                className="ml-2 cursor-pointer text-green-500" 
+                onClick={onSave}
+              />
+            </TooltipTrigger>
+            <TooltipContent>Save</TooltipContent>
+            </Tooltip>
+            </>
           ) : (
-            <Edit size={20} className="ml-2 cursor-pointer" onClick={() => setIsEditing(true)} />
+            <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+              <Edit 
+                size={20} 
+                className="ml-2 cursor-pointer" 
+                onClick={() => setIsEditing(true)}
+              />
+              </TooltipTrigger>
+              <TooltipContent>Add Amount</TooltipContent>
+            </Tooltip>
+            </>
           )}
         </div>
       </div>
