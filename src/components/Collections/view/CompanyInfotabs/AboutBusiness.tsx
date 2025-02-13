@@ -25,6 +25,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [originalData, setOriginalData] = useState<{ [key: string]: string | null }>({});
   const [documentId, setDocumentId] = useState<string | null>(null); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,6 +61,8 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
   
@@ -77,6 +80,8 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving data:", error);
+    }finally {
+      setIsSubmitting(false);
     }
   };
   const handleCancel = () => {
@@ -108,6 +113,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
             <div className="relative group ml-3">
               <SaveIcon size={25} 
                 className="cursor-pointer text-green-500"
+                aria-disabled={isSubmitting}
                 onClick={() => {
                 handleSave();
                 toast({
@@ -116,7 +122,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
               }}
               />
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
               </span>
             </div>
             <div className="relative group ml-3">
