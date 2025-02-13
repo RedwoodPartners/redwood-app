@@ -53,6 +53,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [isSameAddress, setIsSameAddress] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const [websiteError, setWebsiteError] = useState<string | null>(null);
@@ -201,6 +202,8 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       let hasErrors = false;
   
@@ -256,6 +259,8 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
         title: "Error saving contact information",
         variant: "destructive",
       });
+    }finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -273,9 +278,9 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
         {isEditing && (
           <div className="ml-5 cursor-pointer">
             <div className="relative group">
-              <SaveIcon size={25} className="cursor-pointer text-green-500" onClick={handleSave} />
+              <SaveIcon size={25} className="cursor-pointer text-green-500" onClick={handleSave} aria-disabled={isSubmitting} />
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                Save
+                {isSubmitting ? "Saving..." : "Save"}
               </span>
             </div>
           </div>

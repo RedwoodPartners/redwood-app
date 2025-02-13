@@ -303,7 +303,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-5 gap-4 mt-2 bg-white mx-auto p-3 rounded-lg border border-gray-300">
+      <div className="grid grid-cols-5 gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
         {Object.entries(startupData).map(([key, value]) => (
           <div key={key} className="space-y-4">
             <div className="flex flex-col space-y-1.5">
@@ -325,7 +325,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   className="text-black"
                   placeholder="0 INR"
                   disabled={!isEditing}
-                  value={updatedData?.[key as keyof StartupData] || ""}
+                  value={`₹${updatedData?.[key as keyof StartupData] || "0"}`}
                   onChange={(e) => {
                     const numericValue = e.target.value.replace(/[^0-9,]/g, "");
                     const formattedValue = numericValue.replace(/,/g, "");
