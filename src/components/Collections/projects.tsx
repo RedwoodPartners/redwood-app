@@ -160,7 +160,7 @@ const ProjectsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  // Save changes to the edited or new project
+ 
   const handleConfirmChanges = async () => {
     if (isSubmitting) return; // Prevent duplicate submission
     setIsSubmitting(true);
@@ -170,12 +170,8 @@ const ProjectsPage: React.FC = () => {
     if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
       editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
     }
-      // Generate `projectId` from the startup name
-      const generatedStartupId = editedProject.name
-        .split(" ")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("") +"-"+ nanoid(2);
-
+      // Generate `projectId`
+      const generatedStartupId = nanoid(6)
 
       try {
         if (isAddingNewProject) {
