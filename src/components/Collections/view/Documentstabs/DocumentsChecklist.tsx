@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle, Trash2, UploadCloud } from "lucide-react";
+import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
 import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
 import { databases, client } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -38,6 +39,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
   const storage = useMemo(() => new Storage(client), []);
   const { toast } = useToast();
+  const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [newComment, setNewComment] = useState("");
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -193,7 +197,67 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     }
   };
-  
+
+  // Function to toggle verification status
+  const handleToggleVerify = async (documentId: string, isVerified: boolean) => {
+    try {
+      // Update the document in the database
+      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
+        verified: !isVerified,
+      });
+
+      // Update local state
+      const updatedDocData = docData.map((doc) =>
+        doc.$id === documentId ? { ...doc, verified: !isVerified } : doc
+      );
+      setDocData(updatedDocData);
+
+      toast({
+        title: "Verification Updated",
+        description: `Document has been ${!isVerified ? "verified" : "unverified"}.`,
+      });
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update verification status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle adding a comment
+  const handleAddComment = async () => {
+    if (!selectedDoc || !newComment.trim()) return;
+
+    try {
+      // Update comments in the database
+      const updatedComments = [...(selectedDoc.comments || []), newComment];
+      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, selectedDoc.$id, {
+        comments: updatedComments,
+      });
+
+      // Update local state
+      const updatedDocData = docData.map((doc) =>
+        doc.$id === selectedDoc.$id ? { ...doc, comments: updatedComments } : doc
+      );
+      setDocData(updatedDocData);
+
+      // Reset state
+      setNewComment("");
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been added successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div>
@@ -275,7 +339,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <TableHead>Document Type</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[500px]">Description</TableHead>
-              <TableHead className="w-36">Documents</TableHead>
+              <TableHead className="w-44">Documents</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -292,7 +356,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.description}</TableCell>
                 <TableCell>
-                  <div className="flex items-center justify-start space-x-2">
+                  <div className="flex items-center justify-start space-x-4">
                     {row.fileId ? (
                       <>
                       <a href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${row.fileId}/view?project=${PROJECT_ID}`} target="_blank" rel="noopener noreferrer"
@@ -344,7 +408,88 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       }} />
                     </label>
                    )}
+                   {/* Comment Icon */}
+                  <div className="flex items-center space-x-2">
+                    <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Tooltip>
+                          <TooltipTrigger>
+                          <MessageCircle
+                          size={20}
+                          className="text-gray-500 cursor-pointer"
+                          onClick={() => {
+                            setSelectedDoc(row);
+                            setIsCommentDialogOpen(true);
+                          }} />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Comments</p>
+                          </TooltipContent> 
+                        </Tooltip>
+                      </DialogTrigger>
+                      <DialogContent className="w-full max-w-lg p-6">
+                        <DialogHeader>
+                          <DialogTitle>Comments for {selectedDoc?.docName}</DialogTitle>
+                          <DialogDescription aria-describedby={undefined}>
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        {/* Display Existing Comments */}
+                        <div className="space-y-4 mb-4">
+                          {selectedDoc?.comments?.length ? (
+                            selectedDoc.comments.map((comment: string, index: number) => (
+                              <div
+                                key={index}
+                                className="bg-gray-100 p-2 rounded-md text-sm text-black"
+                              >
+                                {comment}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-gray-500">No comments yet.</p>
+                          )}
+                        </div>
+
+                        {/* Add New Comment */}
+                        <Textarea
+                          placeholder="Add a comment..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          className="mb-4"
+                        />
+                        <Button onClick={handleAddComment}>Add Comment</Button>
+                      </DialogContent>
+                    </Dialog>
                   </div>
+                   {/* Verify Icon */}
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => handleToggleVerify(row.$id, row.verified)}
+                  >
+                    <div className="mt-1">
+                    {row.verified ? (
+                      <Tooltip>
+                        <TooltipTrigger>
+                        <CheckCircle size={20} className="text-green-500 cursor-pointer" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Verified</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger>
+                        <Circle size={20} className="text-gray-500 cursor-pointer" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Unverified</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    </div>
+                  </div>
+                  </div>
+                  
                 </TableCell>
 
               </TableRow>
