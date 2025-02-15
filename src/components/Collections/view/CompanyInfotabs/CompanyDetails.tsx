@@ -16,13 +16,13 @@ interface StartupData {
   companyStage: string;
   businessType: string;
   patentsCertifications: string;
+  registeredState: string;
   registeredCompanyName: string;
-  registeredCountry: string;
   domain: string;
   incubated: string;
   revenue: string;
   natureOfCompany: string;
-  registeredState: string;
+  registeredCountry: string;
   subDomain: string;
   communityCertificate: string;
   employees: string;
@@ -38,6 +38,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); 
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,12 +53,12 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             businessType: data.businessType,
             patentsCertifications: data.patentsCertifications,
             registeredCompanyName: data.registeredCompanyName,
-            registeredCountry: data.registeredCountry,
+            registeredState: data.registeredState,
             domain: data.domain,
             incubated: data.incubated,
             revenue: data.revenue,
             natureOfCompany: data.natureOfCompany,
-            registeredState: data.registeredState,
+            registeredCountry: data.registeredCountry,
             subDomain: data.subDomain,
             communityCertificate: data.communityCertificate,
             employees: data.employees,
@@ -99,7 +100,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const handleChange = (key: keyof StartupData, value: string) => {
     if (updatedData) {
       let newValue = value;
-      if (key === 'subDomain' || key === 'registeredCountry' || key === 'registeredState') {
+      if (key === 'subDomain' || key === 'registeredState' || key === 'registeredCountry') {
         newValue = validateCharacterInput(value);
       }
       setUpdatedData({ ...updatedData, [key]: newValue });
@@ -219,24 +220,66 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     ],
   };
 
-  const renderDropdown = (key: keyof StartupData) => (
-    <Select
-      disabled={!isEditing}
-      onValueChange={(value) => handleChange(key, value)}
-      value={updatedData?.[key] || ""}
-    >
-      <SelectTrigger className="py-2 border rounded-md text-sm">
-        <SelectValue placeholder="Select" />
-      </SelectTrigger>
-      <SelectContent className="-mb-10">
-        {dropdownOptions[key]?.map((option) => (
-          <SelectItem key={option} value={option}>
-            {option}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  const renderDropdown = (key: keyof StartupData) =>
+    key === "domain" ? (
+      renderDomainDropdown()
+    ) : (
+      <Select
+        disabled={!isEditing}
+        onValueChange={(value) => handleChange(key, value)}
+        value={updatedData?.[key] || ""}
+      >
+        <SelectTrigger className="py-2 border rounded-md text-sm">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent>
+          {dropdownOptions[key]?.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+
+  // Render dropdown with search functionality for domain
+  const renderDomainDropdown = () => {
+    const filteredDomains =
+      dropdownOptions.domain?.filter((option) =>
+        option.toLowerCase().includes(searchTerm.toLowerCase())
+      ) || [];
+
+    return (
+      <Select
+        disabled={!isEditing}
+        onValueChange={(value) => handleChange("domain", value)}
+        value={updatedData?.domain || ""}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select Domain" />
+        </SelectTrigger>
+        <SelectContent className="">
+          <div className="p-2">
+            <Input
+              type="text"
+              placeholder="Search domain..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full border rounded-md py-1 px-2"
+            />
+          </div>
+          {filteredDomains.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+          {filteredDomains.length === 0 && (
+            <div className="p-2 text-sm text-gray-500">No results found</div>
+          )}
+        </SelectContent>
+      </Select>
+    );
+  };
 
   const validateCharacterInput = (value: string) => {
     return value.replace(/[^a-zA-Z\s]/g, '');
@@ -250,12 +293,12 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     businessType: "Business Type",
     patentsCertifications: "Patents & Certifications",
     registeredCompanyName: "Registered Company Name",
-    registeredCountry: "Registered Country",
+    registeredState: "Registered State",
     domain: "Domain",
     incubated: "Incubated",
     revenue: "Revenue (last FY)",
     natureOfCompany: "Nature of Company",
-    registeredState: "Registered State",
+    registeredCountry: "Registered Country",
     subDomain: "Sub-Domain",
     communityCertificate: "Community Certificate",
     employees: "Employees (last FY)",
@@ -356,7 +399,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   value={updatedData?.[key as keyof StartupData] || ""}
                   onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
                   onKeyPress={(e) => {
-                    if ((key === 'subDomain' || key === 'registeredCountry' || key === 'registeredState') && !/[a-zA-Z\s]/.test(e.key)) {
+                    if ((key === 'subDomain' || key === 'registeredState' || key === 'registeredCountry') && !/[a-zA-Z\s]/.test(e.key)) {
                       e.preventDefault();
                     }
                   }}

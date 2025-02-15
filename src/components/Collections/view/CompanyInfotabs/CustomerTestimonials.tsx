@@ -91,7 +91,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       console.error("Error saving testimonial:", error);
       toast({ title: "Error saving testimonial", variant: "destructive" });
     }finally {
-      setIsSubmitting(false); // Ensure this runs after saving or if an error occurs
+      setIsSubmitting(false); 
     }
   };
 
