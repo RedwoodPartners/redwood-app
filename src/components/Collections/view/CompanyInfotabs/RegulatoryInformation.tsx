@@ -113,7 +113,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
 
   const handleSave = async () => {
     const formats = {
-      dpiitNumber: 'AAAA000000',
+      dpiitNumber: 'AAAA000000000',
       cinNumber: 'A00000AA0000AAA000000',
       tanNumber: 'AAAA00000A',
       panNumber: 'AAAAA0000A',
@@ -131,7 +131,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     Object.entries(regulatoryData).forEach(([field, value]) => {
       if (value !== "") { // Only validate non-empty fields
         const format = formats[field as keyof RegulatoryData];
-        if (!validateInput(value, format)) {
+        if (field !== "dpiitNumber" && !validateInput(value, format)) {
           newErrors[field as keyof ErrorData] = `Please enter a valid ${field.replace('Number', '')} number`;
           hasErrors = true;
         }
@@ -212,7 +212,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       <div className="border border-gray-300 rounded-lg p-4 bg-white">
         <div className="grid grid-cols-4 gap-4">
           {[
-            ["DPIIT Number", "dpiitNumber", "AAAA000000"],
+            ["DPIIT Number", "dpiitNumber", "$$$$$00000000000"],
             ["CIN Number", "cinNumber", "A00000AA0000AAA000000"],
             ["TAN Number", "tanNumber", "AAAA00000A"],
             ["PAN Number", "panNumber", "AAAAA0000A"],

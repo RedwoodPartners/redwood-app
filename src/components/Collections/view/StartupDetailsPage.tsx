@@ -86,6 +86,9 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         <div>
         <RegulatoryInformation startupId={startupId} />
         </div>
+        <div>
+        <Contact startupId={startupId} />
+        </div>
         </div>);
       case "regulatoryInfo":
         return <RegulatoryInformation startupId={startupId} />;
