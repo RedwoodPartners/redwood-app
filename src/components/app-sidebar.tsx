@@ -14,6 +14,7 @@ import {
   Grid,
   Rocket,
   Folder,
+  Contact,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,7 +43,6 @@ import {
 } from "@/components/ui/collapsible";
 import appwriteService from "@/appwrite/config";
 import { Models } from "appwrite";
-import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
 import Link from "next/link";
 
@@ -67,6 +67,11 @@ const items = [
     title: "Projects",
     url: "/projects",
     icon: Folder,
+  },
+  {
+    title: "Contacts",
+    url: "/contact",
+    icon: Contact,
   },
   {
     title: "Settings",
@@ -147,17 +152,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Input Search Bar 
-      <div className="relative p-2">
-        <Input type="search" placeholder="Search..." 
-          className="w-full rounded-md border border-input px-1 py-1 pl-8 text-sm focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-        />
-
-      <Search className="absolute -ml-1 h-5 w-4 left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-      </div> */}
-
-
-      <SidebarContent className="">
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -189,14 +184,8 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {/*<SidebarMenuSubItem>
-                          <Link href="/startup">Startups</Link>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <Link href="/projects">Projects</Link>
-                        </SidebarMenuSubItem> */}
-                        <SidebarMenuSubItem>
                           <Link href="/contact">Contacts</Link>
-                        </SidebarMenuSubItem>
+                        </SidebarMenuSubItem>*/}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </SidebarMenuItem>
@@ -207,7 +196,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="">
+      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -220,9 +209,6 @@ export function AppSidebar() {
               <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
                   <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Billing</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <span className="cursor-pointer" onClick={handleLogout}>Sign out</span>

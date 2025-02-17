@@ -130,7 +130,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     ],
     natureOfCompany: [
       "Select",
-      "Pvt Ltd",
+      "PvtLtd",
       "LLP",
       "Partnership",
       "Proprietorship",
