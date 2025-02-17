@@ -16,17 +16,14 @@ import { ServicesChart } from "@/components/charts/services";
 const Dashboard = () => {
   return (
     <>
-      <Tabs defaultValue="dashboard" className="">
+      <Tabs defaultValue="dashboard">
         {/* Tabs List */}
-        <TabsList className="grid w-[250px] grid-cols-3 text-black">
+        <TabsList className="grid w-[250px] grid-cols-2 text-black">
           <TabsTrigger value="dashboard">
             Dashboard
           </TabsTrigger>
           <TabsTrigger value="portfolio">
             Portfolio
-          </TabsTrigger>
-          <TabsTrigger value="projects">
-            Projects
           </TabsTrigger>
         </TabsList>
 
@@ -48,10 +45,6 @@ const Dashboard = () => {
           <Domain />
           {/*<BarChartPortfolio />*/}
         </div>
-        </TabsContent>
-        
-        <TabsContent value="projects">
-        <StartupStats showInvestmentCard={false} />
         </TabsContent>
       </Tabs>
     </>
