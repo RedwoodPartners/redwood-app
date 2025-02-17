@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
-import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, STARTUP_ID } from "@/appwrite/config";
 import { databases, client } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
@@ -36,6 +36,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     status: "",
     description: "",
   });
+  // Update natureOfCompany state type
+  const [natureOfCompany, setNatureOfCompany] = useState<keyof typeof documentOptions>("LLP");
 
   const storage = useMemo(() => new Storage(client), []);
   const { toast } = useToast();
@@ -50,6 +52,14 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
           Query.equal("startupId", startupId),
         ]);
         setDocData(response.documents);
+
+        //Fetch natureOfCompany from Startups
+        const startupResponse = await databases.getDocument(
+          STAGING_DATABASE_ID,
+          STARTUP_ID,
+          startupId
+        )
+        setNatureOfCompany(startupResponse.natureOfCompany);
       } catch (error) {
         console.error("Error fetching document data:", error);
       }
@@ -258,6 +268,138 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     }
   };
+  //return Document Type based on Document Name selection
+  const getDocumentType = (docName: string): string => {
+    switch (docName) {
+      case "Income Tax Login and Password":
+      case "GST Portal Login and Password":
+        return "Portal Credentials";
+      case "Designated Partner Identification Number (DPIN) of all the Designated Partners":
+      case "DIN Nos of all Directors & Promoters":
+      case "DIR 3 KYC for all Directors for all completed Financial Years":
+        return "Director and Promotor Documents";
+      case "Startup India Certificate":
+      case "UDYAM Registration Certificate":
+      case "Filed copy of FiLLip (Form for Incorporation of LLP)":
+      case "Filed copy of RUN LLP (Form for Reserving a name for LLP)":
+      case "Filed copy of Form 3 (Information about LLP agreement)":
+      case "Filed copy of Form 8 (Statement of Account & Solvency)":
+      case "Filed copy of Form 11 (Annual Return of LLP)":
+      case "LLP Incorporation Certificate":
+      case "Copy of the LLP agreement":
+      case "Certificate of Incorporation":
+      case "MOA of Company":
+      case "AOA of Company":
+      case "Details of Professional Tax registration if the company is registered":
+      case "Details of the Shops and Establishment Act, 1948 registration if the company is registered":
+      case "Copies of the Loan Documents if the proprietorship has taken loans from Banks & Financial Institutions":
+      case "Details of Professional Tax registration if the partnership is registered":
+      case "Details of the Shops and Establishment Act, 1948 registration if the partnership is registered":
+      case "Copies of the Loan Documents if the partnership has taken loans from Banks and Financial Institutions":
+      case "Copy of the Partnership Deed":
+        return "Legal";
+      case "Registration Details under Shops and Establishment Act, 1948 & Professional Tax if applicable":
+      case "Details of Shops & Establishment Act":
+      case "Details of Professionals if the company is registered":
+        return "Regulatory and Registration";
+      case "Audited Financials for FY 21-22, FY 22-23 & Unaudited Financials for FY 23-24":
+      case "Bank Statements for FY 22-23 & FY 23-24":
+      case "ESI & PF Challans for FY 22-23 & FY 23-24 (If Applicable)":
+      case "ESI Challans for all completed Financial Years":
+      case "PF Challans for all completed Financial Years":
+      case "Audited Financials for all Completed Financials":
+      case "Cash Book/Vouchers of the Proprietorship":
+      case "Unaudited Financials for FY 23-24":
+      case "Audited Financials for FY 21-22 & FY 22-23":
+      case "Cash Book/Vouchers of the Partnership":
+        return "Financial";
+      case "INC 20 A":
+      case "Form AOC 4 for all completed Financial Years":
+      case "Form MGT-7 or MGT-7A for all completed Financial Years":
+      case "Form DPT-3 for all completed Financial Years":
+        return "Compliance Forms";
+      default:
+        return "";
+    }
+  };
+
+  const documentOptions = {
+    LLP: [
+      "Income Tax Login and Password",
+      "GST Portal Login and Password",
+      "Designated Partner Identification Number (DPIN) of all the Designated Partners",
+      "Startup India Certificate",
+      "UDYAM Registration Certificate",
+      "Registration Details under Shops and Establishment Act, 1948 & Professional Tax if applicable",
+      "Audited Financials for FY 21-22, FY 22-23 & Unaudited Financials for FY 23-24",
+      "Bank Statements for FY 22-23 & FY 23-24",
+      "ESI & PF Challans for FY 22-23 & FY 23-24 (If Applicable)",
+      "Filed copy of FiLLip (Form for Incorporation of LLP)",
+      "Filed copy of RUN LLP (Form for Reserving a name for LLP)",
+      "Filed copy of Form 3 (Information about LLP agreement)",
+      "Filed copy of Form 8 (Statement of Account & Solvency)",
+      "Filed copy of Form 11 (Annual Return of LLP)",
+      "LLP Incorporation Certificate",
+      "Copy of the LLP agreement",
+    ],
+    PvtLtd: [
+      "GST Portal Login and Password",
+      "Income Tax Login and Password",
+      "DIR 3 KYC for all Directors for all completed Financial Years",
+      "INC 20 A",
+      "Form AOC 4 for all completed Financial Years",
+      "Form MGT-7 or MGT-7A for all completed Financial Years",
+      "Form DPT-3 for all completed Financial Years",
+      "ESI Challans for all completed Financial Years",
+      "PF Challans for all completed Financial Years",
+      "Details of Shops & Establishment Act",
+      "Details of Professionals if the company is registered",
+      "Audited Financials for all Completed Financials",
+      "Certificate of Incorporation",
+      "MOA of Company",
+      "AOA of Company",
+      "Startup India Certificate",
+      "UDYAM Registration Certificate",
+    ],
+    Proprietorship: [
+      "Audited Financials for FY 21-22 & FY 22-23",
+      "Unaudited Financials for FY 23-24",
+      "Bank Statements for FY 22-23 & FY 23-24",
+      "Cash Book/Vouchers of the Proprietorship",
+      "Copies of the Loan Documents if the proprietorship has taken loans from Banks & Financial Institutions",
+      "Startup India Certificate",
+      "UDYAM Registration Certificate",
+      "Details of the Shops and Establishment Act, 1948 registration if the company is registered",
+      "Details of Professional Tax registration if the company is registered",
+      "GST Portal Login and Password",
+      "Income Tax Login and Password",
+
+    ],
+    Partnership: [
+      "Audited Financials for FY 21-22 & FY 22-23",
+      "Unaudited Financials for FY 23-24",
+      "Bank Statements for FY 22-23 & FY 23-24",
+      "Cash Book/Vouchers of the Partnership",
+      "Copy of the Partnership Deed",
+      "Copies of the Loan Documents if the partnership has taken loans from Banks and Financial Institutions",
+      "UDYAM Registration Certificate",
+      "Startup India Certificate",
+      "Details of the Shops and Establishment Act, 1948 registration if the partnership is registered",
+      "Details of Professional Tax registration if the partnership is registered",
+      "GST Portal Login and Password",
+      "Income Tax Login and Password",
+
+    ],
+  };
+  
+  const renderOptions = (natureOfCompany: keyof typeof documentOptions) => {
+    return documentOptions[natureOfCompany]?.map((option) => (
+      <SelectItem key={option} value={option}>
+        {option}
+      </SelectItem>
+    ));
+  };
+  
 
   return (
     <div>
@@ -275,43 +417,47 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <div className="grid grid-cols-4 gap-4 mt-4">
               <div>
                 <Label>Document Name</Label>
-                <Input
-                  placeholder="Document Name"
-                  value={newDoc.docName}
-                  onChange={(e) => setNewDoc({ ...newDoc, docName: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Document Type</Label>
                 <Select
-                  value={newDoc.docType}
-                  onValueChange={(value) => setNewDoc({ ...newDoc, docType: value })}
+                  value={newDoc.docName}
+                  onValueChange={(value) => {
+                  setNewDoc({
+                    ...newDoc,
+                    docName: value,
+                    docType: getDocumentType(value), // Automatically set docType based on selection
+                   });
+                  }}
                 >
-                <SelectTrigger className="w-full p-2 text-sm border rounded">
-                  <SelectValue placeholder="Select Type" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Document Name" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Select">Select</SelectItem>
-                  <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
-                  <SelectItem value="Legal">Legal</SelectItem>
-                  <SelectItem value="Financial">Financial</SelectItem>
-                  <SelectItem value="Technical">Technical</SelectItem>
-                  <SelectItem value="Compliance Forms">Compliance Forms</SelectItem>
-                  <SelectItem value="Director and Promotor Documents">Director and Promotor Documents</SelectItem>
-                  <SelectItem value="Portal Credentials">Portal Credentials</SelectItem>
-                  <SelectItem value="RP Workings">RP Workings</SelectItem>
-                  <SelectItem value="Received Document">Received Document</SelectItem>
+                <SelectContent className="absolute z-50 w-96 h-72 mb-20">
+                  {renderOptions(natureOfCompany)}
+                <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
                 </Select>
               </div>
-
+              <div>
+                <Label>Document Type</Label>
+                <Input
+                  placeholder="Document Type"
+                  value={newDoc.docType}
+                  readOnly
+                />
+              </div>
               <div>
                 <Label>Status</Label>
-                <Input
-                  placeholder="Status"
+                <Select
                   value={newDoc.status}
-                  onChange={(e) => setNewDoc({ ...newDoc, status: e.target.value })}
-                />
+                  onValueChange={(value) => setNewDoc({ ...newDoc, status: value })}
+                >
+                  <SelectTrigger className="w-full p-2 text-sm border rounded">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Received">Received</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Description</Label>
@@ -504,45 +650,49 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <DialogDescription>Modify the document details below.</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-4 gap-4 mt-4">
-            <div>
-              <Label>Document Name</Label>
-              <Input
-                placeholder="Document Name"
-                value={editingDoc?.docName}
-                onChange={(e) => setEditingDoc({ ...editingDoc, docName: e.target.value })}
+          <div>
+            <Label>Document Name</Label>
+            <Select
+              value={editingDoc?.docName || ""}
+              onValueChange={(value) => {
+                setEditingDoc({
+                  ...editingDoc,
+                  docName: value,
+                  docType: getDocumentType(value), // Automatically update docType
+                });
+              }}
+            >
+            <SelectTrigger className="w-full p-2 text-sm border rounded">
+              <SelectValue placeholder="Select Document Name" />
+            </SelectTrigger>
+            <SelectContent className="absolute z-50 w-96 h-72 mb-20">
+              {renderOptions(natureOfCompany)}
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Document Type</Label>
+            <Input
+              placeholder="Document Type"
+              value={editingDoc?.docType || ""}
+              readOnly 
               />
-            </div>
-            <div>
-              <Label>Document Type</Label>
-              <Select
-                value={editingDoc?.docType || ""}
-                onValueChange={(value) => setEditingDoc({ ...editingDoc, docType: value })}
-              >
-              <SelectTrigger className="w-full p-2 text-sm border rounded">
-                <SelectValue placeholder="Select Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Select">Select</SelectItem>
-                <SelectItem value="Regulatory and Registration">Regulatory and Registration</SelectItem>
-                <SelectItem value="Legal">Legal</SelectItem>
-                <SelectItem value="Financial">Financial</SelectItem>
-                <SelectItem value="Technical">Technical</SelectItem>
-                <SelectItem value="Compliance Forms">Compliance Forms</SelectItem>
-                <SelectItem value="Director and Promotor Documents">Director and Promotor Documents</SelectItem>
-                <SelectItem value="Portal Credentials">Portal Credentials</SelectItem>
-                <SelectItem value="RP Workings">RP Workings</SelectItem>
-                <SelectItem value="Received Document">Received Document</SelectItem>
-              </SelectContent>
-              </Select>
-            </div>
-
+          </div>
             <div>
               <Label>Status</Label>
-              <Input
-                placeholder="Status"
-                value={editingDoc?.status}
-                onChange={(e) => setEditingDoc({ ...editingDoc, status: e.target.value })}
-              />
+              <Select
+                value={editingDoc?.status || ""}
+                onValueChange={(value) => setEditingDoc({ ...editingDoc, status: value })}
+              >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Received">Received</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Description</Label>
