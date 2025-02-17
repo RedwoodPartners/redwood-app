@@ -23,6 +23,9 @@ const SendMessage: React.FC = () => {
   const [messages, setMessages] = useState<Models.Document[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: Set<string> }>({});
 
+  const [isChat, setIsChat] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
   useEffect(() => {
     account.get().then(
       (user) => {
@@ -33,6 +36,20 @@ const SendMessage: React.FC = () => {
         setError("Failed to fetch current user.");
       }
     );
+
+    const checkAdminStatus = async () => {
+      try {
+        const user = await account.get();
+        const userLabels = user?.labels || [];
+        setIsChat(userLabels.includes("chat"));
+        setLoading(false);
+      } catch (err) {
+        setError("Error fetching user data");
+        setLoading(false);
+      }
+    };
+
+    checkAdminStatus();
 
     const fetchUsers = async () => {
       try {
@@ -148,9 +165,15 @@ const SendMessage: React.FC = () => {
     }
   };
 
+  if (!isChat) return (
+    <div className="text-red-500 font-medium">
+      Development Mode...!
+    </div>
+  );
+
   return (
     <div className="flex bg-gray-100 h-screen">
-
+      {error && <p className="text-red-500 font-medium mb-4">{error}</p>}
       <div className="w-1/4 border-r border-gray-300 p-2 shadow-lg overflow-y-auto">
         <h2 className="text-lg font-semibold mb-4">Users</h2>
         

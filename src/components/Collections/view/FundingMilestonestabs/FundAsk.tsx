@@ -190,7 +190,6 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       console.error(`Error saving ${type} fund ask:`, error);
     }
   };
-  
 
   return (
     <>
@@ -297,6 +296,12 @@ const FundTable: React.FC<FundTableProps> = ({
   onSave,
 }) => {
   const total = calculateTotal(funds);
+  //Validate total amount
+  const validateTotal = (total: number, fundAsk: string): boolean => {
+    const cleanFundAsk = parseFloat(fundAsk.replace(/[^0-9.]/g, '')) || 0;
+    return total === cleanFundAsk;
+  };
+  const isValid = validateTotal(total, fundAsk);
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
@@ -311,6 +316,10 @@ const FundTable: React.FC<FundTableProps> = ({
     <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
       <div className="flex justify-between items-center mb-4">
         <h4 className="text-lg font-semibold">{title}</h4>
+        {/*validation check*/}
+        <div>
+          {!isValid && <p className="text-red-500">Total Amount does not match the Fund Ask amount!..</p>}
+        </div>
         <div onClick={onOpenDialog}>
           <PlusCircle size={20} className="mr-2 cursor-pointer" />
         </div>

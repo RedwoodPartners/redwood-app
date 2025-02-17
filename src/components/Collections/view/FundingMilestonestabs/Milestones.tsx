@@ -25,6 +25,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [amountError, setAmountError] = useState("");
   const [newMilestone, setNewMilestone] = useState({
     trancheType: "",
     status: "",
@@ -47,6 +48,14 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
   }, [startupId]);
 
   const handleAddMilestone = async () => {
+    // Validate amount field
+    if (!newMilestone.amount.trim()) {
+      setAmountError("Amount is required");
+      return;
+    }
+    setAmountError(""); // Clear error if validation passes
+    setIsSubmitting(true);
+
     if (isSubmitting) return; // Prevent multiple submissions
     setIsSubmitting(true);
     try {
@@ -165,9 +174,10 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
                   maximumFractionDigits: 0
                 }).format(Number(rawValue) || 0);
                 setNewMilestone({ ...newMilestone, amount: formattedValue });
+                setAmountError("")
                 }}
               />
-
+              {amountError && <p className="text-red-500 text-sm mt-1">{amountError}</p>}
               </div>
               <div>
               <Label>Milestones</Label>
