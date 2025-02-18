@@ -19,10 +19,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
+const DOCUMENT_OPTIONS_COLLECTION_ID = "67b4b97900371c532d9a";
 
 interface DocChecklistProps {
   startupId: string;
 }
+interface Document {
+  [key: string]: any; 
+}
+
 
 const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [docData, setDocData] = useState<any[]>([]);
@@ -36,8 +41,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     status: "",
     description: "",
   });
-  // Update natureOfCompany state type
-  const [natureOfCompany, setNatureOfCompany] = useState<keyof typeof documentOptions>("LLP");
+
+  const [natureOfCompany, setNatureOfCompany] = useState<string>("LLP");
+  const [fetchedDocumentOptions, setFetchedDocumentOptions] = useState<any[]>([]);
 
   const storage = useMemo(() => new Storage(client), []);
   const { toast } = useToast();
@@ -64,6 +70,42 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         console.error("Error fetching document data:", error);
       }
     };
+    //fetch Document checklist options
+    const fetchDocumentOptions = async () => {
+      try {
+        let allDocuments: Document[] = [];
+        let hasMoreDocuments = true;
+        let offset = 0;
+        const limit = 100; // Maximum limit per request
+    
+        while (hasMoreDocuments) {
+          const response = await databases.listDocuments(
+            STAGING_DATABASE_ID,
+            DOCUMENT_OPTIONS_COLLECTION_ID,
+            [
+              Query.limit(limit), 
+              Query.offset(offset),
+            ]
+          );
+          // Add the fetched documents to the array
+          allDocuments = [...allDocuments, ...response.documents];
+    
+          // Check if there are more documents to fetch
+          if (response.documents.length < limit) {
+            hasMoreDocuments = false; // No more documents to fetch
+          } else {
+            offset += limit; // Move to the next batch
+          }
+        }
+    
+        // Store all fetched documents in state
+        setFetchedDocumentOptions(allDocuments);
+      } catch (error) {
+        console.error("Error fetching document options:", error);
+      }
+    };
+    fetchDocumentOptions();
+    
     fetchDocuments();
   }, [startupId]);
 
@@ -268,137 +310,24 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     }
   };
-  //return Document Type based on Document Name selection
+  
+ 
   const getDocumentType = (docName: string): string => {
-    switch (docName) {
-      case "Income Tax Login and Password":
-      case "GST Portal Login and Password":
-        return "Portal Credentials";
-      case "Designated Partner Identification Number (DPIN) of all the Designated Partners":
-      case "DIN Nos of all Directors & Promoters":
-      case "DIR 3 KYC for all Directors for all completed Financial Years":
-        return "Director and Promotor Documents";
-      case "Startup India Certificate":
-      case "UDYAM Registration Certificate":
-      case "Filed copy of FiLLip (Form for Incorporation of LLP)":
-      case "Filed copy of RUN LLP (Form for Reserving a name for LLP)":
-      case "Filed copy of Form 3 (Information about LLP agreement)":
-      case "Filed copy of Form 8 (Statement of Account & Solvency)":
-      case "Filed copy of Form 11 (Annual Return of LLP)":
-      case "LLP Incorporation Certificate":
-      case "Copy of the LLP agreement":
-      case "Certificate of Incorporation":
-      case "MOA of Company":
-      case "AOA of Company":
-      case "Details of Professional Tax registration if the company is registered":
-      case "Details of the Shops and Establishment Act, 1948 registration if the company is registered":
-      case "Copies of the Loan Documents if the proprietorship has taken loans from Banks & Financial Institutions":
-      case "Details of Professional Tax registration if the partnership is registered":
-      case "Details of the Shops and Establishment Act, 1948 registration if the partnership is registered":
-      case "Copies of the Loan Documents if the partnership has taken loans from Banks and Financial Institutions":
-      case "Copy of the Partnership Deed":
-        return "Legal";
-      case "Registration Details under Shops and Establishment Act, 1948 & Professional Tax if applicable":
-      case "Details of Shops & Establishment Act":
-      case "Details of Professionals if the company is registered":
-        return "Regulatory and Registration";
-      case "Audited Financials for FY 21-22, FY 22-23 & Unaudited Financials for FY 23-24":
-      case "Bank Statements for FY 22-23 & FY 23-24":
-      case "ESI & PF Challans for FY 22-23 & FY 23-24 (If Applicable)":
-      case "ESI Challans for all completed Financial Years":
-      case "PF Challans for all completed Financial Years":
-      case "Audited Financials for all Completed Financials":
-      case "Cash Book/Vouchers of the Proprietorship":
-      case "Unaudited Financials for FY 23-24":
-      case "Audited Financials for FY 21-22 & FY 22-23":
-      case "Cash Book/Vouchers of the Partnership":
-        return "Financial";
-      case "INC 20 A":
-      case "Form AOC 4 for all completed Financial Years":
-      case "Form MGT-7 or MGT-7A for all completed Financial Years":
-      case "Form DPT-3 for all completed Financial Years":
-        return "Compliance Forms";
-      default:
-        return "";
-    }
+    const document = fetchedDocumentOptions.find((doc: any) => doc.docName === docName);
+    return document?.docType || "";
   };
 
-  const documentOptions = {
-    LLP: [
-      "Income Tax Login and Password",
-      "GST Portal Login and Password",
-      "Designated Partner Identification Number (DPIN) of all the Designated Partners",
-      "Startup India Certificate",
-      "UDYAM Registration Certificate",
-      "Registration Details under Shops and Establishment Act, 1948 & Professional Tax if applicable",
-      "Audited Financials for FY 21-22, FY 22-23 & Unaudited Financials for FY 23-24",
-      "Bank Statements for FY 22-23 & FY 23-24",
-      "ESI & PF Challans for FY 22-23 & FY 23-24 (If Applicable)",
-      "Filed copy of FiLLip (Form for Incorporation of LLP)",
-      "Filed copy of RUN LLP (Form for Reserving a name for LLP)",
-      "Filed copy of Form 3 (Information about LLP agreement)",
-      "Filed copy of Form 8 (Statement of Account & Solvency)",
-      "Filed copy of Form 11 (Annual Return of LLP)",
-      "LLP Incorporation Certificate",
-      "Copy of the LLP agreement",
-    ],
-    PvtLtd: [
-      "GST Portal Login and Password",
-      "Income Tax Login and Password",
-      "DIR 3 KYC for all Directors for all completed Financial Years",
-      "INC 20 A",
-      "Form AOC 4 for all completed Financial Years",
-      "Form MGT-7 or MGT-7A for all completed Financial Years",
-      "Form DPT-3 for all completed Financial Years",
-      "ESI Challans for all completed Financial Years",
-      "PF Challans for all completed Financial Years",
-      "Details of Shops & Establishment Act",
-      "Details of Professionals if the company is registered",
-      "Audited Financials for all Completed Financials",
-      "Certificate of Incorporation",
-      "MOA of Company",
-      "AOA of Company",
-      "Startup India Certificate",
-      "UDYAM Registration Certificate",
-    ],
-    Proprietorship: [
-      "Audited Financials for FY 21-22 & FY 22-23",
-      "Unaudited Financials for FY 23-24",
-      "Bank Statements for FY 22-23 & FY 23-24",
-      "Cash Book/Vouchers of the Proprietorship",
-      "Copies of the Loan Documents if the proprietorship has taken loans from Banks & Financial Institutions",
-      "Startup India Certificate",
-      "UDYAM Registration Certificate",
-      "Details of the Shops and Establishment Act, 1948 registration if the company is registered",
-      "Details of Professional Tax registration if the company is registered",
-      "GST Portal Login and Password",
-      "Income Tax Login and Password",
-
-    ],
-    Partnership: [
-      "Audited Financials for FY 21-22 & FY 22-23",
-      "Unaudited Financials for FY 23-24",
-      "Bank Statements for FY 22-23 & FY 23-24",
-      "Cash Book/Vouchers of the Partnership",
-      "Copy of the Partnership Deed",
-      "Copies of the Loan Documents if the partnership has taken loans from Banks and Financial Institutions",
-      "UDYAM Registration Certificate",
-      "Startup India Certificate",
-      "Details of the Shops and Establishment Act, 1948 registration if the partnership is registered",
-      "Details of Professional Tax registration if the partnership is registered",
-      "GST Portal Login and Password",
-      "Income Tax Login and Password",
-
-    ],
+  // Render options dynamically based on natureOfCompany
+  const renderOptions = (natureOfCompany: string) => {
+    return fetchedDocumentOptions
+      .filter((doc: any) => doc.natureOfCompany.includes(natureOfCompany)) // Filter by natureOfCompany
+      .map((doc: any) => (
+        <SelectItem key={doc.docName} value={doc.docName}>
+          {doc.docName}
+        </SelectItem>
+      ));
   };
   
-  const renderOptions = (natureOfCompany: keyof typeof documentOptions) => {
-    return documentOptions[natureOfCompany]?.map((option) => (
-      <SelectItem key={option} value={option}>
-        {option}
-      </SelectItem>
-    ));
-  };
   
 
   return (
@@ -424,17 +353,18 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                     ...newDoc,
                     docName: value,
                     docType: getDocumentType(value), // Automatically set docType based on selection
-                   });
+                  });
                   }}
                 >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Document Name" />
                 </SelectTrigger>
-                <SelectContent className="absolute z-50 w-96 h-72 mb-20">
+                <SelectContent className="absolute z-50 w-96 h-72">
                   {renderOptions(natureOfCompany)}
                 <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
                 </Select>
+
               </div>
               <div>
                 <Label>Document Type</Label>
@@ -655,18 +585,25 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <Select
               value={editingDoc?.docName || ""}
               onValueChange={(value) => {
-                setEditingDoc({
-                  ...editingDoc,
-                  docName: value,
-                  docType: getDocumentType(value), // Automatically update docType
+              setEditingDoc({
+                ...editingDoc,
+                docName: value,
+                docType: getDocumentType(value), // Automatically update docType
                 });
               }}
             >
-            <SelectTrigger className="w-full p-2 text-sm border rounded">
+            <SelectTrigger>
               <SelectValue placeholder="Select Document Name" />
             </SelectTrigger>
-            <SelectContent className="absolute z-50 w-96 h-72 mb-20">
-              {renderOptions(natureOfCompany)}
+            <SelectContent className="absolute z-50 w-96 h-72">
+               {/* Dynamically render document options based on natureOfCompany */}
+                {fetchedDocumentOptions
+                  .filter((option: any) => option.natureOfCompany.includes(natureOfCompany)) // Filter by natureOfCompany
+                  .map((option: any) => (
+                <SelectItem key={option.docName} value={option.docName}>
+                  {option.docName}
+                </SelectItem>
+                ))}
               <SelectItem value="Other">Other</SelectItem>
             </SelectContent>
             </Select>
