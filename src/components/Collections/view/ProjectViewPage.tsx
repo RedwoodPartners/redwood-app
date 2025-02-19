@@ -302,18 +302,18 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                           <ul className="flex flex-col">
                             <li>
                               <button
-                                onClick={() => setActiveTab("incometax")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                              >
-                                Income Tax
-                              </button>
-                            </li>
-                            <li>
-                              <button
                                 onClick={() => setActiveTab("roccompliance")}
                                 className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                               >
                                 ROC Compliance
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() => setActiveTab("incometax")}
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                              >
+                                Income Tax
                               </button>
                             </li>
                             <li>
