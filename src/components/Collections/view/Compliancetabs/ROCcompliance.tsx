@@ -1,20 +1,41 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHeader,
+  TableRow,
+  TableHead,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ROC_ID = "6739c2c40032254ca4b6";
-const FORMS_ID = "67b45189001e40764c83";
+export const FORMS_ID = "67b45189001e40764c83";
 
 interface RocComplianceProps {
   startupId: string;
@@ -31,8 +52,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     date: "",
     description: "",
   });
-  const [queryOptions, setQueryOptions] = useState<string[]>([]); // State for dynamic query options
+  const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("");
+  const [formsData, setFormsData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -40,7 +62,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         const response = await databases.listDocuments(STAGING_DATABASE_ID, ROC_ID, [
           Query.equal("startupId", startupId),
         ]);
-        const filteredDocuments = response.documents.map(doc => {
+        const filteredDocuments = response.documents.map((doc) => {
           const { $id, query, yesNo, date, description } = doc;
           return { $id, query, yesNo, date, description };
         });
@@ -50,7 +72,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           STAGING_DATABASE_ID,
           STARTUP_ID,
           startupId
-          )
+        );
         setNatureOfCompany(startupResponse.natureOfCompany);
       } catch (error) {
         console.error("Error fetching compliance data:", error);
@@ -58,6 +80,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     };
     fetchComplianceData();
   }, [startupId]);
+
   // Fetch dynamic query options based on natureOfCompany
   useEffect(() => {
     const fetchQueryOptions = async () => {
@@ -65,63 +88,57 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
           Query.equal("natureOfCompany", natureOfCompany), // Filter by natureOfCompany
         ]);
-        const options = response.documents.map((doc) => doc.query);
+        const documents = response.documents;
+        const options = documents.map((doc) => doc.query);
         setQueryOptions(options);
+                setFormsData(documents);
       } catch (error) {
         console.error("Error fetching query options:", error);
       }
-    };    
+    };
     fetchQueryOptions();
   }, [natureOfCompany]);
-  
+
+    // Function to get description based on yesNo value
+    const getDescriptionForYesNo = (yesNoValue: string, queryValue: string): string => {
+        const formData = formsData.find((doc) => doc.query === queryValue);
+        if (formData && formData.yesNo && Array.isArray(formData.yesNo) && formData.yesNo.length > 0) {
+            const index = yesNoValue === 'Yes' ? 0 : 1;
+            return formData.yesNo[index] || ''; // Return corresponding description or empty string if not found
+        }
+        return '';
+    };
+
   //when editing
   const handleSaveCompliance = async () => {
     if (!editingCompliance) return;
-  
-    try {
-      const { query, yesNo } = editingCompliance;
-      // Fetch the document from FORMS_ID based on the selected query
-      const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
-        Query.equal("query", query),
-      ]);
-  
-      if (response.documents.length > 0) {
-        const formDocument = response.documents[0];
-        const yesNoValues = formDocument.yesNo; // Fetch yesNo attribute (array)
-        // Update description dynamically based on Yes/No selection
-        const description =
-          yesNo === "Yes"
-            ? yesNoValues[0] 
-            : yesNoValues[1]; 
-        const updatedData = { ...editingCompliance, description };
 
-        const allowedFields = ["query", "yesNo", "date", "description"];
-        const updateData = Object.fromEntries(
-          Object.entries(updatedData).filter(([key]) => allowedFields.includes(key))
-        );
-  
-        await databases.updateDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id, updateData);
-  
-        // Update local state with saved data
-        const updatedCompliances = complianceData.map((c) =>
-          c.$id === editingCompliance.$id ? { ...c, ...updateData } : c
-        );
-        setComplianceData(updatedCompliances);
-        setEditingCompliance(null);
-      } else {
-        console.error("No matching document found in FORMS_ID collection.");
-      }
+    try {
+      const allowedFields = ["query", "yesNo", "date", "description"];
+      const updateData = Object.fromEntries(
+        Object.entries(editingCompliance).filter(([key]) =>
+          allowedFields.includes(key)
+        )
+      );
+
+      await databases.updateDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id, updateData);
+
+      // Update local state with saved data
+      const updatedCompliances = complianceData.map((c) =>
+        c.$id === editingCompliance.$id ? { ...c, ...updateData } : c
+      );
+      setComplianceData(updatedCompliances);
+      setEditingCompliance(null);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     }
   };
-  
 
   const handleDeleteCompliance = async () => {
     if (!editingCompliance) return;
     try {
       await databases.deleteDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id);
-      const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
+      const updatedCompliances = complianceData.filter((c) => c.$id !== editingCompliance.$id);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
     } catch (error) {
@@ -133,45 +150,46 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const { query, yesNo, date } = newCompliance;
-      // Fetch the document from FORMS_ID based on selected query
-      const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
-        Query.equal("query", query),
-      ]);
-  
-      if (response.documents.length > 0) {
-        const formDocument = response.documents[0];
-        const yesNoValues = formDocument.yesNo; // Fetch yesNo attribute (array)
-        // Set description based on Yes/No selection
-        const description =
-          yesNo === "Yes"
-            ? yesNoValues[0] // Index 0 for Yes
-            : yesNoValues[1]; // Index 1 for No
-        // Update newCompliance with dynamically set description
-        setNewCompliance({ ...newCompliance, description });
-        // Save compliance data
-        const saveResponse = await databases.createDocument(
-          STAGING_DATABASE_ID,
-          ROC_ID,
-          "unique()",
-          { query, yesNo, date, description, startupId }
-        );
-  
-        setComplianceData([...complianceData, saveResponse]);
-        setIsDialogOpen(false);
-        setNewCompliance({
-          query: "",
-          yesNo: "",
-          date: "",
-          description: "",
-        });
-      } else {
-        console.error("No matching document found in FORMS_ID collection.");
-      }
+      const { query, yesNo, date, description } = newCompliance;
+      const response = await databases.createDocument(
+        STAGING_DATABASE_ID,
+        ROC_ID,
+        "unique()",
+        { query, yesNo, date, description, startupId }
+      );
+
+      setComplianceData([...complianceData, response]);
+      setIsDialogOpen(false);
+      setNewCompliance({
+        query: "",
+        yesNo: "",
+        date: "",
+        description: "",
+      });
     } catch (error) {
       console.error("Error adding compliance data:", error);
-    }finally {
+    } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleYesNoChange = (value: string) => {
+    const description = getDescriptionForYesNo(value, newCompliance.query);
+    setNewCompliance({
+      ...newCompliance,
+      yesNo: value,
+      description: description, // description based on Yes/No selection
+    });
+  };
+
+  const handleEditYesNoChange = (value: string) => {
+    if (editingCompliance) {
+      const description = getDescriptionForYesNo(value, editingCompliance.query);
+      setEditingCompliance({
+        ...editingCompliance,
+        yesNo: value,
+        description: description,
+      });
     }
   };
 
@@ -204,17 +222,17 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           </TableBody>
         </Table>
       </div>
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Add New Compliance</DialogTitle>
-            <DialogDescription aria-describedby={undefined}>
-            </DialogDescription>
+            <DialogDescription aria-describedby={undefined}></DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-4 gap-4 py-4">
             <div>
-              <Label htmlFor="query" className="text-right">Form Query</Label>
+              <Label htmlFor="query" className="text-right">
+                Form Query
+              </Label>
               <Select
                 value={newCompliance.query}
                 onValueChange={(value) => setNewCompliance({ ...newCompliance, query: value })}
@@ -232,10 +250,12 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="yesNo" className="text-right">Yes/No</Label>
+              <Label htmlFor="yesNo" className="text-right">
+                Yes/No
+              </Label>
               <Select
                 value={newCompliance.yesNo}
-                onValueChange={(value) => setNewCompliance({ ...newCompliance, yesNo: value })}
+                onValueChange={handleYesNoChange}
               >
                 <SelectTrigger id="yesNo" className="col-span-3">
                   <SelectValue placeholder="Select Yes/No" />
@@ -247,7 +267,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="date" className="text-right">Date</Label>
+              <Label htmlFor="date" className="text-right">
+                Date
+              </Label>
               <Input
                 id="date"
                 type="date"
@@ -257,18 +279,19 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               />
             </div>
             <div>
-              <Label htmlFor="description" className="text-right">Description</Label>
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={newCompliance.description}
                 onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
-                disabled
               />
             </div>
           </div>
           <DialogFooter>
             <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -279,33 +302,36 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>Edit Compliance</DialogTitle>
-              <DialogDescription aria-describedby={undefined}>
-              </DialogDescription>
+              <DialogDescription aria-describedby={undefined}></DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
-                <Label htmlFor="edit-query" className="text-right">Form Query</Label>
+                <Label htmlFor="edit-query" className="text-right">
+                  Form Query
+                </Label>
                 <Select
-    value={editingCompliance.query}
-    onValueChange={(value) => setEditingCompliance({ ...editingCompliance, query: value })}
-  >
-    <SelectTrigger id="edit-query" className="col-span-3">
-      <SelectValue placeholder="Edit Form Query" />
-    </SelectTrigger>
-    <SelectContent>
-                  {queryOptions.map((option, index) => (
-                    <SelectItem key={index} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-  </Select>
+                  value={editingCompliance.query}
+                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, query: value })}
+                >
+                  <SelectTrigger id="edit-query" className="col-span-3">
+                    <SelectValue placeholder="Edit Form Query" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {queryOptions.map((option, index) => (
+                      <SelectItem key={index} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label htmlFor="edit-yesNo" className="text-right">Yes/No</Label>
+                <Label htmlFor="edit-yesNo" className="text-right">
+                  Yes/No
+                </Label>
                 <Select
                   value={editingCompliance.yesNo}
-                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, yesNo: value })}
+                  onValueChange={handleEditYesNoChange}
                 >
                   <SelectTrigger id="edit-yesNo" className="col-span-3">
                     <SelectValue placeholder="Select Yes/No" />
@@ -317,7 +343,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-date" className="text-right">Date</Label>
+                <Label htmlFor="edit-date" className="text-right">
+                  Date
+                </Label>
                 <Input
                   id="edit-date"
                   type="date"
@@ -327,7 +355,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-description" className="text-right">Description</Label>
+                <Label htmlFor="edit-description" className="text-right">
+                  Description
+                </Label>
                 <Textarea
                   id="edit-description"
                   value={editingCompliance.description}
@@ -337,8 +367,15 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDeleteCompliance} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
-              <Button onClick={handleSaveCompliance} className="mr-2">Save</Button>
+              <Button
+                onClick={handleDeleteCompliance}
+                className="bg-white text-black border border-black hover:bg-neutral-200"
+              >
+                Delete
+              </Button>
+              <Button onClick={handleSaveCompliance} className="mr-2">
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

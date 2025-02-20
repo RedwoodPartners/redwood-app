@@ -1,17 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHeader,
+  TableRow,
+  TableHead,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FORMS_ID } from "./ROCcompliance";
 
 const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
 
@@ -29,6 +51,9 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     date: "",
     description: "",
   });
+  const [queryOptions, setQueryOptions] = useState<string[]>([]);
+  const [natureOfCompany, setNatureOfCompany] = useState<string>("");
+  const [formsData, setFormsData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -41,6 +66,13 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
           return { $id, query, yesNo, date, description };
         });
         setComplianceData(filteredDocuments);
+        //Fetch natureOfCompany from Startups
+        const startupResponse = await databases.getDocument(
+          STAGING_DATABASE_ID,
+          STARTUP_ID,
+          startupId
+        );
+        setNatureOfCompany(startupResponse.natureOfCompany);
       } catch (error) {
         console.error("Error fetching compliance data:", error);
       }
@@ -48,15 +80,44 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     fetchComplianceData();
   }, [startupId]);
 
+  useEffect(() => {
+    const fetchQueryOptions = async () => {
+      try {
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
+          Query.equal("natureOfCompany", natureOfCompany),
+          Query.equal("types", "it"), // Additional query to filter by type "it"
+        ]);
+        const documents = response.documents;
+        const options = documents.map((doc) => doc.query);
+        setQueryOptions(options);
+        setFormsData(documents);
+      } catch (error) {
+        console.error("Error fetching query options:", error);
+      }
+    };
+    fetchQueryOptions();
+  }, [natureOfCompany]);
+
+  const getDescriptionForYesNo = (yesNoValue: string, queryValue: string): string => {
+    const formData = formsData.find((doc) => doc.query === queryValue);
+    if (formData && formData.yesNo && Array.isArray(formData.yesNo) && formData.yesNo.length > 0) {
+      const index = yesNoValue === 'Yes' ? 0 : 1;
+      return formData.yesNo[index] || '';
+    }
+    return '';
+  };
+
   const handleSaveCompliance = async () => {
     if (!editingCompliance) return;
     try {
-      const allowedFields = ['query', 'yesNo', 'date', 'description'];
+      const allowedFields = ["query", "yesNo", "date", "description"];
       const updateData = Object.fromEntries(
-        Object.entries(editingCompliance).filter(([key]) => allowedFields.includes(key))
+        Object.entries(editingCompliance).filter(([key]) =>
+          allowedFields.includes(key)
+        )
       );
       await databases.updateDocument(STAGING_DATABASE_ID, INCOME_TAX_TABLE_ID, editingCompliance.$id, updateData);
-      const updatedCompliances = complianceData.map(c => c.$id === editingCompliance.$id ? {...c, ...updateData} : c);
+      const updatedCompliances = complianceData.map(c => c.$id === editingCompliance.$id ? { ...c, ...updateData } : c);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
     } catch (error) {
@@ -95,6 +156,26 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       });
     } catch (error) {
       console.error("Error adding compliance data:", error);
+    }
+  };
+
+  const handleYesNoChange = (value: string) => {
+    const description = getDescriptionForYesNo(value, newCompliance.query);
+    setNewCompliance({
+      ...newCompliance,
+      yesNo: value,
+      description: description,
+    });
+  };
+
+  const handleEditYesNoChange = (value: string) => {
+    if (editingCompliance) {
+      const description = getDescriptionForYesNo(value, editingCompliance.query);
+      setEditingCompliance({
+        ...editingCompliance,
+        yesNo: value,
+        description: description,
+      });
     }
   };
 
@@ -138,17 +219,38 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
           <div className="grid grid-cols-4 gap-4 py-4">
             <div>
               <Label htmlFor="query" className="text-right">Form Query</Label>
-              <Textarea id="query" value={newCompliance.query} onChange={(e) => setNewCompliance({ ...newCompliance, query: e.target.value })} className="col-span-3" />
+              <Select
+                value={newCompliance.query}
+                onValueChange={(value) => setNewCompliance({ ...newCompliance, query: value })}
+              >
+                <SelectTrigger id="query" className="col-span-3">
+                  <SelectValue placeholder="Select a query" />
+                </SelectTrigger>
+                <SelectContent>
+                  {queryOptions.length > 0 ? (
+                    queryOptions.map((option, index) => (
+                      <SelectItem key={index} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <p>error</p>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="yesNo" className="text-right">Yes/No</Label>
-              <Select value={newCompliance.yesNo} onValueChange={(value) => setNewCompliance({ ...newCompliance, yesNo: value })}>
+              <Select
+                value={newCompliance.yesNo}
+                onValueChange={handleYesNoChange}
+              >
                 <SelectTrigger id="yesNo" className="col-span-3">
                   <SelectValue placeholder="Select Yes/No" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -176,17 +278,36 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
                 <Label htmlFor="edit-query" className="text-right">Form Query</Label>
-                <Textarea id="edit-query" value={editingCompliance.query} onChange={(e) => setEditingCompliance({ ...editingCompliance, query: e.target.value })} className="col-span-3" />
+                <Select
+                  value={editingCompliance.query}
+                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, query: value })}
+                >
+                  <SelectTrigger id="edit-query" className="col-span-3">
+                    <SelectValue placeholder="Select a query" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {queryOptions.length > 0 ? (
+                      queryOptions.map((option, index) => (
+                        <SelectItem key={index} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <p>error</p>
+                    )}
+                </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="edit-yesNo" className="text-right">Yes/No</Label>
-                <Select value={editingCompliance.yesNo} onValueChange={(value) => setEditingCompliance({ ...editingCompliance, yesNo: value })}>
+                <Select value={editingCompliance.yesNo}
+                  onValueChange={handleEditYesNoChange}>
                   <SelectTrigger id="edit-yesNo" className="col-span-3">
                     <SelectValue placeholder="Select Yes/No" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="Yes">Yes</SelectItem>
+                    <SelectItem value="No">No</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
