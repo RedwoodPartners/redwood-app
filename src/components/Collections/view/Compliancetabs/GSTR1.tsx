@@ -41,6 +41,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
     gstr1: "",
     gst3b: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -105,6 +106,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
   };
 
   const handleAddComplianceData = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { date, gstr1, gst3b } = newCompliance;
       const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
@@ -132,6 +135,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
       });
     } catch (error) {
       console.error("Error adding compliance data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -208,7 +213,9 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData}>Save</Button>
+            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -76,7 +76,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         let allDocuments: Document[] = [];
         let hasMoreDocuments = true;
         let offset = 0;
-        const limit = 100; // Maximum limit per request
+        const limit = 100;
     
         while (hasMoreDocuments) {
           const response = await databases.listDocuments(
@@ -92,7 +92,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     
           // Check if there are more documents to fetch
           if (response.documents.length < limit) {
-            hasMoreDocuments = false; // No more documents to fetch
+            hasMoreDocuments = false; 
           } else {
             offset += limit; // Move to the next batch
           }
