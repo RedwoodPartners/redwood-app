@@ -54,6 +54,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
   const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("");
   const [formsData, setFormsData] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -138,6 +139,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
   };
 
   const handleAddComplianceData = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { query, yesNo, date, description } = newCompliance;
       const response = await databases.createDocument(
@@ -156,6 +159,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       });
     } catch (error) {
       console.error("Error adding compliance data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -264,7 +269,9 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData}>Save</Button>
+            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

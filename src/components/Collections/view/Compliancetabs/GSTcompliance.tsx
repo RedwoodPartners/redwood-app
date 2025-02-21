@@ -55,6 +55,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("all");
   const [formsData, setFormsData] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -149,6 +150,8 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   };
 
   const handleAddComplianceData = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { query, yesNo, date, description } = newCompliance;
       const response = await databases.createDocument(
@@ -167,6 +170,8 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       });
     } catch (error) {
       console.error("Error adding compliance data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -310,8 +315,8 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData}>
-              Save
+            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
