@@ -1,14 +1,14 @@
 import { Client, Account, Databases, ID, OAuthProvider, Storage } from "appwrite";
 import { v4 as uuidv4 } from 'uuid';
 
-export const API_ENDPOINT = 'https://cloud.appwrite.io/v1';
-export const PROJECT_ID = '66d94ffb0025a8aa0b9d';
-export const BUCKET_ID = '66eb0cfc000e821db4d9';
-export const STAGING_DATABASE_ID = 'staging';
-export const STARTUP_ID = '6704bbd6003c907e60dc';
-export const PROJECTS_ID = '67077994001c72cd4b42';
+export const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT!;
+export const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID!;
+export const BUCKET_ID = process.env.NEXT_PUBLIC_BUCKET_ID!;
+export const STAGING_DATABASE_ID = process.env.NEXT_PUBLIC_STAGING_DATABASE_ID!;
+export const STARTUP_ID = process.env.NEXT_PUBLIC_STARTUP_ID!;
+export const PROJECTS_ID = process.env.NEXT_PUBLIC_PROJECTS_ID!;
+export const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID!;
 
-export const DATABASE_ID = '66ebe85b002fb4aab493';
 
 type CreateUserAccount = {
   email: string;
@@ -83,7 +83,7 @@ export class AppwriteService {
 
   async loginWithGoogle(successRedirectUrl: string, failureRedirectUrl: string) {
     try {
-      await account.createOAuth2Session(OAuthProvider.Google, "https://redwood-app.vercel.app/home", "https://redwood-app.vercel.app/");
+      await account.createOAuth2Session(OAuthProvider.Google, process.env.NEXT_PUBLIC_SUCCESS_REDIRECT_URL!, process.env.NEXT_PUBLIC_FAILURE_REDIRECT_URL!);
     } catch (error: any) {
       console.error("Error during Google login:", error.message);
       throw new Error(error.message || "Google login failed.");
@@ -112,7 +112,7 @@ export class AppwriteService {
   // Method to send password reset email
   async sendPasswordResetEmail(email: string) {
     try {
-      await account.createRecovery(email, "http://localhost:3000/resetpassword");
+      await account.createRecovery(email, "https://redwood-app.vercel.app/resetpassword");
       alert("Password reset link sent to your email!");
     } catch (error: any) {
       console.error("Error sending password reset email:", error.message);
@@ -144,7 +144,6 @@ export class AppwriteService {
 
   async updateUserProfilePicture(userId: string, photoUrl: string) {
     try {
-        // Appwrite doesn't support direct user profile updates, so using preferences to store the photo URL
         await account.updatePrefs({
             profilePic: photoUrl
         });
