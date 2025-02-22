@@ -81,10 +81,6 @@ const StartupsPage: React.FC = () => {
     setFilteredStartups(filtered);
   }, [searchTerm, startups]);
 
-  const handleAddStartup = () => {
-    setShowAddDialog(true);
-  };
-
   const createAndRedirect = async (newStartupData: Partial<Startup>) => {
     
     const shortUUID = nanoid(6);
@@ -165,23 +161,19 @@ const StartupsPage: React.FC = () => {
 
   return (
     <div className="p-2 mx-auto">
-      <div className="flex space-x-3 mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center space-x-4">
         <h1 className="text-2xl font-semibold">Startups</h1>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <button className="text-black rounded-full transition hover:text-green-500 focus:outline-none">
-              <div className="relative group">
+              <div className="cursor-pointer">
                 <PlusCircle size={20} />
-                <span className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2 whitespace-nowrap">
-                  Add new Startup
-                </span>
               </div>
-            </button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-lg p-4">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-sm font-semibold">Add New Startup</DialogTitle>
-              <DialogDescription className="text-sm">
+              <DialogTitle>Add New Startup</DialogTitle>
+              <DialogDescription>
                 Fill in the details to add a new startup.
               </DialogDescription>
             </DialogHeader>
@@ -231,20 +223,13 @@ const StartupsPage: React.FC = () => {
             </form>
           </DialogContent>
         </Dialog>
-        <button
-          onClick={handleRemoveSelected}
-          className="text-black rounded-full transition hover:text-red-500 focus:outline-none"
-        >
-          <div className="relative group">
-            <Trash size={20} />
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2 whitespace-nowrap">
-              Remove selected Startup
-            </span>
+          <div className="cursor-pointer">
+            <Trash size={20} 
+            onClick={handleRemoveSelected}
+            />
           </div>
-        </button>
-      </div>
-
-      <div className="mb-4 relative">
+        </div>
+        <div className="relative">
         <Input
           type="text"
           placeholder="Search by ID, Startup Name, or Year"
@@ -253,6 +238,7 @@ const StartupsPage: React.FC = () => {
           className="w-72 text-xs pl-10 pr-4 py-2 border rounded-lg"
         />
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      </div>
       </div>
        {/* Loading Indicator */}
       {loading ? (
@@ -309,8 +295,8 @@ const StartupsPage: React.FC = () => {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">Edit Startup</DialogTitle>
-            <DialogDescription className="text-sm">
+            <DialogTitle>Edit Startup</DialogTitle>
+            <DialogDescription>
               Edit the details of the startup.
             </DialogDescription>
           </DialogHeader>
@@ -346,11 +332,9 @@ const StartupsPage: React.FC = () => {
                 ))}
               </SelectContent>
               </Select>
-
-              
               <Label>Remarks</Label>
               <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3} defaultValue={editingStartup.description}></Textarea>
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end">
                 <Button type="submit">Save Changes</Button>
               </div>
             </form>
