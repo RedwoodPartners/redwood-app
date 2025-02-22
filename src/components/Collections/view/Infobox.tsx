@@ -146,15 +146,15 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   return (
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
-        <span className="font-medium text-gray-950 text-xs sm:text-base">
+        <span className="font-medium text-black text-xs sm:text-base">
           {validatedFund !== null && !isNaN(Number(validatedFund.toString().replace(/[₹,]/g, "")))
             ? `₹ ${(Number(validatedFund.toString().replace(/[₹,]/g, "")) / 10000000).toFixed(2)} Cr`
             : "NA"}
         </span>
-        <span className="text-gray-950 font-medium text-xs sm:text-base">
+        <span className="text-black sm:text-base">
           {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
         </span>
-        <span className="text-gray-950 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+        <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
           {projectData.services}
         </span>
 
@@ -183,7 +183,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           </Select>
           </div>
         ) : (
-          <span className="text-gray-950 flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+          <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
             <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
             {projectData.stage}
           </span>

@@ -200,12 +200,12 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                         <NavigationMenuTrigger className="font-bold bg-transparent">
                           Company Information
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg mt-2 w-full sm:w-64 z-20">
-                          <ul className="flex flex-col">
+                        <NavigationMenuContent className="absolute left-0 bg-white shadow-lg rounded-lg w-full sm:w-64 z-20">
+                          <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
                                 onClick={() => setActiveTab("companyInfo")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Company Details
                               </button>
@@ -213,7 +213,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("regulatoryInfo")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Regulatory Information
                               </button>
@@ -221,7 +221,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("contact")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Contact
                               </button>
@@ -229,7 +229,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("aboutBusiness")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 About Business
                               </button>
@@ -237,7 +237,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("customerTestimonials")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Customer Testimonials
                               </button>
@@ -249,12 +249,12 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                         <NavigationMenuTrigger className="font-bold bg-transparent">
                           Funding and Milestones
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute left-0 sm:left-48 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
-                          <ul className="flex flex-col">
+                        <NavigationMenuContent className="absolute left-0 sm:left-48 w-full bg-white shadow-lg rounded-lg z-10">
+                          <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
                                 onClick={() => setActiveTab("fundraisedsofar")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Fund raised so far
                               </button>
@@ -262,7 +262,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("shareholders")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Shareholders
                               </button>
@@ -270,7 +270,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("captable")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Cap Table
                               </button>
@@ -278,7 +278,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("fundask")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Fund Ask
                               </button>
@@ -286,7 +286,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("milestones")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Tranches Milestones
                               </button>
@@ -298,12 +298,12 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                         <NavigationMenuTrigger className="font-bold bg-transparent">
                           Compliance
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2 z-10">
-                          <ul className="flex flex-col">
+                        <NavigationMenuContent className="absolute left-0 sm:left-96 w-full bg-white shadow-lg rounded-lg z-10">
+                          <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
                                 onClick={() => setActiveTab("roccompliance")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 ROC Compliance
                               </button>
@@ -311,7 +311,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("incometax")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Income Tax
                               </button>
@@ -319,7 +319,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("gstcompliance")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 GST Compliance
                               </button>
@@ -327,7 +327,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("gstrcompliance")}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 GSTR Compliance
                               </button>
@@ -340,12 +340,12 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                         <NavigationMenuTrigger  className="font-bold bg-transparent">
                           Documents
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute left-0 ml-36 sm:left-96 w-full bg-white shadow-lg rounded-lg mt-2">
-                          <ul className="flex flex-col">
+                        <NavigationMenuContent className="absolute left-0 ml-36 sm:left-96 w-full bg-white shadow-lg rounded-lg">
+                          <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
                                 onClick={() => setActiveTab("documentchecklist")}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Document Checklist
                               </button>
@@ -353,7 +353,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("patents")}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Patents
                               </button>
@@ -361,19 +361,16 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             <li>
                               <button
                                 onClick={() => setActiveTab("incubation")}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                                className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Incubation
                               </button>
                             </li>
-                            
                           </ul>
                         </NavigationMenuContent>
                       </NavigationMenuItem>
                     </NavigationMenuList>
                   </NavigationMenu>
-
-
                   {/* Render the active tab content */}
               <div className="mt-2 p-2">{renderTabContent()}</div>
        
