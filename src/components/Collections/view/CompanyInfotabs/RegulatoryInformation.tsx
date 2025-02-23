@@ -21,7 +21,6 @@ type ErrorData = {
 };
 
 export const REGULATORY_COLLECTION_ID = "6731872d0023e52aebc3";
-export const REGULATORY_STAGING_ID = "6731872d0023e52aebc3";
 
 interface RegulatoryInformationProps {
   startupId: string;
@@ -193,7 +192,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   return (
     <>
       <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2 -mt-4">Regulatory Information</h2>
+        <h2 className="container text-lg font-medium mb-2">Regulatory Information</h2>
         <div className="relative group ml-3">
           <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">

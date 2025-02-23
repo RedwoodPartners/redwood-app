@@ -50,6 +50,9 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [newComment, setNewComment] = useState("");
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [newDocFile, setNewDocFile] = useState<File | null>(null); 
+  const [editingDocFile, setEditingDocFile] = useState<File | null>(null);
+
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -113,13 +116,25 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
     try {
+      let fileId = null;
+      let fileName = null;
+
+      // Upload file if provided
+      if (newDocFile) {
+        const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), newDocFile);
+        fileId = uploadResponse.$id;
+        fileName = newDocFile.name;
+      }
       const response = await databases.createDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
         ...newDoc,
         startupId,
+        fileId,
+        fileName,
       });
       setDocData([...docData, response]);
       setNewDoc({ docName: "", docType: "", status: "", description: "" });
       setIsAddDialogOpen(false);
+      setNewDocFile(null);
       toast({
         title: "Document added",
         description: "A new document has been added to the checklist.",
@@ -138,10 +153,20 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
   const handleEditDocument = async () => {
     try {
+      let updatedFields = { ...editingDoc };
+
+      // Upload new file if provided
+      if (editingDocFile) {
+        const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), editingDocFile);
+        updatedFields.fileId = uploadResponse.$id;
+        updatedFields.fileName = editingDocFile.name;
+      }
       const { $id, $createdAt, $updatedAt, $permissions, $collectionId, $databaseId, ...validFields } = editingDoc;
       await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, $id, validFields);
       const updatedData = docData.map(doc => doc.$id === editingDoc.$id ? { ...doc, ...validFields } : doc);
       setDocData(updatedData);
+      setEditingDoc(null);
+      setEditingDocFile(null);
       setIsEditDialogOpen(false);
       toast({
         title: "Document updated",
@@ -343,7 +368,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <DialogTitle>Add New Document</DialogTitle>
               <DialogDescription>Enter the details for the new document.</DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-4 gap-4 mt-4">
+            <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
                 <Label>Document Name</Label>
                 <Select
@@ -395,6 +420,18 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   placeholder="Description"
                   value={newDoc.description}
                   onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Upload File</Label>
+                <Input
+                  type="file"
+                  onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                      setNewDocFile(e.target.files[0]); // For Add Dialog
+                      setEditingDocFile(e.target.files[0]); // For Edit Dialog
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -579,7 +616,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             <DialogTitle>Edit Document</DialogTitle>
             <DialogDescription>Modify the document details below.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-4 gap-4 mt-4">
+          <div className="grid grid-cols-3 gap-4 mt-4">
           <div>
             <Label>Document Name</Label>
             <Select
@@ -638,6 +675,29 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 value={editingDoc?.description}
                 onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
               />
+            </div>
+            <div>
+              <Label>Upload File</Label>
+              <Input
+                type="file"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setEditingDocFile(e.target.files[0]);
+                  }
+                }}
+              />
+              <div>
+                {editingDoc?.fileId && (
+                <a
+                  href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${editingDoc.fileId}/view?project=${PROJECT_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline text-xs"
+                >
+                ({editingDoc.fileName})
+                </a>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
