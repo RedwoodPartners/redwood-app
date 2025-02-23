@@ -96,7 +96,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   return (
     <div>
       <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2 -mt-4">About Business</h2>
+        <h2 className="container text-lg font-medium mb-2">About Business</h2>
         <div className="relative group">
           <EditIcon
             size={25}

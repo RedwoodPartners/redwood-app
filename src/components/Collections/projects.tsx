@@ -300,20 +300,19 @@ const ProjectsPage: React.FC = () => {
     <div className="p-2">
       <div className="flex space-x-3 mb-4">
         <h1 className="text-2xl font-semibold">Projects</h1>
-        <div className="flex items-center space-x-4">
-          <div>
-          <PlusCircle size={20} onClick={handleAddNewProject} className="cursor-pointer" />
-          </div>
-          <div>
-            <Trash
-              size={20}
-              className={`cursor-pointer ${
-              selectedProjects.length > 0 ? "text-red-500" : "text-black"
-              }`}
-              onClick={handleDeleteSelectedProjects}
-            />
-          </div>
-        
+        <div className="flex items-center space-x-2">
+          <>
+          <span onClick={handleAddNewProject} className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-green-500 space-x-1">
+              <PlusCircle size={15}  className="cursor-pointer"/>
+              <span className="text-xs">Add</span>
+          </span>
+          </>
+          <>
+            <span onClick={handleDeleteSelectedProjects} className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-red-500 space-x-1">
+              <Trash size={15}/>
+              <span className="text-xs">Remove</span>
+            </span>
+          </>
         </div>
       </div>
       {/* Loading Indicator */}

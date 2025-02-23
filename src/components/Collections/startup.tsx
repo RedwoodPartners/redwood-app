@@ -113,6 +113,10 @@ const StartupsPage: React.FC = () => {
     } catch (error) {
       console.error("Error deleting startups:", error);
     }
+    toast({
+      variant: "destructive",
+      title: "Startup Record Deleted",
+    });
   };
 
   const handleViewStartup = (id: string) => {
@@ -162,13 +166,14 @@ const StartupsPage: React.FC = () => {
   return (
     <div className="p-2 mx-auto">
       <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
         <h1 className="text-2xl font-semibold">Startups</h1>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-              <div className="cursor-pointer">
-                <PlusCircle size={20} />
-              </div>
+            <div className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-green-500 space-x-1">
+                <PlusCircle size={15} className="cursor-pointer"/>
+                <span className="text-xs">Add</span>
+            </div>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -223,11 +228,12 @@ const StartupsPage: React.FC = () => {
             </form>
           </DialogContent>
         </Dialog>
-          <div className="cursor-pointer">
-            <Trash size={20} 
-            onClick={handleRemoveSelected}
-            />
-          </div>
+        <>
+          <span onClick={handleRemoveSelected} className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-red-500 space-x-1">
+            <Trash size={15}/>
+            <span className="text-xs">Remove</span>
+          </span>
+        </>
         </div>
         <div className="relative">
         <Input

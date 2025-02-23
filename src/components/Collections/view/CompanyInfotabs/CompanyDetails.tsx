@@ -285,7 +285,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     return value.replace(/[^a-zA-Z\s]/g, '');
   };
   
-
   const fieldLabels: { [key in keyof StartupData]: string } = {
     brandName: "Brand Name",
     dateOfIncorporation: "Date of Incorporation",
@@ -325,7 +324,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   return (
     <>
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium mb-2 -mt-4">Company Details</h2>
+        <h2 className="text-lg font-medium mb-2">Company Details</h2>
         {isEditing ? (
           <div className="relative group ml-3">
             <SaveIcon

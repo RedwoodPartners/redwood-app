@@ -268,7 +268,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   return (
     <>
       <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2 -mt-4">Contact</h2>
+        <h2 className="container text-lg font-medium mb-2">Contact</h2>
         <div className="relative group ">
           <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
