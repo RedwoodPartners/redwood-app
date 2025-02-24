@@ -15,6 +15,7 @@ interface StartupData {
   dateOfIncorporation: string;
   companyStage: string;
   businessType: string;
+  businessModel: string;
   patentsCertifications: string;
   registeredState: string;
   registeredCompanyName: string;
@@ -48,17 +49,18 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           const data = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId);
           const parsedData = {
             brandName: data.brandName,
-            dateOfIncorporation: data.dateOfIncorporation,
-            companyStage: data.companyStage,
             businessType: data.businessType,
-            patentsCertifications: data.patentsCertifications,
+            companyStage: data.companyStage,
+            registeredCountry: data.registeredCountry,
             registeredCompanyName: data.registeredCompanyName,
+            dateOfIncorporation: data.dateOfIncorporation,
+            patentsCertifications: data.patentsCertifications,
             registeredState: data.registeredState,
+            natureOfCompany: data.natureOfCompany,
             domain: data.domain,
             incubated: data.incubated,
             revenue: data.revenue,
-            natureOfCompany: data.natureOfCompany,
-            registeredCountry: data.registeredCountry,
+            businessModel: data.businessModel,
             subDomain: data.subDomain,
             communityCertificate: data.communityCertificate,
             employees: data.employees,
@@ -116,6 +118,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "MVP",
       "Early Traction",
       "Growth",
+    ],
+    businessModel: [
+      "Select",
+      "B2B",
+      "B2B2C",
+      "B2G",
+      "B2C",
+      "D2C",
     ],
     businessType: [
       "Select",
@@ -290,6 +300,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     dateOfIncorporation: "Date of Incorporation",
     companyStage: "Company Stage",
     businessType: "Business Type",
+    businessModel: "Business Model",
     patentsCertifications: "Patents & Certifications",
     registeredCompanyName: "Registered Company Name",
     registeredState: "Registered State",
@@ -345,7 +356,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-5 gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
+      <div className="grid grid-cols-4 gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
         {Object.entries(startupData).map(([key, value]) => (
           <div key={key} className="space-y-4">
             <div className="flex flex-col space-y-1.5">
@@ -389,7 +400,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   }}
                   min="0"
                 />
-              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
+              ) : ["companyStage", "businessType", "businessModel", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
                 renderDropdown(key as keyof StartupData)
               ) : (
                 <Input

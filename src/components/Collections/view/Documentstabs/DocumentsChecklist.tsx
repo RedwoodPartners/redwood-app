@@ -40,6 +40,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     docType: "",
     status: "",
     description: "",
+    financialYear: "",
   });
 
   const [natureOfCompany, setNatureOfCompany] = useState<string>("LLP");
@@ -132,7 +133,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         fileName,
       });
       setDocData([...docData, response]);
-      setNewDoc({ docName: "", docType: "", status: "", description: "" });
+      setNewDoc({ docName: "", docType: "", status: "", description: "", financialYear: "" });
       setIsAddDialogOpen(false);
       setNewDocFile(null);
       toast({
@@ -423,13 +424,31 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 />
               </div>
               <div>
+                <Label>Financial Year</Label>
+                <Select
+                  value={newDoc.financialYear}
+                  onValueChange={(value) => setNewDoc({ ...newDoc, financialYear: value })}
+                >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Financial Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2020-21">2020-21</SelectItem>
+                  <SelectItem value="2021-22">2021-22</SelectItem>
+                  <SelectItem value="2022-23">2022-23</SelectItem>
+                  <SelectItem value="2023-24">2023-24</SelectItem>
+                  <SelectItem value="2023-24">2024-25</SelectItem>
+                  <SelectItem value="2023-24">2025-26</SelectItem>
+                </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>Upload File</Label>
                 <Input
                   type="file"
                   onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                      setNewDocFile(e.target.files[0]); // For Add Dialog
-                      setEditingDocFile(e.target.files[0]); // For Edit Dialog
+                      setNewDocFile(e.target.files[0]);
                     }
                   }}
                 />
@@ -451,7 +470,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <TableHead>Document Name</TableHead>
               <TableHead>Document Type</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[500px]">Description</TableHead>
+              <TableHead className="w-auto">Description</TableHead>
+              <TableHead>Financial Year</TableHead>
               <TableHead className="w-44">Documents</TableHead>
             </TableRow>
           </TableHeader>
@@ -468,6 +488,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <TableCell>{row.docType}</TableCell>
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.description}</TableCell>
+                <TableCell>{row.financialYear}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-start space-x-4">
                     {row.fileId ? (
@@ -675,6 +696,25 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 value={editingDoc?.description}
                 onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
               />
+            </div>
+            <div>
+              <Label>Financial Year</Label>
+              <Select
+                value={editingDoc?.financialYear}
+                onValueChange={(value) => setEditingDoc({ ...editingDoc, financialYear: value })}
+              >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Financial Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2020-21">2020-21</SelectItem>
+                  <SelectItem value="2021-22">2021-22</SelectItem>
+                  <SelectItem value="2022-23">2022-23</SelectItem>
+                  <SelectItem value="2023-24">2023-24</SelectItem>
+                  <SelectItem value="2023-24">2024-25</SelectItem>
+                  <SelectItem value="2023-24">2025-26</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Upload File</Label>

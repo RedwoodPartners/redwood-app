@@ -14,6 +14,10 @@ type RegulatoryData = {
   cinNumber: string;
   tanNumber: string;
   panNumber: string;
+  gstNumber: string;
+  udyamRegNumber: string;
+  profRegNumber: string;
+  shopsActRegNumber: string;
 };
 
 type ErrorData = {
@@ -32,12 +36,20 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     cinNumber: "",
     tanNumber: "",
     panNumber: "",
+    gstNumber: "",
+    udyamRegNumber: "",
+    profRegNumber: "",
+    shopsActRegNumber: "",
   });
   const [errors, setErrors] = useState<ErrorData>({
     dpiitNumber: "",
     cinNumber: "",
     tanNumber: "",
     panNumber: "",
+    gstNumber: "",
+    udyamRegNumber: "",
+    profRegNumber: "",
+    shopsActRegNumber: "",
   });
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null);
@@ -59,6 +71,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             cinNumber: document.cinNumber || "",
             tanNumber: document.tanNumber || "",
             panNumber: document.panNumber || "",
+            gstNumber: document.gstNumber || "",
+            udyamRegNumber: document.udyamRegNumber || "",
+            profRegNumber: document.profRegNumber || "",
+            shopsActRegNumber: document.shopsActRegNumber || "",
           });
           setDocumentId(document.$id);
         } else {
@@ -67,6 +83,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             cinNumber: "",
             tanNumber: "",
             panNumber: "",
+            gstNumber: "",
+            udyamRegNumber: "",
+            profRegNumber: "",
+            shopsActRegNumber: "",
           });
         }
       } catch (error) {
@@ -107,6 +127,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       cinNumber: "",
       tanNumber: "",
       panNumber: "",
+      gstNumber: "",
+      udyamRegNumber: "",
+      profRegNumber: "",
+      shopsActRegNumber: "",
     });
   };
 
@@ -116,6 +140,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       cinNumber: 'A00000AA0000AAA000000',
       tanNumber: 'AAAA00000A',
       panNumber: 'AAAAA0000A',
+      gstNumber: '00AAAAA0000A0AA',
+      udyamRegNumber: 'AAAAAAA000000000',
+      profRegNumber: '00000AA00000',
+      shopsActRegNumber: 'AAAAAAAAAAAA000000000',
     };
 
     const newErrors: ErrorData = {
@@ -123,6 +151,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       cinNumber: "",
       tanNumber: "",
       panNumber: "",
+      gstNumber: "",
+      udyamRegNumber: "",
+      profRegNumber: "",
+      shopsActRegNumber: "",
     };
 
     let hasErrors = false;
@@ -148,7 +180,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     }
 
     try {
-      const { dpiitNumber, cinNumber, tanNumber, panNumber } = regulatoryData;
+      const { dpiitNumber, cinNumber, tanNumber, panNumber, gstNumber, udyamRegNumber, profRegNumber, shopsActRegNumber, } = regulatoryData;
       if (documentId) {
         await databases.updateDocument(
           STAGING_DATABASE_ID,
@@ -159,6 +191,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             cinNumber,
             tanNumber,
             panNumber,
+            gstNumber,
+            udyamRegNumber,
+            profRegNumber,
+            shopsActRegNumber,
           }
         );
       } else {
@@ -171,6 +207,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             cinNumber,
             tanNumber,
             panNumber,
+            gstNumber,
+            udyamRegNumber,
+            profRegNumber,
+            shopsActRegNumber,
             startupId: startupId,
           }
         );
@@ -215,12 +255,15 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             ["CIN Number", "cinNumber", "A00000AA0000AAA000000"],
             ["TAN Number", "tanNumber", "AAAA00000A"],
             ["PAN Number", "panNumber", "AAAAA0000A"],
+            ["GST Number", "gstNumber", "00AAAAA0000A0AA"],
+            ["UDYAM Registration Number", "udyamRegNumber", "UDYAMTN000000000"],
+            ["Professional Tax Registration","profRegNumber", "00000AA00000"],
+            ["Shops and Establishment Act Registration", "shopsActRegNumber", "AAAAAAAAAAAA000000000"]
           ].map(([label, field, format]) => (
             <div key={label} className="flex flex-col">
               <div className="flex items-center mb-1">
                 <Label className="font-semibold text-gray-700">{label}</Label>
                 <div className="relative ml-2">
-                  <InfoIcon size={16} className="text-gray-400" />
                   <span className={`absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 ${
                     focusedField === field ? 'block' : 'hidden'
                   } bg-gray-700 text-white text-xs rounded-md py-1 px-2 whitespace-nowrap z-10`}>
