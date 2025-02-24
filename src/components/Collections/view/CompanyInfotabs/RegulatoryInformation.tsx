@@ -104,6 +104,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     if (value.length !== format.length) return false;
     for (let i = 0; i < format.length; i++) {
       if (format[i] === 'A' && !/[A-Z]/.test(value[i])) return false;
+      if (format[i] === '-' && !/[-]/.test(value[i])) return false;
       if (format[i] === '0' && !/[0-9]/.test(value[i])) return false;
     }
     return true;
@@ -113,12 +114,40 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof RegulatoryData
   ) => {
-    const value = e.target.value.toUpperCase();
+    const formats = {
+      dpiitNumber: "AAAA000000000",
+      cinNumber: "A-00000-AA-0000-AAA-000000",
+      tanNumber: "AAAA-00000-A",
+      panNumber: "AAAAA-0000-A",
+      gstNumber: "00-AAAAA-0000-A-0-AA",
+      udyamRegNumber: "UDYAM-TN-00-0000000",
+      profRegNumber: "00-000-AA-00000",
+      shopsActRegNumber: "TN-AAAAAA-AAAA-00-00-00000",
+    };
+  
+    const rawValue = e.target.value.toUpperCase().replace(/-/g, "");
+    const format = formats[field];
+    
+    let formattedValue = "";
+    let rawIndex = 0;
+  
+    for (let i = 0; i < format.length; i++) {
+      if (format[i] === "-") {
+        if (rawIndex > i - formattedValue.split("-").length) {
+          formattedValue += "-";
+        }
+      } else if (rawValue[rawIndex]) {
+        formattedValue += rawValue[rawIndex];
+        rawIndex++;
+      }
+    }
+  
     setRegulatoryData({
       ...regulatoryData,
-      [field]: value,
+      [field]: formattedValue,
     });
   };
+  
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -137,13 +166,13 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const handleSave = async () => {
     const formats = {
       dpiitNumber: 'AAAA000000000',
-      cinNumber: 'A00000AA0000AAA000000',
-      tanNumber: 'AAAA00000A',
-      panNumber: 'AAAAA0000A',
-      gstNumber: '00AAAAA0000A0AA',
-      udyamRegNumber: 'AAAAAAA000000000',
-      profRegNumber: '00000AA00000',
-      shopsActRegNumber: 'AAAAAAAAAAAA000000000',
+      cinNumber: 'A-00000-AA-0000-AAA-000000',
+      tanNumber: 'AAAA-00000-A',
+      panNumber: 'AAAAA-0000-A',
+      gstNumber: '00-AAAAA-0000-A-0-AA',
+      udyamRegNumber: 'UDYAM-TN-00-0000000',
+      profRegNumber: '00-000-AA-00000',
+      shopsActRegNumber: 'TN-AAAAAA-AAAA-00-00-00000',
     };
 
     const newErrors: ErrorData = {
@@ -251,14 +280,14 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       <div className="border border-gray-300 rounded-lg p-4 bg-white">
         <div className="grid grid-cols-4 gap-4">
           {[
-            ["DPIIT Number", "dpiitNumber", "$$$$$00000000000"],
-            ["CIN Number", "cinNumber", "A00000AA0000AAA000000"],
-            ["TAN Number", "tanNumber", "AAAA00000A"],
-            ["PAN Number", "panNumber", "AAAAA0000A"],
-            ["GST Number", "gstNumber", "00AAAAA0000A0AA"],
-            ["UDYAM Registration Number", "udyamRegNumber", "UDYAMTN000000000"],
-            ["Professional Tax Registration","profRegNumber", "00000AA00000"],
-            ["Shops and Establishment Act Registration", "shopsActRegNumber", "AAAAAAAAAAAA000000000"]
+            ["DPIIT Number", "dpiitNumber", "AAAAA00000000000"],
+            ["CIN Number", "cinNumber", "A-00000-AA-0000-AAA-000000"],
+            ["TAN Number", "tanNumber", "AAAA-00000-A"],
+            ["PAN Number", "panNumber", "AAAAA-0000-A"],
+            ["GST Number", "gstNumber", "00-AAAAA-0000-A-0-AA"],
+            ["UDYAM Registration Number", "udyamRegNumber", "UDYAM-TN-00-0000000"],
+            ["Professional Tax Registration","profRegNumber", "00-000-AA-00000"],
+            ["Shops and Establishment Act Registration", "shopsActRegNumber", "TN-AAAAAA-AAAA-00-00-00000"]
           ].map(([label, field, format]) => (
             <div key={label} className="flex flex-col">
               <div className="flex items-center mb-1">
