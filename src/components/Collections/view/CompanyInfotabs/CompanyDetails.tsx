@@ -9,13 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { databases } from "@/lib/utils";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReactSelect from "react-select";
 
 interface StartupData {
   brandName: string;
   dateOfIncorporation: string;
   companyStage: string;
   businessType: string;
-  businessModel: string;
+  businessModel: string[];
   patentsCertifications: string;
   registeredState: string;
   registeredCompanyName: string;
@@ -99,7 +100,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     }
   };
 
-  const handleChange = (key: keyof StartupData, value: string) => {
+  const handleChange = (key: keyof StartupData, value: any) => {
     if (updatedData) {
       let newValue = value;
       if (key === 'subDomain' || key === 'registeredState' || key === 'registeredCountry') {
@@ -118,14 +119,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "MVP",
       "Early Traction",
       "Growth",
-    ],
-    businessModel: [
-      "Select",
-      "B2B",
-      "B2B2C",
-      "B2G",
-      "B2C",
-      "D2C",
     ],
     businessType: [
       "Select",
@@ -229,6 +222,47 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "No",
     ],
   };
+  
+  const BusinessModelSelect = ({
+    value,
+    disabled,
+    onChange,
+  }: {
+    value: string[];
+    disabled: boolean;
+    onChange: (value: string[]) => void;
+  }) => {
+    const options = [
+      { value: "B2B", label: "B2B" },
+      { value: "B2B2C", label: "B2B2C" },
+      { value: "B2G", label: "B2G" },
+      { value: "B2C", label: "B2C" },
+      { value: "D2C", label: "D2C" },
+    ];
+  
+    return (
+      <ReactSelect
+        isMulti
+        isDisabled={disabled}
+        options={options}
+        value={options.filter((option) => value.includes(option.value))} // Map selected values to options
+        onChange={(selectedOptions) =>
+          onChange(selectedOptions.map((option) => option.value))
+        }
+        className="basic-multi-select"
+        classNamePrefix="select"
+        styles={{
+          control: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isDisabled ? "white" : provided.backgroundColor,
+            cursor: state.isDisabled ? "not-allowed" : "default",
+            opacity: state.isDisabled ? 1 : 1,
+          }),
+        }}
+      />
+    );
+  };
+  
 
   const renderDropdown = (key: keyof StartupData) =>
     key === "domain" ? (
@@ -237,7 +271,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       <Select
         disabled={!isEditing}
         onValueChange={(value) => handleChange(key, value)}
-        value={updatedData?.[key] || ""}
+        value={typeof updatedData?.[key] === "string" ? updatedData[key] : ""}
       >
         <SelectTrigger className="py-2 border rounded-md text-sm">
           <SelectValue placeholder="Select" />
@@ -363,8 +397,13 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
               <Label className="font-semibold text-gray-700">
                 {fieldLabels[key as keyof StartupData] || key}
               </Label>
-              
-              {key === "dateOfIncorporation" ? (
+              {key === "businessModel" ? (
+                <BusinessModelSelect
+                value={updatedData?.businessModel || []} // Pass selected values as an array
+                disabled={!isEditing}
+                onChange={(value) => handleChange("businessModel", value)}
+              />
+              ) : key === "dateOfIncorporation" ? (
                 <Input
                   type="date"
                   className="text-black"
@@ -400,8 +439,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   }}
                   min="0"
                 />
-              ) : ["companyStage", "businessType", "businessModel", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
+                
+              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
                 renderDropdown(key as keyof StartupData)
+                
               ) : (
                 <Input
                   className="text-black"
