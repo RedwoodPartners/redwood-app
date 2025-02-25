@@ -120,11 +120,21 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       let fileId = null;
       let fileName = null;
 
-      // Upload file if provided
+      // Upload file
       if (newDocFile) {
-        const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), newDocFile);
-        fileId = uploadResponse.$id;
-        fileName = newDocFile.name;
+        try {
+          const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), newDocFile);
+          fileId = uploadResponse.$id;
+          fileName = newDocFile.name;
+        } catch (uploadError) {
+          console.error("Error uploading document:", uploadError);
+          toast({
+            title: "Document Upload Error",
+            description: "File Size should not Exceed 5Mb",
+            variant: "destructive",
+          });
+          return; 
+        }
       }
       const response = await databases.createDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, ID.unique(), {
         ...newDoc,
@@ -156,7 +166,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     try {
       let updatedFields = { ...editingDoc };
 
-      // Upload new file if provided
       if (editingDocFile) {
         const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), editingDocFile);
         updatedFields.fileId = uploadResponse.$id;
@@ -207,49 +216,39 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     const documentId = docData[index].$id;
     if (!documentId) return;
 
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'csv'];
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-
-    if (fileExtension && allowedExtensions.includes(fileExtension)) {
-      try {
+    try {
         const uploadResponse = await storage.createFile(BUCKET_ID, ID.unique(), file);
         if (uploadResponse && uploadResponse.$id) {
-          const { $id, $createdAt, $updatedAt, $permissions, $collectionId, $databaseId, ...validFields } = docData[index];
-          const updatedDoc = {
-            ...validFields,
-            fileId: uploadResponse.$id,
-            fileName: file.name,
-          };
-          await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedDoc);
-          
-          // Update the local state
-          const updatedDocData = [...docData];
-          updatedDocData[index] = { ...updatedDocData[index], ...updatedDoc };
-          setDocData(updatedDocData);
+            const { $id, $createdAt, $updatedAt, $permissions, $collectionId, $databaseId, ...validFields } = docData[index];
+            const updatedDoc = {
+                ...validFields,
+                fileId: uploadResponse.$id,
+                fileName: file.name,
+            };
+            await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedDoc);
 
-          toast({
-            title: "Document upload successful",
-            description: "Your document has been uploaded successfully!",
-          });
+            // Update the local state
+            const updatedDocData = [...docData];
+            updatedDocData[index] = { ...updatedDocData[index], ...updatedDoc };
+            setDocData(updatedDocData);
+
+            toast({
+                title: "Document upload successful",
+                description: "Your document has been uploaded successfully!",
+            });
         } else {
-          throw new Error("Invalid upload response");
+            throw new Error("Invalid upload response");
         }
-      } catch (error) {
+    } catch (error) {
         console.error("Error uploading file:", error);
         toast({
-          title: "Error",
-          description: "Failed to upload the document. Please try again.",
-          variant: "destructive",
+            title: "File Size should not Exceed 5Mb",
+            description: "Failed to upload the document. Please try again.",
+            variant: "destructive",
         });
-      }
-    } else {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a file with an allowed extension.",
-        variant: "destructive",
-      });
     }
   };
+
 
   const handleDeleteFile = async (documentId: string, fileId: string) => {
     try {
@@ -451,6 +450,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       setNewDocFile(e.target.files[0]);
                     }
                   }}
+                  className="cursor-pointer"
                 />
               </div>
             </div>
