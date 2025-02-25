@@ -18,7 +18,7 @@ const Dashboard = () => {
     <>
       <Tabs defaultValue="dashboard">
         {/* Tabs List */}
-        <TabsList className="grid w-[250px] grid-cols-2 text-black">
+        <TabsList className="grid w-[200px] grid-cols-2 text-black">
           <TabsTrigger value="dashboard">
             Dashboard
           </TabsTrigger>

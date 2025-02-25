@@ -74,7 +74,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     if (!selectedInvestment) return;
 
     if (isSubmitting) return; // Prevent duplicate submission
-   setIsSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...cleanInvestment } = selectedInvestment;
@@ -206,7 +206,31 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-GB").format(date);
   };
+  const handleUploadFileForDialog = async (file: File) => {
+    if (!selectedInvestment || !file) return;
   
+    try {
+      const uploadResponse = await storage.createFile(FUND_DOCUMENTS_ID, ID.unique(), file);
+  
+      setSelectedInvestment({
+        ...selectedInvestment,
+        fileId: uploadResponse.$id,
+        fileName: file.name,
+      });
+  
+      toast({
+        title: "Document uploaded",
+        description: "Your document has been uploaded successfully!",
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "File Size should not Exceed 5Mb",
+        description: "Failed to upload the document. Please try again.",
+        variant: "destructive",
+      });
+    } 
+  };
 
   return (
     <div>
@@ -361,6 +385,46 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              {/* File Upload */}
+              <div className="mt-4">
+                <Label>Upload Document</Label>
+                <div className="flex items-center space-x-2">
+                  {selectedInvestment?.fileId ? (
+                  <>
+                  {/* View & Download Link */}
+                  <a
+                    href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${selectedInvestment.fileId}/view?project=${PROJECT_ID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                  <div className="relative group">
+                    <FaEye size={20} className="inline" />
+                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                      View & Download
+                    </span>
+                  </div>
+                  </a>
+                   {/* File Name */}
+                  <span className="text-xs text-gray-500">{selectedInvestment.fileName}</span>
+                  </>
+                  ) : (
+                      // Upload New File Input
+                      <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleUploadFileForDialog(e.target.files[0]);
+                        }
+                        }}
+                      />
+                      <UploadCloud size={20} className="cursor-pointer" />
+                      </label>
+                      )}
+                    </div>
+                  </div>
             </div>
           </div>
           <DialogFooter>
