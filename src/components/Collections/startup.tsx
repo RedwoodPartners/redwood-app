@@ -9,7 +9,6 @@ import { databases } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,7 +24,7 @@ type Startup = {
   brandName: string;
   revenue: string;
   year: string;
-  description: string;
+  services: string;
 };
 
 type Document = {
@@ -44,6 +43,8 @@ const StartupsPage: React.FC = () => {
   const [year, setYear] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [brandNameError, setBrandNameError] = useState<string | null>(null);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -59,7 +60,7 @@ const StartupsPage: React.FC = () => {
           brandName: doc.brandName || "",
           revenue: doc.revenue || "0",
           year: doc.year || "",
-          description: doc.description || "",
+          services: doc.services || "",
         }));
         setStartups(startupData);
         setFilteredStartups(startupData);
@@ -82,12 +83,18 @@ const StartupsPage: React.FC = () => {
   }, [searchTerm, startups]);
 
   const createAndRedirect = async (newStartupData: Partial<Startup>) => {
-    
+    if (nameError || brandNameError) {
+      toast({
+        variant: "destructive",
+        title: "Please resolve duplication errors before submitting.",
+      });
+      return;
+    }
     const shortUUID = nanoid(6);
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const createdStartup = await databases.createDocument(STAGING_DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: year });
+      const createdStartup = await databases.createDocument(STAGING_DATABASE_ID, STARTUP_ID, shortUUID, { ...newStartupData, year: formattedDate });
       setShowAddDialog(false);
       router.push(`/startup/${createdStartup.$id}`);
     } catch (error) {
@@ -138,14 +145,20 @@ const StartupsPage: React.FC = () => {
   const handleSaveChanges = async (updatedStartupData: Startup) => {
     try {
       await databases.updateDocument(STAGING_DATABASE_ID, STARTUP_ID, updatedStartupData.id, {
-        ...updatedStartupData,
-        year
+        name: updatedStartupData.name,
+        brandName: updatedStartupData.brandName,
+        year: formattedDate,
+        services: updatedStartupData.services,
       });
       setStartups((prev) =>
-        prev.map((startup) => (startup.id === updatedStartupData.id ? { ...updatedStartupData, year } : startup))
+        prev.map((startup) =>
+          startup.id === updatedStartupData.id ? { ...updatedStartupData, year: formattedDate } : startup
+        )
       );
       setFilteredStartups((prev) =>
-        prev.map((startup) => (startup.id === updatedStartupData.id ? { ...updatedStartupData, year } : startup))
+        prev.map((startup) =>
+          startup.id === updatedStartupData.id ? { ...updatedStartupData, year: formattedDate } : startup
+        )
       );
       setShowEditDialog(false);
       setEditingStartup(null);
@@ -162,6 +175,39 @@ const StartupsPage: React.FC = () => {
       });
     }
   };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const enteredName = e.target.value.trim();
+    const isDuplicate = startups.some(
+      (startup) => startup.name.toLowerCase() === enteredName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      setNameError("A startup with this name already exists.");
+    } else {
+      setNameError(null);
+    }
+  };
+
+  const handleBrandNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const enteredBrandName = e.target.value.trim();
+    const isDuplicate = startups.some(
+      (startup) =>
+        startup.brandName.toLowerCase() === enteredBrandName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      setBrandNameError("A startup with this brand name already exists.");
+    } else {
+      setBrandNameError(null);
+    }
+  };
+  
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
 
   return (
     <div className="p-2 mx-auto">
@@ -192,32 +238,65 @@ const StartupsPage: React.FC = () => {
             >
               <div className="grid grid-rows-1 gap-1">
               <div>
-                <Label>Startup Name</Label>
-                <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" required />
-              </div>
+              <Label>Startup Name</Label>
+              <Input
+                type="text"
+                name="name"
+                placeholder="Startup Name"
+                className={`w-full p-2 mb-2 border rounded ${
+                  nameError ? "border-red-500" : ""
+                }`}
+                required
+                autoComplete="off"
+                onChange={handleNameChange}
+              />
+              {nameError && (
+                <p className="text-red-500 text-sm">{nameError}</p>
+              )}
+            </div>
               <div>
-                <Label>Brand Name</Label>
-                <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" required />
-              </div>
+              <Label>Brand Name</Label>
+              <Input
+                type="text"
+                name="brandName"
+                placeholder="Brand Name"
+                className={`w-full p-2 mb-2 border rounded ${
+                  brandNameError ? "border-red-500" : ""
+                }`}
+                required
+                autoComplete="off"
+                onChange={handleBrandNameChange}
+              />
+              {brandNameError && (
+                <p className="text-red-500 text-sm">{brandNameError}</p>
+              )}
+            </div>
               <div>
                 <Label htmlFor="year">Year</Label>
-                <Select value={year} onValueChange={(selectedYear) => setYear(selectedYear)}>
-                    <SelectTrigger id="year" name="year" className="w-full p-2 mb-2 border rounded">
-                      <SelectValue placeholder="Select a year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((yearOption) => (
-                        <SelectItem key={yearOption} value={String(yearOption)}>
-                          {yearOption}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Input
+                  id="year"
+                  name="year"
+                  value={formattedDate}
+                  readOnly
+                  className="w-full p-2 mb-2 border rounded"
+                />
               </div>
-
               <div>
-                <Label>Remarks</Label>
-                <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3}></Textarea>
+                <Label>Services</Label>
+                <Select name="services" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Consulting">Consulting</SelectItem>
+                    <SelectItem value="BDD">BDD</SelectItem>
+                    <SelectItem value="Business Structuring">Business Structuring</SelectItem>
+                    <SelectItem value="Events">Events</SelectItem>
+                    <SelectItem value="Workshops">Workshops</SelectItem>
+                    <SelectItem value="Pitch Session">Pitch Session</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex justify-end mt-4">
                 <Button type="submit" disabled={isSubmitting}>
@@ -238,7 +317,7 @@ const StartupsPage: React.FC = () => {
         <div className="relative">
         <Input
           type="text"
-          placeholder="Search by ID, Startup Name, or Year"
+          placeholder="Search by Startup Name, or Year"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-72 text-xs pl-10 pr-4 py-2 border rounded-lg"
@@ -260,9 +339,8 @@ const StartupsPage: React.FC = () => {
               <TableHead className="w-10">View</TableHead>
               <TableHead className="w-auto">Startup Name</TableHead>
               <TableHead className="w-auto">Brand Name</TableHead>
-              <TableHead>Revenue (last FY)</TableHead>
               <TableHead>Year</TableHead>
-              <TableHead>Remarks</TableHead>
+              <TableHead>Services</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -289,9 +367,8 @@ const StartupsPage: React.FC = () => {
                   className="cursor-pointer hover:text-blue-700"
                 >{startup.name}</TableCell>
                 <TableCell>{startup.brandName}</TableCell>
-                <TableCell>₹ {startup.revenue}</TableCell>
                 <TableCell>{startup.year}</TableCell>
-                <TableCell>{startup.description}</TableCell>
+                <TableCell>{startup.services}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -322,24 +399,31 @@ const StartupsPage: React.FC = () => {
               <Input type="text" name="name" placeholder="Startup Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.name} required />
               <Label>Brand Name</Label>
               <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.brandName} required />
-              <Label>Revenue</Label>
-              <Input type="number" name="revenue" placeholder="Revenue" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.revenue} />
-
-              <Label>Year</Label>
-              <Select value={year} onValueChange={(selectedYear) => setYear(selectedYear)}>
-              <SelectTrigger id="edit-year" name="year" className="w-full p-2 mb-2 border rounded">
-                <SelectValue placeholder="Select a year" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 2031 - 2020 }, (_, i) => 2020 + i).map((yearOption) => (
-                  <SelectItem key={yearOption} value={String(yearOption)}>
-                    {yearOption}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              
+              <Label>Services</Label>
+              <Select
+                  value={editingStartup?.services || ""}
+                  onValueChange={(selectedService) =>
+                    setEditingStartup((prev) =>
+                      prev ? { ...prev, services: selectedService } : null
+                    )
+                  }
+                  name="services"
+                  required
+              >
+                <SelectTrigger className="w-full p-2 mb-2 border rounded">
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Consulting">Consulting</SelectItem>
+                  <SelectItem value="BDD">BDD</SelectItem>
+                  <SelectItem value="Business Structuring">Business Structuring</SelectItem>
+                  <SelectItem value="Events">Events</SelectItem>
+                  <SelectItem value="Workshops">Workshops</SelectItem>
+                  <SelectItem value="Pitch Session">Pitch Session</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
               </Select>
-              <Label>Remarks</Label>
-              <Textarea name="description" placeholder="Remarks" className="w-full p-2 mb-2 border rounded" rows={3} defaultValue={editingStartup.description}></Textarea>
               <div className="flex justify-end">
                 <Button type="submit">Save Changes</Button>
               </div>
