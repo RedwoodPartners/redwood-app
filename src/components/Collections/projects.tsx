@@ -339,62 +339,61 @@ const ProjectsPage: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-  {projects.map((project) => {
-    // Find the corresponding startup for the project
-    const startup = startups.find((s) => s.name === project.name);
-    return (
-      <TableRow key={project.id} onDoubleClick={() => handleEditProject(project)}>
-        <TableCell>
-          <Checkbox
-            checked={selectedProjects.includes(project.id)}
-            onCheckedChange={(isChecked) => {
-            if (isChecked) {
-              setSelectedProjects((prev) => [...prev, project.id]);
-            } else {
-              setSelectedProjects((prev) =>
-              prev.filter((id) => id !== project.id)
-            );
-            }
-          }}
-           />
-          </TableCell>
+            {projects.map((project) => {
+              // Find the corresponding startup for the project
+              const startup = startups.find((s) => s.name === project.name);
+              return (
+                <TableRow key={project.id} onDoubleClick={() => handleEditProject(project)}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedProjects.includes(project.id)}
+                      onCheckedChange={(isChecked) => {
+                      if (isChecked) {
+                        setSelectedProjects((prev) => [...prev, project.id]);
+                      } else {
+                        setSelectedProjects((prev) =>
+                        prev.filter((id) => id !== project.id)
+                      );
+                      }
+                    }}
+                    />
+                    </TableCell>
 
-        <TableCell>
-          <button
-            className="bg-transparent text-gray-600 hover:text-blue-700 px-2 py-1 border border-transparent transition-colors duration-200 ease-in-out disabled:opacity-50"
-            title="View Startup"
-            onClick={() => {
-              if (startup) {
-                router.push(`/projects/${project.id}`); // Redirect to the project
-              } else {
-                console.error("Startup not found for redirection.");
-              }
-            }}
-          >
-            <FaEye size={18} />
-          </button>
-        </TableCell>
-        <TableCell>
-          <button
-            className="hover:text-blue-600"
-            onClick={() => router.push(`/projects/${project.id}`)}
-          >
-          {project.name}
-          </button>
-        </TableCell>
-        <TableCell>{formatDate(project.startDate)}</TableCell>
-        <TableCell>{formatDate(project.receivedDate)}</TableCell>
-        <TableCell>{formatDate(project.projectEndDate)}</TableCell>
-        <TableCell>{project.appliedFor}</TableCell>
-        <TableCell>{project.services}</TableCell>
-        <TableCell>{project.projectTemplate}</TableCell>
-        <TableCell>{project.startupStatus}</TableCell>
-        <TableCell>{project.stage}</TableCell>
-      </TableRow>
-    );
-  })}
-</TableBody>
-
+                  <TableCell>
+                    <button
+                      className="bg-transparent text-gray-600 hover:text-blue-700 px-2 py-1 border border-transparent transition-colors duration-200 ease-in-out disabled:opacity-50"
+                      title="View Startup"
+                      onClick={() => {
+                        if (startup) {
+                          router.push(`/projects/${project.id}`); // Redirect to the project
+                        } else {
+                          console.error("Startup not found for redirection.");
+                        }
+                      }}
+                    >
+                      <FaEye size={18} />
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      className="hover:text-blue-600"
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                    >
+                    {project.name}
+                    </button>
+                  </TableCell>
+                  <TableCell>{formatDate(project.startDate)}</TableCell>
+                  <TableCell>{formatDate(project.receivedDate)}</TableCell>
+                  <TableCell>{formatDate(project.projectEndDate)}</TableCell>
+                  <TableCell>{project.appliedFor}</TableCell>
+                  <TableCell>{project.services}</TableCell>
+                  <TableCell>{project.projectTemplate}</TableCell>
+                  <TableCell>{project.startupStatus}</TableCell>
+                  <TableCell>{project.stage}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
         </Table>
       </div>
       )}
