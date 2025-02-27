@@ -293,6 +293,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
             <Label className="font-semibold text-gray-700">Company Website</Label>
             <Input
               disabled={!isEditing}
+              autoComplete="off"
               value={contactData.companyWebsite}
               onChange={(e) => handleInputChange(e, "companyWebsite")}
               className={websiteError ? "border-red-500" : ""}
@@ -303,6 +304,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
             <Label className="font-semibold text-gray-700">Email</Label>
             <Input
               disabled={!isEditing}
+              autoComplete="off"
               value={contactData.email}
               onChange={(e) => handleInputChange(e, "email")}
               className={emailError ? "border-red-500" : ""}
