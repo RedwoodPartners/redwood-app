@@ -26,12 +26,12 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
 
         <div className="flex-1 flex flex-col">
           {/* Top Row: SidebarTrigger and Breadcrumb */}
-          <div className="flex items-center justify-between p-1">
+          <div>
             <SidebarTrigger />
-            <Separator orientation="vertical" className="ml-1 -mr-2 h-4" />
+            {/*<Separator orientation="vertical" className="ml-1 -mr-2 h-4" />
             <div className="ml-4 flex-1">
               <BreadcrumbWithDynamicPath />
-            </div>
+            </div>*/}
           </div>
 
           {/* Main Content */}

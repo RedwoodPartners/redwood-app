@@ -1,31 +1,31 @@
 "use client";
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Query, Models } from "appwrite";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
-import { databases } from '@/lib/utils';
+import { databases } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
 
 interface Startup extends Models.Document {
   name: string;
-  description: string;
-  foundedDate: string;
-  industry: string;
+  dateOfIncorporation: string;
+  domain: string;
+  revenue: number;
 }
 
 export default function StartupsForYear() {
   const params = useParams();
-  const year = params?.year;
+  const year = typeof params?.year === "string" ? params.year.trim() : null;
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStartupsForYear = async () => {
-      if (!year || typeof year !== 'string') {
-        console.error('Invalid year parameter');
+      if (!year) {
+        console.error("Invalid year parameter");
         setLoading(false);
         return;
       }
@@ -35,7 +35,7 @@ export default function StartupsForYear() {
         const response = await databases.listDocuments<Startup>(
           STAGING_DATABASE_ID,
           STARTUP_ID,
-          [Query.equal('year', year)]
+          [Query.contains("year", year)]
         );
         setStartups(response.documents);
       } catch (error) {
@@ -48,7 +48,7 @@ export default function StartupsForYear() {
     fetchStartupsForYear();
   }, [year]);
 
-  if (!year || typeof year !== 'string') {
+  if (!year) {
     return <div className="container mx-auto py-8">Invalid year parameter</div>;
   }
 
@@ -70,7 +70,7 @@ export default function StartupsForYear() {
                   <TableHead>Name</TableHead>
                   <TableHead>Date of Incorporation</TableHead>
                   <TableHead>Domain</TableHead>
-                  <TableHead>Revenue</TableHead>
+                  <TableHead>Startup record Created Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -79,7 +79,7 @@ export default function StartupsForYear() {
                     <TableCell className="font-medium">{startup.name}</TableCell>
                     <TableCell>{startup.dateOfIncorporation}</TableCell>
                     <TableCell>{startup.domain}</TableCell>
-                    <TableCell>₹{startup.revenue}</TableCell>
+                    <TableCell>{startup.year}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
