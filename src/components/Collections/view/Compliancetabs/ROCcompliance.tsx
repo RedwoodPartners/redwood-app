@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ButtonWithIcon from "@/lib/addButton";
 
 const ROC_ID = "6739c2c40032254ca4b6";
 export const FORMS_ID = "67b45189001e40764c83";
@@ -197,7 +198,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     <div>
       <div className="flex justify-between items-center">
         <h3 className="container text-lg font-medium mb-2 -mt-4">ROC Compliance</h3>
-        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+          <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>

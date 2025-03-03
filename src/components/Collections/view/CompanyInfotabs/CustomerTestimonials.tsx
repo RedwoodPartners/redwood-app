@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircleIcon, ChevronRightIcon } from "lucide-react";
+import { PlusCircleIcon, ChevronRightIcon, PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ButtonWithIcon from "@/lib/addButton";
 
 export const CUSTOMER_COLLECTION_ID = "6731d3a0001a04a8f849";
 
@@ -119,7 +120,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <div className="cursor-pointer" onClick={() => setCurrentTestimonial({})}>
-              <PlusCircleIcon size={20} className="mr-3 mb-1" />
+              <ButtonWithIcon label="Add" />
             </div>
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl">

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ButtonWithIcon from "@/lib/addButton";
 
 const INCUBATION_ID = "673c2945001eddd9aea3";
 
@@ -125,7 +126,7 @@ const Incubation: React.FC<IncubationProps> = ({ startupId }) => {
     <div>
       <div className="flex justify-between items-center">
         <h3 className="container text-lg font-medium mb-2 -mt-4">Incubation</h3>
-        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+        <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>

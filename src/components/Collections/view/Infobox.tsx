@@ -63,7 +63,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           console.warn("No projects found for this startup.");
         }
 
-        // Fetch Funding Data
+        {/*// Fetch Funding Data
         const fundingResponse = await databases.listDocuments(STAGING_DATABASE_ID, FUNDING_ID, [
           Query.equal("startupId", startupId),
         ]);
@@ -73,7 +73,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           setValidatedFund(funding.validatedFund || null); // Set validatedFund value
         } else {
           console.warn("No funding data found for this startup.");
-        }
+        }*/}
       } catch (error) {
         console.error("Error fetching project data:", error);
       } finally {
@@ -146,17 +146,19 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   return (
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
-        <span className="font-medium text-black text-xs sm:text-base">
+        {/*<span className="font-medium text-black text-xs sm:text-base">
           {validatedFund !== null && !isNaN(Number(validatedFund.toString().replace(/[₹,]/g, "")))
             ? `₹ ${(Number(validatedFund.toString().replace(/[₹,]/g, "")) / 10000000).toFixed(2)} Cr`
             : "NA"}
-        </span>
+        </span>*/}
         <span className="text-black sm:text-base">
           {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
         </span>
-        <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-          {projectData.services}
-        </span>
+        {projectData.services && (
+          <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+            {projectData.services}
+          </span>
+        )}
 
         {/* Editable Stage */}
         {isEditing ? (
@@ -183,10 +185,14 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           </Select>
           </div>
         ) : (
-          <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-            <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
-            {projectData.stage}
-          </span>
+          <>
+          {projectData.stage && (
+            <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+              <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
+              {projectData.stage}
+            </span>
+          )}
+          </>
         )}
 
         {/* Editable Startup Status */}
@@ -214,11 +220,15 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           </Select>
           </div>
         ) : (
-          <span
-            className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}
-          >
-            {projectData.startupStatus}
-          </span>
+          <>
+          {projectData.startupStatus && (
+            <span
+              className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}
+            >
+              {projectData.startupStatus}
+            </span>
+          )}
+          </>
         )}
 
         {/* Update/Save Button */}

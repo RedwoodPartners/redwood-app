@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ButtonWithIcon from "@/lib/addButton";
 
 export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
 export const VALIDATED_FUND_ASK_ID = "67694e77002cc9cd69c4";
@@ -321,7 +322,7 @@ const FundTable: React.FC<FundTableProps> = ({
           {!isValid && <p className="text-red-500">Total Amount does not match the Fund Ask amount!..</p>}
         </div>
         <div onClick={onOpenDialog}>
-          <PlusCircle size={20} className="mr-2 cursor-pointer" />
+          <ButtonWithIcon label="Add" />
         </div>
       </div>
       <div className="flex items-center mb-4">

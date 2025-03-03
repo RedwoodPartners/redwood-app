@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FORMS_ID } from "./ROCcompliance";
+import ButtonWithIcon from "@/lib/addButton";
 
 const GST_ID = "6739ce42002b5b5036a8";
 
@@ -201,11 +202,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
         <h3 className="container text-lg font-medium mb-2 -mt-4">
           GST Compliance
         </h3>
-        <PlusCircle
-          onClick={() => setIsDialogOpen(true)}
-          size={20}
-          className="mr-2 mb-2 cursor-pointer"
-        />
+        <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>

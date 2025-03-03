@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ButtonWithIcon from "@/lib/addButton";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -361,7 +362,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         <h3 className="container text-lg font-medium mb-2 -mt-4">Document Checklist</h3>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <PlusCircle size={20} className="mb-2 mr-3 cursor-pointer" />
+            <ButtonWithIcon label="Add" />
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>

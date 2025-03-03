@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 import {nanoid} from "nanoid";
 import LoadingSpinner from "../ui/loading";
@@ -24,7 +23,6 @@ type Startup = {
   brandName: string;
   revenue: string;
   year: string;
-  services: string;
 };
 
 type Document = {
@@ -60,7 +58,6 @@ const StartupsPage: React.FC = () => {
           brandName: doc.brandName || "",
           revenue: doc.revenue || "0",
           year: doc.year || "",
-          services: doc.services || "",
         }));
         setStartups(startupData);
         setFilteredStartups(startupData);
@@ -148,7 +145,6 @@ const StartupsPage: React.FC = () => {
         name: updatedStartupData.name,
         brandName: updatedStartupData.brandName,
         year: formattedDate,
-        services: updatedStartupData.services,
       });
       setStartups((prev) =>
         prev.map((startup) =>
@@ -281,23 +277,7 @@ const StartupsPage: React.FC = () => {
                   className="w-full p-2 mb-2 border rounded"
                 />
               </div>
-              <div>
-                <Label>Services</Label>
-                <Select name="services" required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Consulting">Consulting</SelectItem>
-                    <SelectItem value="BDD">BDD</SelectItem>
-                    <SelectItem value="Business Structuring">Business Structuring</SelectItem>
-                    <SelectItem value="Events">Events</SelectItem>
-                    <SelectItem value="Workshops">Workshops</SelectItem>
-                    <SelectItem value="Pitch Session">Pitch Session</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
               <div className="flex justify-end mt-4">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Adding..." : "Add Startup"}
@@ -340,7 +320,6 @@ const StartupsPage: React.FC = () => {
               <TableHead className="w-auto">Startup Name</TableHead>
               <TableHead className="w-auto">Brand Name</TableHead>
               <TableHead>Year</TableHead>
-              <TableHead>Services</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -368,7 +347,6 @@ const StartupsPage: React.FC = () => {
                 >{startup.name}</TableCell>
                 <TableCell>{startup.brandName}</TableCell>
                 <TableCell>{startup.year}</TableCell>
-                <TableCell>{startup.services}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -400,30 +378,6 @@ const StartupsPage: React.FC = () => {
               <Label>Brand Name</Label>
               <Input type="text" name="brandName" placeholder="Brand Name" className="w-full p-2 mb-2 border rounded" defaultValue={editingStartup.brandName} required />
               
-              <Label>Services</Label>
-              <Select
-                  value={editingStartup?.services || ""}
-                  onValueChange={(selectedService) =>
-                    setEditingStartup((prev) =>
-                      prev ? { ...prev, services: selectedService } : null
-                    )
-                  }
-                  name="services"
-                  required
-              >
-                <SelectTrigger className="w-full p-2 mb-2 border rounded">
-                  <SelectValue placeholder="Select a service" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Consulting">Consulting</SelectItem>
-                  <SelectItem value="BDD">BDD</SelectItem>
-                  <SelectItem value="Business Structuring">Business Structuring</SelectItem>
-                  <SelectItem value="Events">Events</SelectItem>
-                  <SelectItem value="Workshops">Workshops</SelectItem>
-                  <SelectItem value="Pitch Session">Pitch Session</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
               <div className="flex justify-end">
                 <Button type="submit">Save Changes</Button>
               </div>
