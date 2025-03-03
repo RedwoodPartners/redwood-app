@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import ButtonWithIcon from "@/lib/addButton";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
@@ -171,10 +172,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           <DialogTrigger asChild>
             <button>
               <div className="relative group">
-                <PlusCircle size={20} className="ml-4 mr-3 mb-2" />
-                <span className="absolute top-full transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                  Add Shareholder
-                </span>
+                <ButtonWithIcon label="Add" />
               </div>
             </button>
           </DialogTrigger>

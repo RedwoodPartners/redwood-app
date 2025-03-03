@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ButtonWithIcon from "@/lib/addButton";
 
 const FUND_RAISED_ID = "6731e2fb000d9580025f";
 const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
@@ -236,8 +237,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     <div>
       <div className="flex">
         <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Raised So Far</h3>
-        <div className="justify-end">
-          <PlusCircle size={20} className="ml-4 mr-3 mb-2 cursor-pointer" onClick={() => openDialog()} />
+        <div className="justify-end" onClick={() => openDialog()}>
+          <ButtonWithIcon label="Add" />
         </div>
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">

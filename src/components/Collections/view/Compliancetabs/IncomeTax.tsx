@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FORMS_ID } from "./ROCcompliance";
+import ButtonWithIcon from "@/lib/addButton";
 
 const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
 
@@ -188,7 +189,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     <div>
       <div className="flex justify-between items-center">
         <h3 className="container text-lg font-medium mb-2 -mt-4">Income Tax Compliance</h3>
-        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+        <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>

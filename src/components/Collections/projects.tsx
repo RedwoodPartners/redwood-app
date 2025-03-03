@@ -58,6 +58,7 @@ type Project = {
 type Startup = {
   id: string;
   name: string;
+  projects?: string[];
 };
 
 const ProjectsPage: React.FC = () => {
@@ -171,7 +172,7 @@ const ProjectsPage: React.FC = () => {
       editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
     }
       // Generate `projectId`
-      const generatedStartupId = nanoid(6)
+      const generatedProjectId = nanoid(6)
 
       try {
         if (isAddingNewProject) {
@@ -179,7 +180,7 @@ const ProjectsPage: React.FC = () => {
           const response = await databases.createDocument(
             STAGING_DATABASE_ID,
             PROJECTS_ID,
-            generatedStartupId,
+            generatedProjectId,
             {
               name: editedProject.name,
               startupId: editedProject.startupId,
@@ -196,7 +197,7 @@ const ProjectsPage: React.FC = () => {
   
           setProjects((prev) => [
             ...prev,
-            { ...editedProject, id: response.$id, startupId: generatedStartupId },
+            { ...editedProject, id: response.$id, startupId: generatedProjectId },
           ]);
   
           // Use the selected startup's ID for redirection
@@ -205,6 +206,25 @@ const ProjectsPage: React.FC = () => {
           );
   
           if (selectedStartup) {
+            // Fetch existing projectIds from the startup document
+            const existingStartup = await databases.getDocument(
+              STAGING_DATABASE_ID,
+              STARTUP_ID,
+              selectedStartup.id
+            );
+
+            const existingProjects = existingStartup.projects || [];
+
+            // Append the new project ID to the array
+            const updatedProjects = [...existingProjects, generatedProjectId];
+
+            // Update the startup document with the new projectIds array
+            await databases.updateDocument(
+              STAGING_DATABASE_ID,
+              STARTUP_ID,
+              selectedStartup.id,
+              { projects: updatedProjects }
+            );
             router.push(`/projects/${response.$id}`); // Redirect to the new project
           } else {
             console.error("Startup not found for redirection.");
@@ -264,6 +284,7 @@ const ProjectsPage: React.FC = () => {
       }
     }
   };
+  
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "-";
     const date = new Date(dateString);
@@ -585,39 +606,39 @@ const ProjectsPage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <Label htmlFor="stage">Stage</Label>
-                <Select
-                  value={editedProject.stage}
-                  onValueChange={(value) =>
-                    setEditedProject({
-                      ...editedProject!,
-                      stage: value,
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[
-                      "Deep Dive",
-                      "First Connect",
-                      "Fund Release",
-                      "IC",
-                      "Pre First Connect",
-                      "PSC",
-                      "SME",
-                    ].map((stage) => (
-                      <SelectItem key={stage} value={stage}>
-                        {stage}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+              {editedProject.projectTemplate === "TANSIM" && (
+                <div>
+                  <Label htmlFor="stage">Stage</Label>
+                  <Select
+                    value={editedProject.stage}
+                    onValueChange={(value) =>
+                      setEditedProject({
+                        ...editedProject!,
+                        stage: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "Deep Dive",
+                        "First Connect",
+                        "Fund Release",
+                        "IC",
+                        "Pre First Connect",
+                        "PSC",
+                        "SME",
+                      ].map((stage) => (
+                        <SelectItem key={stage} value={stage}>
+                          {stage}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <DialogFooter>

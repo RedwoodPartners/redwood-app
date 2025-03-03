@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ButtonWithIcon from "@/lib/addButton";
 
 export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 
@@ -116,7 +117,7 @@ const TranchesMilestones: React.FC<TranchesMilestonesProps> = ({ startupId }) =>
         <h3 className="container text-lg font-medium mb-2 -mt-4">Tranches & Milestones</h3>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <PlusCircle size={20} className="cursor-pointer mb-2 mr-2" />
+            <ButtonWithIcon label="Add" />
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>

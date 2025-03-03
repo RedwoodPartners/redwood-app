@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ButtonWithIcon from "@/lib/addButton";
 
 const GSTR_ID = "673b1988001c3d93380e";
 
@@ -150,7 +151,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
     <div>
       <div className="flex justify-between items-center">
         <h3 className="container text-lg font-medium mb-2 -mt-4">GSTR-1 & GSTR-3B</h3>
-        <PlusCircle onClick={() => setIsDialogOpen(true)} size={20} className="mr-2 mb-2 cursor-pointer" />
+        <ButtonWithIcon onClick={() => setIsDialogOpen(true)} label="Add" />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>

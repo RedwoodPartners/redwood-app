@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ButtonWithIcon from "@/lib/addButton";
 
 export const CAP_TABLE_ID = "67339ad7000ee8d123a9";
 
@@ -128,7 +129,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           setIsDialogOpen(true);
           setError(null);
         }}>
-          <PlusCircle size={20} className="mr-2 mb-2 cursor-pointer" />
+          <ButtonWithIcon label="Add" />
         </div>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
