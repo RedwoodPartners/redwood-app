@@ -10,8 +10,11 @@ import { databases } from "@/lib/utils";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
+import Link from "next/link";
+
 
 interface StartupData {
+  [key: string]: string | string[];
   brandName: string;
   dateOfIncorporation: string;
   companyStage: string;
@@ -33,6 +36,7 @@ interface StartupData {
 interface CompanyDetailsProps {
   startupId: string | undefined;
 }
+export const HISTORY_COLLECTON_ID = "67c82d7b000b564ff2e4";
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
@@ -84,31 +88,53 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
 
   const handleSaveClick = async () => {
     if (!updatedData || !startupId) return;
-    if (isSubmitting) return; 
+    if (isSubmitting) return;
     setIsSubmitting(true);
-
+  
     try {
+      const changes = [];
+      for (const key in updatedData) {
+        if (updatedData[key] !== startupData?.[key]) {
+          changes.push({
+            startupId,
+            fieldChanged: key,
+            oldValue: startupData?.[key] || "N/A",
+            newValue: updatedData[key],
+            changedAt: new Date().toISOString(),
+          });
+        }
+      }
+      // Save changes to the StartupHistory collection
+      await Promise.all(
+        changes.map((change) =>
+          databases.createDocument(STAGING_DATABASE_ID, HISTORY_COLLECTON_ID, "unique()", change)
+        )
+      );
+  
+      // Update the startup details
       await databases.updateDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId, updatedData);
       setStartupData(updatedData);
       setIsEditing(false);
-      toast({ title: "Company Details saved!!" });
+      toast({ title: "Company Details saved!" });
     } catch (error) {
       console.error("Error saving updated data:", error);
       setError("Failed to save changes. Please try again later.");
-    }finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   const handleChange = (key: keyof StartupData, value: any) => {
     if (updatedData) {
       let newValue = value;
-      if (key === 'subDomain' || key === 'registeredState' || key === 'registeredCountry') {
+      if (key === "subDomain" || key === "registeredState" || key === "registeredCountry") {
         newValue = validateCharacterInput(value);
       }
       setUpdatedData({ ...updatedData, [key]: newValue });
     }
   };
+  
   
 
   const dropdownOptions: { [key: string]: string[] } = {
@@ -369,7 +395,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   return (
     <>
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium mb-2">Company Details</h2>
+        <div className="flex space-x-2 items-center">
+        <h2 className="text-lg font-medium">Company Details</h2>
+        <Link href={`/startup/${startupId}/history`}>
+          <span className="text-blue-500 hover:text-blue-700 text-sm">
+            History
+          </span>
+        </Link>
+        </div>
         {isEditing ? (
           <div className="relative group ml-3">
             <SaveIcon
