@@ -6,6 +6,7 @@ import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Query } from "appwrite";
 import { HISTORY_COLLECTON_ID } from "@/components/Collections/view/CompanyInfotabs/CompanyDetails";
+import LoadingSpinner from "@/components/ui/loading";
 
 interface HistoryRecord {
   $id: string;
@@ -51,11 +52,11 @@ const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
     fetchHistory();
   }, [params.id]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div><LoadingSpinner /></div>;
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Change History</h1>
+      <h1 className="text-xl font-bold mb-4">Startup History</h1>
       <Table>
         <TableHeader>
           <TableRow>

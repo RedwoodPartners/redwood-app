@@ -11,6 +11,7 @@ import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 
 interface StartupData {
@@ -46,6 +47,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
   const { toast } = useToast();
+
+  const pathname = usePathname(); // Get the current path
+  const isStartupRoute = pathname ? /^\/startup\/[a-zA-Z0-9]+$/.test(pathname) : false;
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
@@ -95,15 +99,31 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       const changes = [];
       for (const key in updatedData) {
         if (updatedData[key] !== startupData?.[key]) {
+          let oldValue = startupData?.[key] || "N/A";
+          let newValue = updatedData[key];
+  
+          // Convert arrays to comma-separated strings for Appwrite compatibility
+          if (Array.isArray(oldValue)) {
+            oldValue = oldValue.join(", ");
+          }
+          if (Array.isArray(newValue)) {
+            newValue = newValue.join(", ");
+          }
+  
+          // Ensure values are strings and truncate to 100 characters if necessary
+          oldValue = String(oldValue).slice(0, 100);
+          newValue = String(newValue).slice(0, 100);
+  
           changes.push({
             startupId,
             fieldChanged: key,
-            oldValue: startupData?.[key] || "N/A",
-            newValue: updatedData[key],
+            oldValue,
+            newValue,
             changedAt: new Date().toISOString(),
           });
         }
       }
+  
       // Save changes to the StartupHistory collection
       await Promise.all(
         changes.map((change) =>
@@ -124,6 +144,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     }
   };
   
+  
 
   const handleChange = (key: keyof StartupData, value: any) => {
     if (updatedData) {
@@ -135,8 +156,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     }
   };
   
-  
-
   const dropdownOptions: { [key: string]: string[] } = {
     companyStage: [
       "Select",
@@ -395,13 +414,15 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   return (
     <>
       <div className="flex justify-between items-center">
-        <div className="flex space-x-2 items-center">
+        <div className="flex space-x-4 items-center">
         <h2 className="text-lg font-medium">Company Details</h2>
-        <Link href={`/startup/${startupId}/history`}>
-          <span className="text-blue-500 hover:text-blue-700 text-sm">
-            History
-          </span>
-        </Link>
+        {isStartupRoute && (
+            <Link href={`/startup/${startupId}/history`}>
+              <span className="text-blue-500 hover:text-blue-700 text-sm">
+                Prev. Records
+              </span>
+            </Link>
+          )}
         </div>
         {isEditing ? (
           <div className="relative group ml-3">
