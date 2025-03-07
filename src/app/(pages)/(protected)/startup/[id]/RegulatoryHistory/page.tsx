@@ -5,8 +5,8 @@ import { databases } from "@/lib/utils";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Query } from "appwrite";
-import { HISTORY_COLLECTON_ID } from "@/components/Collections/view/CompanyInfotabs/CompanyDetails";
 import LoadingSpinner from "@/components/ui/loading";
+import { REGULATORY_HISTORY_COLLECTION_ID } from "@/components/Collections/view/CompanyInfotabs/RegulatoryInformation";
 
 interface HistoryRecord {
   $id: string;
@@ -16,7 +16,7 @@ interface HistoryRecord {
   changedAt: string;
 }
 
-const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
+const RegulatoryHistoryPage = ({ params }: { params: { id: string } }) => {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
       try {
         const response = await databases.listDocuments(
           STAGING_DATABASE_ID,
-          HISTORY_COLLECTON_ID,
+          REGULATORY_HISTORY_COLLECTION_ID,
           [
             Query.equal("startupId", params.id),
             Query.orderDesc("changedAt"),
@@ -56,7 +56,7 @@ const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Startup History</h1>
+      <h1 className="text-xl font-bold mb-4">Regulatory History</h1>
       <Table>
         <TableHeader>
           <TableRow>
@@ -72,7 +72,7 @@ const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
               <TableCell>{record.fieldChanged}</TableCell>
               <TableCell>{record.oldValue || "N/A"}</TableCell>
               <TableCell>{record.newValue || "N/A"}</TableCell>
-              <TableCell>{new Date(record.changedAt).toLocaleString()}</TableCell>
+              <TableCell>{new Date(record.changedAt).toLocaleString('en-GB')}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -81,4 +81,4 @@ const StartupHistoryPage = ({ params }: { params: { id: string } }) => {
   );
 };
 
-export default StartupHistoryPage;
+export default RegulatoryHistoryPage;
