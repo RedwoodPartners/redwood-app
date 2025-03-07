@@ -8,6 +8,8 @@ import { databases } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type RegulatoryData = {
   dpiitNumber: string;
@@ -25,6 +27,7 @@ type ErrorData = {
 };
 
 export const REGULATORY_COLLECTION_ID = "6731872d0023e52aebc3";
+export const REGULATORY_HISTORY_COLLECTION_ID = "67cb2f3b002e2a70248d";
 
 interface RegulatoryInformationProps {
   startupId: string;
@@ -54,7 +57,12 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const [isEditing, setIsEditing] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [previousData, setPreviousData] = useState<RegulatoryData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { toast } = useToast();
+  const pathname = usePathname(); 
+  const isStartupRoute = pathname ? /^\/startup\/[a-zA-Z0-9]+$/.test(pathname) : false;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +75,16 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         if (response.documents.length > 0) {
           const document = response.documents[0];
           setRegulatoryData({
+            dpiitNumber: document.dpiitNumber || "",
+            cinNumber: document.cinNumber || "",
+            tanNumber: document.tanNumber || "",
+            panNumber: document.panNumber || "",
+            gstNumber: document.gstNumber || "",
+            udyamRegNumber: document.udyamRegNumber || "",
+            profRegNumber: document.profRegNumber || "",
+            shopsActRegNumber: document.shopsActRegNumber || "",
+          });
+          setPreviousData({
             dpiitNumber: document.dpiitNumber || "",
             cinNumber: document.cinNumber || "",
             tanNumber: document.tanNumber || "",
@@ -93,11 +111,12 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         console.error("Error fetching regulatory data:", error);
       }
     };
-
+  
     if (startupId) {
       fetchData();
     }
   }, [startupId]);
+  
 
   const validateInput = (value: string, format: string): boolean => {
     if (value === "") return true; // Allowing empty fields to save
@@ -164,6 +183,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const formats = {
       dpiitNumber: 'AAAA000000000',
       cinNumber: 'A-00000-AA-0000-AAA-000000',
@@ -245,6 +266,29 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         );
         setDocumentId(response.$id);
       }
+      // Save changes to the Regulatory History collection
+      const changes: { startupId: string; fieldChanged: string; oldValue: string; newValue: string; changedAt: string }[] = [];
+
+      Object.keys(regulatoryData).forEach((key) => {
+        if (regulatoryData[key as keyof RegulatoryData] !== previousData?.[key as keyof RegulatoryData]) {
+          let oldValue = previousData?.[key as keyof RegulatoryData] || "N/A";
+          let newValue = regulatoryData[key as keyof RegulatoryData];
+      
+          changes.push({
+            startupId,
+            fieldChanged: key,
+            oldValue,
+            newValue,
+            changedAt: new Date().toISOString(),
+          });
+        }
+      });
+      
+      await Promise.all(
+        changes.map((change) =>
+          databases.createDocument(STAGING_DATABASE_ID, REGULATORY_HISTORY_COLLECTION_ID, "unique()", change)
+        )
+      );
       setIsEditing(false);
       toast({
         title: "Regulatory Information saved!",
@@ -255,28 +299,48 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         title: "Error saving Regulatory Information",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <>
-      <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2">Regulatory Information</h2>
-        <div className="relative group ml-3">
-          <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-            Edit
-          </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <h2 className="text-lg font-medium">Regulatory Information</h2>
+          <div className="ml-3">
+          {isStartupRoute && (
+            <Link href={`/startup/${startupId}/RegulatoryHistory`}>
+              <span className="text-blue-500 hover:text-blue-700 text-sm">
+                Prev. Records
+              </span>
+            </Link>
+          )}
+          </div>
         </div>
-        {isEditing && (
-          <div onClick={handleSave} className="ml-5 cursor-pointer relative group text-green-500">
-            <SaveIcon size={25} className="cursor-pointer" />
+        
+        <div className="flex items-center">
+          <div className="relative group ml-3">
+            <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              Save
+              Edit
             </span>
           </div>
-        )}
+          {isEditing && (
+            <div
+              onClick={handleSave}
+              className="ml-5 cursor-pointer relative group text-green-500"
+            >
+              <SaveIcon size={25} className="cursor-pointer" aria-disabled={isSubmitting}/>
+              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                {isSubmitting ? "Saving..." : "Save"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
+
       <div className="border border-gray-300 rounded-lg p-4 bg-white">
         <div className="grid grid-cols-4 gap-4">
           {[
