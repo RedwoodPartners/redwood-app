@@ -25,17 +25,17 @@ interface Contact extends Models.Document {
   startupId: string;
   companyWebsite: string;
   email: string;
-  phone1: string;
-  phone2: string;
-  address1: string;
-  address2: string;
-  city: string;
+  primaryPhone: string;
+  secondaryPhone: string;
+  registeredAddress1: string;
+  registeredAddress2: string;
+  registeredCity: string;
   state: string;
   postalCode: string;
-  address21: string;
-  address22: string;
-  city2: string;
-  state2: string;
+  communicationAddress1: string;
+  communicationAddress2: string;
+  communicationCity: string;
+  communicationState: string;
   postalCode2: string;
 }
 
@@ -131,17 +131,17 @@ const ContactsTable: React.FC = () => {
                     </a>
                   </TableCell>
                   <TableCell>{contact.email}</TableCell>
-                  <TableCell>{contact.phone1}</TableCell>
-                  <TableCell>{contact.phone2}</TableCell>
+                  <TableCell>{contact.primaryPhone}</TableCell>
+                  <TableCell>{contact.secondaryPhone}</TableCell>
                   <TableCell>
-                    <p>{contact.address1}</p>
-                    <p>{contact.address2}</p>
-                    <p>{`${contact.city}, ${contact.state} - ${contact.postalCode}`}</p>
+                    <p>{contact.registeredAddress1}</p>
+                    <p>{contact.registeredAddress2}</p>
+                    <p>{`${contact.registeredCity}, ${contact.state} - ${contact.postalCode}`}</p>
                   </TableCell>
                   <TableCell>
-                    <p>{contact.address21}</p>
-                    <p>{contact.address22}</p>
-                    <p>{`${contact.city2}, ${contact.state2} - ${contact.postalCode2}`}</p>
+                    <p>{contact.communicationAddress1}</p>
+                    <p>{contact.communicationAddress2}</p>
+                    <p>{`${contact.communicationCity}, ${contact.communicationState} - ${contact.postalCode2}`}</p>
                   </TableCell>
                 </TableRow>
               ))}

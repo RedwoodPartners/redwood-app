@@ -4,29 +4,31 @@ import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 type ContactData = {
   companyWebsite: string;
   email: string;
-  phone1: string;
-  phone2: string;
-  address1: string;
-  address2: string;
-  city: string;
+  primaryPhone: string;
+  secondaryPhone: string;
+  registeredAddress1: string;
+  registeredAddress2: string;
+  registeredCity: string;
   state: string;
   postalCode: string;
-  address21: string;
-  address22: string;
-  city2: string;
-  state2: string;
+  communicationAddress1: string;
+  communicationAddress2: string;
+  communicationCity: string;
+  communicationState: string;
   postalCode2: string;
 };
 
 export const CONTACT_ID = "672bac4a0017528d75ae";
+export const CONTACT_HISTORY_COLLECTION_ID = "67cc7e6c002757b5375a";
 
 interface ContactInformationProps {
   startupId: string;
@@ -36,17 +38,17 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const [contactData, setContactData] = useState<ContactData>({
     companyWebsite: "",
     email: "",
-    phone1: "",
-    phone2: "",
-    address1: "",
-    address2: "",
-    city: "",
+    primaryPhone: "",
+    secondaryPhone: "",
+    registeredAddress1: "",
+    registeredAddress2: "",
+    registeredCity: "",
     state: "",
     postalCode: "",
-    address21: "",
-    address22: "",
-    city2: "",
-    state2: "",
+    communicationAddress1: "",
+    communicationAddress2: "",
+    communicationCity: "",
+    communicationState: "",
     postalCode2: "",
   });
 
@@ -58,10 +60,11 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
 
   const [websiteError, setWebsiteError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [phone1Error, setPhone1Error] = useState<string | null>(null);
-  const [phone2Error, setPhone2Error] = useState<string | null>(null);
+  const [primaryPhoneError, setprimaryPhoneError] = useState<string | null>(null);
+  const [secondaryPhoneError, setsecondaryPhoneError] = useState<string | null>(null);
   const [postalCodeError, setPostalCodeError] = useState<string | null>(null);
-  
+  const [previousData, setPreviousData] = useState<ContactData | null>(null);
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,37 +79,64 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
           setContactData({
             companyWebsite: document.companyWebsite || "",
             email: document.email || "",
-            phone1: document.phone1 || "",
-            phone2: document.phone2 || "",
-            address1: document.address1 || "",
-            address2: document.address2 || "",
-            city: document.city || "",
+            primaryPhone: document.primaryPhone || "",
+            secondaryPhone: document.secondaryPhone || "",
+            registeredAddress1: document.registeredAddress1 || "",
+            registeredAddress2: document.registeredAddress2 || "",
+            registeredCity: document.registeredCity || "",
             state: document.state || "",
             postalCode: document.postalCode || "",
-            address21: document.address21 || "",
-            address22: document.address22 || "",
-            city2: document.city2 || "",
-            state2: document.state2 || "",
+            communicationAddress1: document.communicationAddress1 || "",
+            communicationAddress2: document.communicationAddress2 || "",
+            communicationCity: document.communicationCity || "",
+            communicationState: document.communicationState || "",
+            postalCode2: document.postalCode2 || "",
+          });
+          setPreviousData({
+            companyWebsite: document.companyWebsite || "",
+            email: document.email || "",
+            primaryPhone: document.primaryPhone || "",
+            secondaryPhone: document.secondaryPhone || "",
+            registeredAddress1: document.registeredAddress1 || "",
+            registeredAddress2: document.registeredAddress2 || "",
+            registeredCity: document.registeredCity || "",
+            state: document.state || "",
+            postalCode: document.postalCode || "",
+            communicationAddress1: document.communicationAddress1 || "",
+            communicationAddress2: document.communicationAddress2 || "",
+            communicationCity: document.communicationCity || "",
+            communicationState: document.communicationState || "",
             postalCode2: document.postalCode2 || "",
           });
           setDocumentId(document.$id);
-          const isSame = 
-          document.address1 === document.address21 &&
-          document.address2 === document.address22 &&
-          document.city === document.city2 &&
-          document.state === document.state2 &&
-          document.postalCode === document.postalCode2;
-        setIsSameAddress(isSame);
+        } else {
+          setContactData({
+            companyWebsite: "",
+            email: "",
+            primaryPhone: "",
+            secondaryPhone: "",
+            registeredAddress1: "",
+            registeredAddress2: "",
+            registeredCity: "",
+            state: "",
+            postalCode: "",
+            communicationAddress1: "",
+            communicationAddress2: "",
+            communicationCity: "",
+            communicationState: "",
+            postalCode2: "",
+          });
         }
       } catch (error) {
         console.error("Error fetching contact data:", error);
       }
     };
-
+  
     if (startupId) {
       fetchData();
     }
   }, [startupId]);
+  
 
   const validateWebsite = (url: string) => {
     if (url === "") {
@@ -169,12 +199,12 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
       validateWebsite(value);
     } else if (field === "email") {
       validateEmail(value);
-    } else if (field === "phone1" || field === "phone2") {
+    } else if (field === "primaryPhone" || field === "secondaryPhone") {
       if (value === "" || validatePhoneNumber(value)) {
-        field === "phone1" ? setPhone1Error(null) : setPhone2Error(null);
+        field === "primaryPhone" ? setprimaryPhoneError(null) : setsecondaryPhoneError(null);
       } else {
         const errorMessage = "Enter a valid 10-digit phone number.";
-        field === "phone1" ? setPhone1Error(errorMessage) : setPhone2Error(errorMessage);
+        field === "primaryPhone" ? setprimaryPhoneError(errorMessage) : setsecondaryPhoneError(errorMessage);
       }
     } else if (field === "postalCode" || field === "postalCode2") {
       validatePostalCode(value);
@@ -192,10 +222,10 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
     if (checked) {
       setContactData((prevData) => ({
         ...prevData,
-        address21: prevData.address1,
-        address22: prevData.address2,
-        city2: prevData.city,
-        state2: prevData.state,
+        communicationAddress1: prevData.registeredAddress1,
+        communicationAddress2: prevData.registeredAddress2,
+        communicationCity: prevData.registeredCity,
+        communicationState: prevData.state,
         postalCode2: prevData.postalCode,
       }));
     }
@@ -204,51 +234,83 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const handleSave = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+  
     try {
-      let hasErrors = false;
+      const { companyWebsite, email, primaryPhone, secondaryPhone, registeredAddress1, registeredAddress2, registeredCity, state, postalCode, communicationAddress1, communicationAddress2, communicationCity, communicationState, postalCode2 } = contactData;
   
-      if (contactData.companyWebsite && !validateWebsite(contactData.companyWebsite)) {
-        hasErrors = true;
-      }
-      if (contactData.email && !validateEmail(contactData.email)) {
-        hasErrors = true;
-      }
-      if (contactData.phone1 && !validatePhoneNumber(contactData.phone1)) {
-        setPhone1Error("Enter a valid 10-digit phone number.");
-        hasErrors = true;
-      }
-      if (contactData.phone2 && !validatePhoneNumber(contactData.phone2)) {
-        setPhone2Error("Enter a valid 10-digit phone number.");
-        hasErrors = true;
-      }
-      if (contactData.postalCode && !validatePostalCode(contactData.postalCode)) {
-        hasErrors = true;
-      }
-      if (contactData.postalCode2 && !validatePostalCode(contactData.postalCode2)) {
-        hasErrors = true;
-      }
-  
-      if (hasErrors) {
-        toast({
-          title: "Please correct the errors before saving.",
-          variant: "destructive",
-        });
-        return;
-      }
-  
-      // saving the data
       if (documentId) {
-        await databases.updateDocument(STAGING_DATABASE_ID, CONTACT_ID, documentId, contactData);
+        await databases.updateDocument(
+          STAGING_DATABASE_ID,
+          CONTACT_ID,
+          documentId,
+          {
+            companyWebsite,
+            email,
+            primaryPhone,
+            secondaryPhone,
+            registeredAddress1,
+            registeredAddress2,
+            registeredCity,
+            state,
+            postalCode,
+            communicationAddress1,
+            communicationAddress2,
+            communicationCity,
+            communicationState,
+            postalCode2,
+          }
+        );
       } else {
         const response = await databases.createDocument(
           STAGING_DATABASE_ID,
           CONTACT_ID,
           "unique()",
-          { ...contactData, startupId }
+          {
+            companyWebsite,
+            email,
+            primaryPhone,
+            secondaryPhone,
+            registeredAddress1,
+            registeredAddress2,
+            registeredCity,
+            state,
+            postalCode,
+            communicationAddress1,
+            communicationAddress2,
+            communicationCity,
+            communicationState,
+            postalCode2,
+            startupId: startupId,
+          }
         );
         setDocumentId(response.$id);
       }
   
+      // Save changes to the Contact History collection
+      const changes: { startupId: string; fieldChanged: string; oldValue: string; newValue: string; changedAt: string }[] = [];
+  
+      Object.keys(contactData).forEach((key) => {
+        if (contactData[key as keyof ContactData] !== previousData?.[key as keyof ContactData]) {
+          let oldValue = previousData?.[key as keyof ContactData] || "N/A";
+          let newValue = contactData[key as keyof ContactData];
+  
+          changes.push({
+            startupId,
+            fieldChanged: key,
+            oldValue,
+            newValue,
+            changedAt: new Date().toISOString(),
+          });
+        }
+      });
+  
+      await Promise.all(
+        changes.map((change) =>
+          databases.createDocument(STAGING_DATABASE_ID, CONTACT_HISTORY_COLLECTION_ID, "unique()", change)
+        )
+      );
+  
+      setPreviousData(contactData);
       setIsEditing(false);
       toast({
         title: "Contact Information saved!",
@@ -256,19 +318,31 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
     } catch (error) {
       console.error("Error saving contact data:", error);
       toast({
-        title: "Error saving contact information",
+        title: "Error saving Contact Information",
         variant: "destructive",
       });
-    }finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
   
+  
 
   return (
     <>
-      <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2">Contact</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+        <h2 className="text-lg font-medium">Contact</h2>
+        <div>
+        {isStartupRoute && (
+            <Link href={`/startup/${startupId}/ContactHistory`}>
+              <span className="text-blue-500 hover:text-blue-700 text-sm">
+                Prev. Records
+              </span>
+            </Link>
+          )}
+          </div>
+        </div>
         <div className="relative group ">
           <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
           <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
@@ -316,22 +390,22 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
             <Input
               type="number"
               disabled={!isEditing}
-              value={contactData.phone1}
-              onChange={(e) => handleInputChange(e, "phone1")}
-              className={phone1Error ? "border-red-500" : ""}
+              value={contactData.primaryPhone}
+              onChange={(e) => handleInputChange(e, "primaryPhone")}
+              className={primaryPhoneError ? "border-red-500" : ""}
             />
-            {phone1Error && <p className="text-red-500 text-sm mt-1">{phone1Error}</p>}
+            {primaryPhoneError && <p className="text-red-500 text-sm mt-1">{primaryPhoneError}</p>}
           </div>
           <div className="w-full">
             <Label className="font-semibold text-gray-700">Secondary Phone Number</Label>
             <Input
               type="number"
               disabled={!isEditing}
-              value={contactData.phone2}
-              onChange={(e) => handleInputChange(e, "phone2")}
-              className={phone2Error ? "border-red-500" : ""}
+              value={contactData.secondaryPhone}
+              onChange={(e) => handleInputChange(e, "secondaryPhone")}
+              className={secondaryPhoneError ? "border-red-500" : ""}
             />
-            {phone2Error && <p className="text-red-500 text-sm mt-1">{phone2Error}</p>}
+            {secondaryPhoneError && <p className="text-red-500 text-sm mt-1">{secondaryPhoneError}</p>}
           </div>
         </div>
       </div>
@@ -340,9 +414,9 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-row space-x-5">
             {[
-              ["Address Line 1", "address1"],
-              ["Address Line 2", "address2"],
-              ["City", "city"],
+              ["Address Line 1", "registeredAddress1"],
+              ["Address Line 2", "registeredAddress2"],
+              ["City", "registeredCity"],
               ["State", "state"],
               ["Postal Code", "postalCode"],
             ].map(([label, field]) => (
@@ -380,10 +454,10 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-row space-x-5">
             {[
-              ["Address Line 1", "address21"],
-              ["Address Line 2", "address22"],
-              ["City", "city2"],
-              ["State", "state2"],
+              ["Address Line 1", "communicationAddress1"],
+              ["Address Line 2", "communicationAddress2"],
+              ["City", "communicationCity"],
+              ["State", "communicationState"],
               ["Postal Code", "postalCode2"],
             ].map(([label, field]) => (
               <div key={field} className="w-full">
