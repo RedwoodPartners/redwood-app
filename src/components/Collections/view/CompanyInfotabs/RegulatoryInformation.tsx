@@ -4,12 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 type RegulatoryData = {
   dpiitNumber: string;
@@ -61,8 +60,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
-  const pathname = usePathname(); 
-  const isStartupRoute = pathname ? /^\/startup\/[a-zA-Z0-9]+$/.test(pathname) : false;
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -183,8 +181,6 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   };
 
   const handleSave = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
     const formats = {
       dpiitNumber: 'AAAA000000000',
       cinNumber: 'A-00000-AA-0000-AAA-000000',
@@ -299,9 +295,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         title: "Error saving Regulatory Information",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    } 
   };
 
   return (
@@ -312,10 +306,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
           <div className="ml-3">
           {isStartupRoute && (
             <Link href={`/startup/${startupId}/RegulatoryHistory`}>
-              <span className="text-blue-500 hover:text-blue-700 text-sm">
-                Prev. Records
-              </span>
-            </Link>
+            <span className="text-blue-500 hover:text-blue-700 text-sm">
+              Prev. Records
+            </span>
+          </Link>
           )}
           </div>
         </div>

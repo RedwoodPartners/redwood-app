@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 export const ABOUT_COLLECTION_ID = "67207029001de651f13d";
+export const ABOUT_BUSINESS_HISTORY_COLLECTION_ID = "67cd3c3200358b51bdc9";
 
 interface AboutBusinessProps {
   startupId: string; 
@@ -27,6 +29,9 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const [documentId, setDocumentId] = useState<string | null>(null); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [changes, setChanges] = useState<{ fieldChanged: string; oldValue: string; newValue: string }[]>([]);
+  const isStartupRoute = useIsStartupRoute();
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,23 +72,43 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
       const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
   
       if (documentId) {
-        // Update existing document with only user-defined fields
         await databases.updateDocument(STAGING_DATABASE_ID, ABOUT_COLLECTION_ID, documentId, userDefinedData);
       } else {
-        // Create a new document for this startup with only user-defined fields
         const response = await databases.createDocument(STAGING_DATABASE_ID, ABOUT_COLLECTION_ID, "unique()", {
           ...userDefinedData,
           startupId: startupId,
         });
         setDocumentId(response.$id);
       }
+  
+      // Save changes to the About Business History collection
+      const historyChanges = changes.map((change) => ({
+        startupId,
+        fieldChanged: change.fieldChanged,
+        oldValue: change.oldValue,
+        newValue: change.newValue,
+        changedAt: new Date().toISOString(),
+      }));
+  
+      await Promise.all(
+        historyChanges.map((change) =>
+          databases.createDocument(STAGING_DATABASE_ID, ABOUT_BUSINESS_HISTORY_COLLECTION_ID, "unique()", change)
+        )
+      );
+  
+      setOriginalData(data);
       setIsEditing(false);
+      toast({
+        title: "About Business saved!",
+      });
     } catch (error) {
       console.error("Error saving data:", error);
-    }finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
+  
+
   const handleCancel = () => {
     setData(originalData); // Revert to the original data
     setIsEditing(false);
@@ -91,12 +116,42 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
 
   const handleChange = (field: string, value: string) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
+  
+    // Track changes
+    if (originalData[field] !== value) {
+      const change = {
+        fieldChanged: field,
+        oldValue: originalData[field] || "N/A",
+        newValue: value,
+      };
+  
+      setChanges((prevChanges) => {
+        const existingChangeIndex = prevChanges.findIndex((c) => c.fieldChanged === field);
+        if (existingChangeIndex !== -1) {
+          prevChanges[existingChangeIndex] = change;
+          return prevChanges;
+        } else {
+          return [...prevChanges, change];
+        }
+      });
+    }
   };
+  
 
   return (
     <div>
-      <div className="flex items-center">
-        <h2 className="container text-lg font-medium mb-2">About Business</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+        <h2 className="text-lg font-medium">About Business</h2>
+        {isStartupRoute && (
+            <Link href={`/startup/${startupId}/AboutBusinessHistory`}>
+              <span className="text-blue-500 hover:text-blue-700 text-sm">
+                Prev. Records
+              </span>
+            </Link>
+          )}
+        </div>
+
         <div className="relative group">
           <EditIcon
             size={25}
@@ -109,17 +164,12 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
         </div>
 
         {isEditing && (
-          <div onClick={handleSave} className="flex ml-4 cursor-pointer">
+          <div className="flex ml-4 cursor-pointer">
             <div className="relative group ml-3">
               <SaveIcon size={25} 
                 className="cursor-pointer text-green-500"
                 aria-disabled={isSubmitting}
-                onClick={() => {
-                handleSave();
-                toast({
-                    title: "About Business saved!!",
-                })
-              }}
+                onClick={handleSave}
               />
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
               {isSubmitting ? "Saving..." : "Save"}

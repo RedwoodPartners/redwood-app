@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { databases } from "@/lib/utils";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 
 interface StartupData {
@@ -47,9 +46,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
   const { toast } = useToast();
-
-  const pathname = usePathname(); // Get the current path
-  const isStartupRoute = pathname ? /^\/startup\/[a-zA-Z0-9]+$/.test(pathname) : false;
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     const fetchStartupDetails = async () => {

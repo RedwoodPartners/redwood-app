@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Client, Databases } from "appwrite";
 import { API_ENDPOINT, PROJECT_ID } from "@/appwrite/config";
+import { usePathname } from "next/navigation";
 
 
 export function cn(...inputs: ClassValue[]): string {
@@ -16,3 +17,9 @@ const databases = new Databases(client);
 
 /*Export the reusable instances and utility functions.*/
 export { client, databases };
+
+//route checks for prev. records
+export const useIsStartupRoute = () => {
+  const pathname = usePathname();
+  return pathname ? /^\/startup\/[a-zA-Z0-9]+$/.test(pathname) : false;
+};
