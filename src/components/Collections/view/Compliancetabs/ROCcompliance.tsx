@@ -88,6 +88,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
       try {
         const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
           Query.equal("natureOfCompany", natureOfCompany), // Filter by natureOfCompany
+          Query.equal("types", "roc"),
         ]);
         const documents = response.documents;
         const options = documents.map((doc) => doc.query);

@@ -343,22 +343,31 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
           )}
           </div>
         </div>
-        <div className="relative group ">
-          <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-            Edit
-          </span>
-        </div>
-        {isEditing && (
-          <div className="ml-5 cursor-pointer">
-            <div className="relative group">
-              <SaveIcon size={25} className="cursor-pointer text-green-500" onClick={handleSave} aria-disabled={isSubmitting} />
-              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-                {isSubmitting ? "Saving..." : "Save"}
-              </span>
-            </div>
+        <>
+        {isEditing ? (
+          <div
+            onClick={handleSave}
+            className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+          >
+            <SaveIcon
+              size={15}
+              className="cursor-pointer text-green-500"
+              aria-disabled={isSubmitting}
+            />
+            <span className="text-xs">
+              {isSubmitting ? "Saving..." : "Save"}
+            </span>
+          </div>
+        ) : (
+          <div
+            onClick={handleEdit}
+            className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+          >
+            <EditIcon size={15} />
+            <span className="text-xs">Edit</span>
           </div>
         )}
+        </>
       </div>
       <div className="flex flex-col space-y-8 border border-gray-150 p-4 rounded-md shadow-sm bg-white">
       <div>
