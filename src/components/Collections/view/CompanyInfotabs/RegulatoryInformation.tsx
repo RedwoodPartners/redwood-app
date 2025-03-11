@@ -58,7 +58,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [previousData, setPreviousData] = useState<RegulatoryData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   const { toast } = useToast();
   const isStartupRoute = useIsStartupRoute();
 
@@ -181,6 +181,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const formats = {
       dpiitNumber: 'AAAA000000000',
       cinNumber: 'A-00000-AA-0000-AAA-000000',
@@ -295,7 +297,9 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         title: "Error saving Regulatory Information",
         variant: "destructive",
       });
-    } 
+    }  finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -315,21 +319,27 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         </div>
         
         <div className="flex items-center">
-          <div className="relative group ml-3">
-            <EditIcon size={25} className="cursor-pointer" onClick={handleEdit} />
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              Edit
-            </span>
-          </div>
-          {isEditing && (
+          {isEditing ? (
             <div
               onClick={handleSave}
-              className="ml-5 cursor-pointer relative group text-green-500"
+              className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
             >
-              <SaveIcon size={25} className="cursor-pointer" aria-disabled={isSubmitting}/>
-              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+              <SaveIcon
+                size={15}
+                className="cursor-pointer text-green-500"
+                aria-disabled={isSubmitting}
+              />
+              <span className="text-xs">
                 {isSubmitting ? "Saving..." : "Save"}
               </span>
+            </div>
+          ) : (
+            <div
+              onClick={handleEdit}
+              className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+            >
+              <EditIcon size={18} />
+              <span className="text-xs">Edit</span>
             </div>
           )}
         </div>

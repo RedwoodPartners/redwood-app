@@ -422,22 +422,20 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           )}
         </div>
         {isEditing ? (
-          <div className="relative group ml-3">
+          <div onClick={handleSaveClick} className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1">
             <SaveIcon
-              size={25}
-              className="cursor-pointer text-green-500"
-              onClick={handleSaveClick} aria-disabled={isSubmitting}
+              size={15}
+              className="text-green-500"
+              aria-disabled={isSubmitting}
             />
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+            <span className="text-xs">
               {isSubmitting ? "Saving..." : "Save"}
             </span>
           </div>
         ) : (
-          <div className="relative group">
-            <EditIcon size={25} className="cursor-pointer" onClick={handleEditClick} />
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              Edit
-            </span>
+          <div className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1" onClick={handleEditClick}>
+            <EditIcon size={15} />
+            <span className="text-xs">Edit</span>
           </div>
         )}
       </div>

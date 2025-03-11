@@ -152,41 +152,33 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
           )}
         </div>
 
-        <div className="relative group">
-          <EditIcon
-            size={25}
-            className="cursor-pointer"
-            onClick={handleEdit}
-          />
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-            Edit
-          </span>
-        </div>
-
-        {isEditing && (
-          <div className="flex ml-4 cursor-pointer">
-            <div className="relative group ml-3">
-              <SaveIcon size={25} 
-                className="cursor-pointer text-green-500"
-                aria-disabled={isSubmitting}
-                onClick={handleSave}
-              />
-              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
-              {isSubmitting ? "Saving..." : "Save"}
+        {isEditing ? (
+          <div className="flex space-x-1 cursor-pointer">
+            <div onClick={handleSave}
+              className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+            >
+              <SaveIcon size={15}  className="text-green-500" aria-disabled={isSubmitting} />
+              <span className="text-xs">
+                {isSubmitting ? "Saving..." : "Save"}
               </span>
             </div>
-            <div className="relative group ml-3">
-              <XIcon
-                size={25}
-                className="cursor-pointer text-red-500"
-                onClick={handleCancel}
-              />
-              <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+            <div
+              onClick={handleCancel}
+              className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+            >
+              <XIcon size={15} className="text-red-500" />
+              <span className="text-xs">
                 Cancel
               </span>
             </div>
-
-            
+          </div>
+        ) : (
+          <div
+            onClick={handleEdit}
+            className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+          >
+            <EditIcon size={15} />
+            <span className="text-xs">Edit</span>
           </div>
         )}
       </div>
