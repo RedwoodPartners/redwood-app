@@ -337,7 +337,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
         {isStartupRoute && (
             <Link href={`/startup/${startupId}/ContactHistory`}>
               <span className="text-blue-500 hover:text-blue-700 text-sm">
-                Prev. Records
+                Audit Trails
               </span>
             </Link>
           )}

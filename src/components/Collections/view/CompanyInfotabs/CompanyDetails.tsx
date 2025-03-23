@@ -416,7 +416,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
         {isStartupRoute && (
             <Link href={`/startup/${startupId}/StartupHistory`}>
               <span className="text-blue-500 hover:text-blue-700 text-sm">
-                Prev. Records
+                Audit Trails
               </span>
             </Link>
           )}

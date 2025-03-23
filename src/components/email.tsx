@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Client, Account, Models, Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { Client, Databases, Account, Models, Query } from "appwrite";
+import { PROJECT_ID, API_ENDPOINT, DATABASE_ID } from "@/appwrite/config";
 import { Button } from "@/components/ui/button";
 import { RealtimeResponseEvent } from 'appwrite';
 import { Label } from "./ui/label";
@@ -11,6 +10,8 @@ import { Label } from "./ui/label";
 const MESSAGES_COLLECTION_ID = "6770e11a0008b9a32f6c";
 
 const client = new Client();
+client.setEndpoint(API_ENDPOINT).setProject(PROJECT_ID);
+const databases = new Databases(client);
 const account = new Account(client);
 
 const SendMessage: React.FC = () => {
@@ -23,9 +24,6 @@ const SendMessage: React.FC = () => {
   const [messages, setMessages] = useState<Models.Document[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: Set<string> }>({});
 
-  const [isChat, setIsChat] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-
   useEffect(() => {
     account.get().then(
       (user) => {
@@ -36,20 +34,6 @@ const SendMessage: React.FC = () => {
         setError("Failed to fetch current user.");
       }
     );
-
-    const checkAdminStatus = async () => {
-      try {
-        const user = await account.get();
-        const userLabels = user?.labels || [];
-        setIsChat(userLabels.includes("chat"));
-        setLoading(false);
-      } catch (err) {
-        setError("Error fetching user data");
-        setLoading(false);
-      }
-    };
-
-    checkAdminStatus();
 
     const fetchUsers = async () => {
       try {
@@ -68,7 +52,7 @@ const SendMessage: React.FC = () => {
     fetchUsers();
 
     const unsubscribe = client.subscribe(
-      `databases.${STAGING_DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
+      `databases.${DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
       (response: RealtimeResponseEvent<Models.Document>) => {
         if (response.events.includes("databases.*.collections.*.documents.*.create")) {
           const newMessage = response.payload;
@@ -99,7 +83,7 @@ const SendMessage: React.FC = () => {
 
     try {
       const response = await databases.listDocuments(
-        STAGING_DATABASE_ID,
+        DATABASE_ID,
         MESSAGES_COLLECTION_ID,
         [
           Query.or([
@@ -135,7 +119,7 @@ const SendMessage: React.FC = () => {
 
     try {
       const newMessage = await databases.createDocument(
-        STAGING_DATABASE_ID,
+        DATABASE_ID,
         MESSAGES_COLLECTION_ID,
         "unique()",
         {
@@ -165,15 +149,9 @@ const SendMessage: React.FC = () => {
     }
   };
 
-  if (!isChat) return (
-    <div className="text-red-500 font-medium">
-      Development Mode...!
-    </div>
-  );
-
   return (
     <div className="flex bg-gray-100 h-screen">
-      {error && <p className="text-red-500 font-medium mb-4">{error}</p>}
+
       <div className="w-1/4 border-r border-gray-300 p-2 shadow-lg overflow-y-auto">
         <h2 className="text-lg font-semibold mb-4">Users</h2>
         

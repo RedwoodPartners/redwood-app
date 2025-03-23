@@ -59,14 +59,14 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Startups",
-    url: "/startup",
-    icon: Rocket,
-  },
-  {
     title: "Projects",
     url: "/projects",
     icon: Folder,
+  },
+  {
+    title: "Startups",
+    url: "/startup",
+    icon: Rocket,
   },
   {
     title: "Contacts",
