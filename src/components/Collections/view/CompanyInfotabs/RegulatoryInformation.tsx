@@ -311,7 +311,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
           {isStartupRoute && (
             <Link href={`/startup/${startupId}/RegulatoryHistory`}>
             <span className="text-blue-500 hover:text-blue-700 text-sm">
-              Prev. Records
+              Audit Trails
             </span>
           </Link>
           )}
@@ -320,7 +320,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         
         <div className="flex items-center">
           {isEditing ? (
-            <div
+            <div  
               onClick={handleSave}
               className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
             >
@@ -338,7 +338,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
               onClick={handleEdit}
               className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
             >
-              <EditIcon size={18} />
+              <EditIcon size={15} />
               <span className="text-xs">Edit</span>
             </div>
           )}
