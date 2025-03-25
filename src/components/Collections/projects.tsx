@@ -53,11 +53,15 @@ type Project = {
   projectTemplate: string;
   startupStatus: string;
   stage: string;
+  founderName?: string;
+  phoneNumber?: string;
 };
 
 type Startup = {
   id: string;
   name: string;
+  founderName?: string; 
+  phoneNumber?: string;
   projects?: string[];
 };
 
@@ -75,7 +79,13 @@ const ProjectsPage: React.FC = () => {
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isCreatingNewRecord, setIsCreatingNewRecord] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [customService, setCustomService] = useState("");
+
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -165,15 +175,16 @@ const ProjectsPage: React.FC = () => {
   const handleConfirmChanges = async () => {
     if (isSubmitting) return; // Prevent duplicate submission
     setIsSubmitting(true);
-    
+  
     if (editedProject) {
       // Automatically set Project End Date if template is TANSIM
-    if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
-      editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
-    }
+      if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
+        editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
+      }
+  
       // Generate `projectId`
-      const generatedProjectId = nanoid(6)
-
+      const generatedProjectId = nanoid(6);
+  
       try {
         if (isAddingNewProject) {
           // Add a new project
@@ -183,12 +194,12 @@ const ProjectsPage: React.FC = () => {
             generatedProjectId,
             {
               name: editedProject.name,
-              startupId: editedProject.startupId,
+              startupId: editedProject.startupId, // Use the startupId from state
               startDate: editedProject.startDate,
               receivedDate: editedProject.receivedDate,
               projectEndDate: editedProject.projectEndDate,
               appliedFor: editedProject.appliedFor,
-              services: editedProject.services,
+              services: editedProject.services === "Other" ? customService : editedProject.services,
               projectTemplate: editedProject.projectTemplate,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
@@ -197,38 +208,28 @@ const ProjectsPage: React.FC = () => {
   
           setProjects((prev) => [
             ...prev,
-            { ...editedProject, id: response.$id, startupId: generatedProjectId },
+            { ...editedProject, id: response.$id },
           ]);
   
-          // Use the selected startup's ID for redirection
-          const selectedStartup = startups.find(
-            (startup) => startup.name === editedProject.name
+          // Update startup document with new project ID
+          const existingStartup = await databases.getDocument(
+            STAGING_DATABASE_ID,
+            STARTUP_ID,
+            editedProject.startupId
           );
   
-          if (selectedStartup) {
-            // Fetch existing projectIds from the startup document
-            const existingStartup = await databases.getDocument(
-              STAGING_DATABASE_ID,
-              STARTUP_ID,
-              selectedStartup.id
-            );
-
-            const existingProjects = existingStartup.projects || [];
-
-            // Append the new project ID to the array
-            const updatedProjects = [...existingProjects, generatedProjectId];
-
-            // Update the startup document with the new projectIds array
-            await databases.updateDocument(
-              STAGING_DATABASE_ID,
-              STARTUP_ID,
-              selectedStartup.id,
-              { projects: updatedProjects }
-            );
-            router.push(`/projects/${response.$id}`); // Redirect to the new project
-          } else {
-            console.error("Startup not found for redirection.");
-          }
+          const existingProjects = existingStartup.projects || [];
+  
+          const updatedProjects = [...existingProjects, response.$id];
+  
+          await databases.updateDocument(
+            STAGING_DATABASE_ID,
+            STARTUP_ID,
+            editedProject.startupId,
+            { projects: updatedProjects }
+          );
+  
+          router.push(`/projects/${response.$id}`); // Redirect to the new project
         } else {
           // Update an existing project
           await databases.updateDocument(
@@ -267,6 +268,7 @@ const ProjectsPage: React.FC = () => {
       }
     }
   };
+  
 
   // Delete a project
   const handleDeleteProject = async () => {
@@ -299,23 +301,39 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleDeleteSelectedProjects = async () => {
+    try {
+      await Promise.all(
+        selectedProjects.map((projectId) =>
+          databases.deleteDocument(STAGING_DATABASE_ID, PROJECTS_ID, projectId)
+        )
+      );
 
-  try {
-    await Promise.all(
-      selectedProjects.map((projectId) =>
-        databases.deleteDocument(STAGING_DATABASE_ID, PROJECTS_ID, projectId)
-      )
-    );
-
-    // Update state after deletion
-    setProjects((prev) =>
-      prev.filter((project) => !selectedProjects.includes(project.id))
-    );
-    setSelectedProjects([]); // Clear selection
-  } catch (error) {
-    console.error("Error deleting projects:", error);
-  }
-};
+      // Update state after deletion
+      setProjects((prev) =>
+        prev.filter((project) => !selectedProjects.includes(project.id))
+      );
+      setSelectedProjects([]); // Clear selection
+    } catch (error) {
+      console.error("Error deleting projects:", error);
+    }
+  };
+  const handleInputChange = () => {
+    setIsCreatingNewRecord(false);
+  };
+  const checkFormValidity = () => {
+    if (editedProject) {
+      const isValid = Boolean(
+        editedProject.name && 
+        editedProject.founderName && 
+        editedProject.phoneNumber
+      );
+      setIsFormValid(isValid);
+    } else {
+      setIsFormValid(false);
+    }
+  };
+  
+  
 
   return (
     <div className="p-2">
@@ -419,7 +437,12 @@ const ProjectsPage: React.FC = () => {
       </div>
       )}
       {editedProject && (
-        <Dialog open={showModal} onOpenChange={setShowModal}>
+        <Dialog open={showModal} onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setErrorMessage(null);
+          }
+          setShowModal(isOpen);
+        }}>
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
               <DialogTitle>
@@ -428,193 +451,208 @@ const ProjectsPage: React.FC = () => {
               <DialogDescription aria-describedby={undefined}>
               </DialogDescription>
               {errorMessage && (
-                  <p className="text-red-500">{errorMessage}</p> // Display error message here
-                )}
+                <p className="text-red-500">{errorMessage}</p>
+              )}
             </DialogHeader>
 
-            {/* Form Fields */}
-            <div className="grid grid-cols-3 gap-4 py-2">
-            <div>
-            <Label htmlFor="name">Startup Name</Label>
-            <Select
-              value={editedProject?.name || ""}
-              onValueChange={(value) => {
-              const selectedStartup = startups.find((startup) => startup.name === value);
-              setEditedProject({
-              ...editedProject!,
-              name: value,
-              startupId: selectedStartup ? selectedStartup.id : "", // Save startupId
-              });
-            }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a startup" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* Add Search Input */}
-                <div className="p-2">
+            {/* Conditional rendering based on currentStep */}
+            {currentStep === 1 && (
+              <div className="grid grid-cols-3 gap-4 py-2">
+                <div>
+                  <Label htmlFor="name">Startup Name<span className="text-red-500">*</span></Label>
                   <Input
-                    placeholder="Search startups..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    id="name"
+                    value={editedProject?.name || ""}
+                    onChange={(e) => {
+                      handleInputChange();
+                      setEditedProject({
+                        ...editedProject!,
+                        name: e.target.value,
+                      });
+                      setErrorMessage(null); 
+                      checkFormValidity();
+                    }}
                   />
                 </div>
-                {/* Render Filtered Startups */}
-                {filteredStartups.map((startup) => (
-                  <SelectItem key={startup.id} value={startup.name}>
-                    {startup.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={editedProject.startDate}
-                  onChange={(e) =>
-                    setEditedProject({
-                      ...editedProject!,
-                      startDate: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div>
-                <Label htmlFor="receivedDate">Received Date</Label>
-                <Input
-                  id="receivedDate"
-                  type="date"
-                  value={editedProject.receivedDate}
-                  onChange={(e) =>
-                    setEditedProject({
-                      ...editedProject!,
-                      receivedDate: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div>
-                <Label htmlFor="projectEndDate">Project End Date</Label>
-                <Input
-                  id="projectEndDate"
-                  type="date"
-                  value={editedProject.projectEndDate}
-                  onChange={(e) =>
-                    setEditedProject({
-                      ...editedProject!,
-                      projectEndDate: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div>
-                <Label htmlFor="appliedFor">Applied For?</Label>
-                <Select
-                  value={editedProject.appliedFor}
-                  onValueChange={(value) =>
-                    setEditedProject({ ...editedProject!, appliedFor: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["Equity", "Grant", "Debt"].map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="services">Services</Label>
-                <Select
-                  value={editedProject.services}
-                  onValueChange={(value) =>
-                    setEditedProject({ ...editedProject!, services: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["Consulting", "BDD", "Business Structuring", "Events"].map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="projectTemplate">Project Template</Label>
-                <Select
-                  value={editedProject.projectTemplate}
-                  onValueChange={(value) =>
-                    setEditedProject({ ...editedProject!, projectTemplate: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["Others", "TANSIM"].map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="startupStatus">Startup Status</Label>
-                <Select
-                  value={editedProject.startupStatus}
-                  onValueChange={(value) =>
-                    setEditedProject({
-                      ...editedProject!,
-                      startupStatus: value,
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[
-                      "Pipeline",
-                      "In-Progress",
-                      "On-Hold",
-                      "Non-Responsive",
-                      "Backed out",
-                      "Rejected",
-                      "Completed",
-                    ].map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {editedProject.projectTemplate === "TANSIM" && (
                 <div>
-                  <Label htmlFor="stage">Stage</Label>
+                  <Label htmlFor="founderName">Founder Name<span className="text-red-500">*</span></Label>
+                  <Input
+                    id="founderName"
+                    value={editedProject.founderName || ""}
+                    onChange={(e) => {
+                      handleInputChange();
+                      setEditedProject({
+                        ...editedProject!,
+                        founderName: e.target.value,
+                      });
+                      setErrorMessage(null);
+                      checkFormValidity();
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phoneNumber">Phone Number<span className="text-red-500">*</span></Label>
+                  <Input
+                    id="phoneNumber"
+                    type="number"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    value={editedProject.phoneNumber || ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      handleInputChange();
+                      setEditedProject({
+                        ...editedProject!,
+                        phoneNumber: e.target.value,
+                      });
+                      setErrorMessage(null);
+                      checkFormValidity();
+                    }}
+                  />
+                    {editedProject.phoneNumber && editedProject.phoneNumber.length !== 10 && (
+                      <p className="text-red-500 text-sm">Phone number must be 10 digits</p>
+                    )}
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="grid grid-cols-3 gap-4 py-2">
+                <div>
+                  <Label>Startup Name</Label>
+                  <p className="h-9 w-full py-1 rounded-md border px-3">{editedProject.name}</p>
+                </div>
+                {/*<div>
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={editedProject.startDate}
+                    onChange={(e) =>
+                      setEditedProject({
+                        ...editedProject!,
+                        startDate: e.target.value,
+                      })
+                    }
+                    className="col-span-3"
+                  />
+                </div>*/}
+                <div>
+                  <Label htmlFor="receivedDate">Received Date</Label>
+                  <Input
+                    id="receivedDate"
+                    type="date"
+                    value={editedProject.receivedDate}
+                    onChange={(e) =>
+                      setEditedProject({
+                        ...editedProject!,
+                        receivedDate: e.target.value,
+                      })
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+                {/*<div>
+                  <Label htmlFor="projectEndDate">Project End Date</Label>
+                  <Input
+                    id="projectEndDate"
+                    type="date"
+                    value={editedProject.projectEndDate}
+                    onChange={(e) =>
+                      setEditedProject({
+                        ...editedProject!,
+                        projectEndDate: e.target.value,
+                      })
+                    }
+                    className="col-span-3"
+                  />
+                </div>*/}
+                <div>
+                  <Label htmlFor="appliedFor">Funding Need</Label>
                   <Select
-                    value={editedProject.stage}
+                    value={editedProject.appliedFor}
+                    onValueChange={(value) =>
+                      setEditedProject({ ...editedProject!, appliedFor: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Equity", "Grant", "Debt"].map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="services">Services</Label>
+                  <Select
+                    value={editedProject.services}
+                    onValueChange={(value) => {
+                      setEditedProject({ ...editedProject!, services: value });
+                      if (value !== "Other") {
+                        setCustomService("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Consulting", "BDD", "Business Structuring", "Events", "Investment Raise", "Advisory-Workshop",
+                      "Advisory-Mock Session", "Advisory-Pitch Fest", "Other"
+                      ].map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {editedProject.services === "Other" && (
+                  <div>
+                    <Label htmlFor="customService">Other Service</Label>
+                    <Input
+                      id="customService"
+                      value={customService}
+                      onChange={(e) => setCustomService(e.target.value)}
+                      placeholder="Enter custom service"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="projectTemplate">Project Template</Label>
+                  <Select
+                    value={editedProject.projectTemplate}
+                    onValueChange={(value) =>
+                      setEditedProject({ ...editedProject!, projectTemplate: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Others", "TANSIM"].map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="startupStatus">Project Status</Label>
+                  <Select
+                    value={editedProject.startupStatus}
                     onValueChange={(value) =>
                       setEditedProject({
                         ...editedProject!,
-                        stage: value,
+                        startupStatus: value,
                       })
                     }
                   >
@@ -623,42 +661,233 @@ const ProjectsPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {[
-                        "Deep Dive",
-                        "First Connect",
-                        "Fund Release",
-                        "IC",
-                        "Pre First Connect",
-                        "PSC",
-                        "SME",
-                      ].map((stage) => (
-                        <SelectItem key={stage} value={stage}>
-                          {stage}
+                        "Pipeline",
+                        "In-Progress",
+                        "On-Hold",
+                        "Non-Responsive",
+                        "Backed out",
+                        "Rejected",
+                        "Completed",
+                      ].map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-            </div>
+                {editedProject.projectTemplate === "TANSIM" && (
+                  <div>
+                    <Label htmlFor="stage">Stage</Label>
+                    <Select
+                      value={editedProject.stage}
+                      onValueChange={(value) =>
+                        setEditedProject({
+                          ...editedProject!,
+                          stage: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[
+                          "Pre First Connect",
+                          "First Connect",
+                          "SME",
+                          "Deep Dive",
+                          "IM",
+                          "IC",
+                          "PSC",
+                          "SHA",
+                        ].map((stage) => (
+                          <SelectItem key={stage} value={stage}>
+                            {stage}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter>
-              {!isAddingNewProject && (
-                <Button
-                  onClick={handleDeleteProject}
-                  className="bg-white text-black border border-black hover:bg-neutral-200"
-                >
-                  Delete
-                </Button>
+            {currentStep === 1 && (
+                <>
+                  {errorMessage ? (
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const existingStartup = await databases.listDocuments(
+                            STAGING_DATABASE_ID,
+                            STARTUP_ID
+                          );
+
+                          const existingStartupDoc = existingStartup.documents.find(
+                            (doc: any) =>
+                              doc.name === editedProject.name ||
+                              doc.founderName === editedProject.founderName ||
+                              doc.phoneNumber === editedProject.phoneNumber
+                          );
+
+                          if (existingStartupDoc) {
+                            setEditedProject({
+                              ...editedProject,
+                              startupId: existingStartupDoc.$id,
+                            });
+                            setCurrentStep(2);
+                            setErrorMessage(null); 
+                          }
+                        } catch (error) {
+                          console.error("Error fetching startup:", error);
+                        }
+                      }}
+                    >
+                      Continue with Existing Startup
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={async () => {
+                        setIsCreatingNewRecord(true);
+                        try {
+                          // Check for duplication
+                          const existingStartup = await databases.listDocuments(
+                            STAGING_DATABASE_ID,
+                            STARTUP_ID
+                          );
+
+                          const existingStartupDoc = existingStartup.documents.find(
+                            (doc: any) =>
+                              doc.name === editedProject.name ||
+                              doc.founderName === editedProject.founderName ||
+                              doc.phoneNumber === editedProject.phoneNumber
+                          );
+
+                          if (existingStartupDoc) {
+                            if (
+                              existingStartupDoc.name === editedProject.name &&
+                              existingStartupDoc.founderName === editedProject.founderName &&
+                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
+                            ) {
+                              setErrorMessage(
+                                `Startup with Name "${editedProject.name}", Founder "${editedProject.founderName}", Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (
+                              existingStartupDoc.name === editedProject.name &&
+                              existingStartupDoc.founderName === editedProject.founderName
+                            ) {
+                              setErrorMessage(
+                                `Startup with Name "${editedProject.name}" and Founder "${editedProject.founderName}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (
+                              existingStartupDoc.name === editedProject.name &&
+                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
+                            ) {
+                              setErrorMessage(
+                                `Startup with Name "${editedProject.name}" and Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (
+                              existingStartupDoc.founderName === editedProject.founderName &&
+                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
+                            ) {
+                              setErrorMessage(
+                                `Startup with Founder "${editedProject.founderName}" and Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (existingStartupDoc.name === editedProject.name) {
+                              setErrorMessage(
+                                `Startup with Name "${editedProject.name}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (existingStartupDoc.founderName === editedProject.founderName) {
+                              setErrorMessage(
+                                `Startup with Founder "${editedProject.founderName}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            } else if (existingStartupDoc.phoneNumber === editedProject.phoneNumber) {
+                              setErrorMessage(
+                                `Startup with Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
+                              );
+                            }
+                            
+                          } else {
+                            // Create or update startup
+                            const existingStartupByName = existingStartup.documents.find(
+                              (doc: any) => doc.name === editedProject.name
+                            );
+
+                            if (existingStartupByName) {
+                              // Update existing startup
+                              await databases.updateDocument(
+                                STAGING_DATABASE_ID,
+                                STARTUP_ID,
+                                existingStartupByName.$id,
+                                {
+                                  name: editedProject.name,
+                                  founderName: editedProject.founderName,
+                                  phoneNumber: editedProject.phoneNumber,
+                                }
+                              );
+                              setEditedProject({
+                                ...editedProject,
+                                startupId: existingStartupByName.$id,
+                              });
+                            } else {
+                              // Create new startup
+                              const response = await databases.createDocument(
+                                STAGING_DATABASE_ID,
+                                STARTUP_ID,
+                                nanoid(6),
+                                {
+                                  name: editedProject.name,
+                                  founderName: editedProject.founderName,
+                                  phoneNumber: editedProject.phoneNumber,
+                                }
+                              );
+                              setEditedProject({
+                                ...editedProject,
+                                startupId: response.$id,
+                              });
+                            }
+
+                            setCurrentStep(2);
+                            setErrorMessage(null); 
+                          }
+                        } catch (error) {
+                          console.error("Error saving startup:", error);
+                        } finally {
+                          setIsCreatingNewRecord(false);
+                        }
+                      }}
+                      disabled={isCreatingNewRecord || !isFormValid}
+                    >
+                      {isCreatingNewRecord ? "Creating New Record..." : "Next"}
+                    </Button>
+                  )}
+                </>
               )}
-              <Button onClick={handleConfirmChanges} disabled={isSubmitting}>
-                {isAddingNewProject ? "Add Project" : "Save"}
-                {isSubmitting && "..."}
-              </Button>
+              {currentStep === 2 && (
+                <>
+                  <Button onClick={() => setCurrentStep(1)}>Back</Button>
+                  {!isAddingNewProject && (
+                    <Button
+                      onClick={handleDeleteProject}
+                      className="bg-white text-black border border-black hover:bg-neutral-200"
+                    >
+                      Delete
+                    </Button>
+                  )}
+                  <Button onClick={handleConfirmChanges} disabled={isSubmitting}>
+                    {isAddingNewProject ? "Add Project" : "Save"}
+                    {isSubmitting && "..."}
+                  </Button>
+                </>
+              )}
             </DialogFooter>
 
           </DialogContent>
         </Dialog>
       )}
+
     </div>
   );
 };
