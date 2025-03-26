@@ -13,7 +13,7 @@ interface StatCardProps {
 }
 
 interface StartupStatsProps {
-  showInvestmentCard?: boolean; // New prop to control visibility of investment card
+  showInvestmentCard?: boolean; 
 }
 
 const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
@@ -22,6 +22,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
   const [pipelineCount, setPipelineCount] = useState<number>(0);
   const [rejectedCount, setRejectedCount] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState<number>(0);
+  const [totalProjects, setTotalProjects] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -81,9 +82,19 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       }
     };
 
+    const fetchTotalProjects = async () => {
+      try {
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, PROJECTS_ID);
+        setTotalProjects(response.total);
+      } catch (error) {
+        console.error("Error fetching total projects:", error);
+      }
+    };
+
     fetchStartupCount();
     fetchStatusCounts();
     fetchTotalInvestment();
+    fetchTotalProjects();
   }, []);
 
   // Calculate the number of cards dynamically
@@ -136,8 +147,31 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       />
     ),
     <StatCard
+      key="total-projects"
+      title="Total Projects"
+      mainValue={`+${totalProjects}`}
+      subValue="+1% from last month"
+      onClick={() => router.push("/projects")}
+      icon={
+        <svg
+          className="w-6 h-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 7l5 5m0 0l-5 5m5-5H6"
+          />
+        </svg>
+      }
+      />,
+    <StatCard
       key="pipeline-startups"
-      title="Pipeline Startups"
+      title="Pipeline Projects"
       mainValue={`+${pipelineCount}`}
       subValue="+0% from last month"
       icon={
@@ -159,7 +193,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     />,
     <StatCard
       key="rejected-startups"
-      title="Rejected Startups"
+      title="Rejected Projects"
       mainValue={`+${rejectedCount}`}
       subValue="+0% from last year"
       icon={
@@ -181,7 +215,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
     />,
     <StatCard
       key="completed-startups"
-      title="Completed Startups"
+      title="Completed Projects"
       mainValue={`+${completedCount}`}
       subValue="+0 since last year"
       icon={
@@ -205,7 +239,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
 
   // Determine grid column count based on the number of cards
   const gridClass =
-    statCards.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-5";
+    statCards.length === 4 ? "lg:grid-cols-6" : "lg:grid-cols-6";
 
   return (
     <div className={`grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 ${gridClass} gap-4 p-2`}>

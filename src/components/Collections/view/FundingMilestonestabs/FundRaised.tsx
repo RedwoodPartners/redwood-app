@@ -73,6 +73,15 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   const handleAddOrUpdateInvestment = async () => {
     if (!selectedInvestment) return;
+    
+    if (!selectedInvestment.date) {
+      toast({
+        title: "Error",
+        description: "Investment date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (isSubmitting) return; // Prevent duplicate submission
     setIsSubmitting(true);

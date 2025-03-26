@@ -333,6 +333,12 @@ const ProjectsPage: React.FC = () => {
     }
   };
   
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+
   
 
   return (
@@ -370,7 +376,7 @@ const ProjectsPage: React.FC = () => {
               <TableHead>Start Date</TableHead>
               <TableHead>Received Date</TableHead>
               <TableHead>Project End Date</TableHead>
-              <TableHead>Applied For?</TableHead>
+              <TableHead>Funding Need</TableHead>
               <TableHead>Services</TableHead>
               <TableHead>Project Template</TableHead>
               <TableHead>Startup Status</TableHead>
@@ -841,6 +847,7 @@ const ProjectsPage: React.FC = () => {
                                   name: editedProject.name,
                                   founderName: editedProject.founderName,
                                   phoneNumber: editedProject.phoneNumber,
+                                  year: formattedDate,
                                 }
                               );
                               setEditedProject({
