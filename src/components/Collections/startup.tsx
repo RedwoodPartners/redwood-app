@@ -212,10 +212,10 @@ const StartupsPage: React.FC = () => {
         <h1 className="text-2xl font-semibold">Startups</h1>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <div className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-green-500 space-x-1">
+            {/*<div className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-green-500 space-x-1">
                 <PlusCircle size={15} className="cursor-pointer"/>
                 <span className="text-xs">Add</span>
-            </div>
+            </div>*/}
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

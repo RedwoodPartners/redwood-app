@@ -10,13 +10,11 @@ import { LineChartPortfolio } from "@/components/charts/lineChart";
 import { AreaChartPortfolio } from "@/components/charts/areaChart";
 import { BarChartPortfolio } from "@/components/charts/barChart";
 import { ServicesChart } from "@/components/charts/services";
-import ProjectStats from "@/components/charts/projectStats";
 
 
 const Dashboard = () => {
   return (
     <>
-        <ProjectStats />
         <StartupStats showInvestmentCard={true} />
           <div className="grid grid-cols-3 gap-4 p-2">
             <ServicesChart />
