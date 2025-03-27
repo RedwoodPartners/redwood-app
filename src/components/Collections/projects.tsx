@@ -157,7 +157,7 @@ const ProjectsPage: React.FC = () => {
       appliedFor: "",
       services: "",
       projectTemplate: "",
-      startupStatus: "",
+      startupStatus: "Pipeline",
       stage: "",
     });
     setIsAddingNewProject(true);
@@ -528,21 +528,6 @@ const ProjectsPage: React.FC = () => {
                   <Label>Startup Name</Label>
                   <p className="h-9 w-full py-1 rounded-md border px-3">{editedProject.name}</p>
                 </div>
-                {/*<div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={editedProject.startDate}
-                    onChange={(e) =>
-                      setEditedProject({
-                        ...editedProject!,
-                        startDate: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>*/}
                 <div>
                   <Label htmlFor="receivedDate">Received Date</Label>
                   <Input
@@ -558,21 +543,6 @@ const ProjectsPage: React.FC = () => {
                     className="col-span-3"
                   />
                 </div>
-                {/*<div>
-                  <Label htmlFor="projectEndDate">Project End Date</Label>
-                  <Input
-                    id="projectEndDate"
-                    type="date"
-                    value={editedProject.projectEndDate}
-                    onChange={(e) =>
-                      setEditedProject({
-                        ...editedProject!,
-                        projectEndDate: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>*/}
                 <div>
                   <Label htmlFor="appliedFor">Funding Need</Label>
                   <Select
@@ -635,7 +605,9 @@ const ProjectsPage: React.FC = () => {
                   <Select
                     value={editedProject.projectTemplate}
                     onValueChange={(value) =>
-                      setEditedProject({ ...editedProject!, projectTemplate: value })
+                      setEditedProject({ ...editedProject!, projectTemplate: value,
+                        stage: value === "TANSIM" ? "Pre First Connect" : ""
+                       })
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -645,38 +617,6 @@ const ProjectsPage: React.FC = () => {
                       {["Others", "TANSIM"].map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="startupStatus">Project Status</Label>
-                  <Select
-                    value={editedProject.startupStatus}
-                    onValueChange={(value) =>
-                      setEditedProject({
-                        ...editedProject!,
-                        startupStatus: value,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[
-                        "Pipeline",
-                        "In-Progress",
-                        "On-Hold",
-                        "Non-Responsive",
-                        "Backed out",
-                        "Rejected",
-                        "Completed",
-                      ].map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -256,7 +256,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                                 onClick={() => setActiveTab("fundraisedsofar")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
-                                Fund raised so far
+                                Funds Raised So Far
                               </button>
                             </li>
                             <li>

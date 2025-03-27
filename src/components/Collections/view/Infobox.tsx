@@ -5,7 +5,6 @@ import { Mail, MessageCircle, Globe } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID, PROJECTS_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
-import { FUNDING_ID } from "./FundingMilestonestabs/FundAsk";
 import {
   Select,
   SelectTrigger,
@@ -13,6 +12,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 type Project = {
   startDate: string;
@@ -36,6 +36,9 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedStage, setUpdatedStage] = useState<string>("");
   const [updatedStartupStatus, setUpdatedStartupStatus] = useState<string>("");
+  const [updatedStartDate, setUpdatedStartDate] = useState(projectData?.startDate || "");
+  const [updatedEndDate, setUpdatedEndDate] = useState(projectData?.projectEndDate || "");
+
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -59,21 +62,11 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           });
           setUpdatedStage(project.stage || "");
           setUpdatedStartupStatus(project.startupStatus || "");
+          setUpdatedStartDate(project.startDate || "");
+          setUpdatedEndDate(project.projectEndDate || "");
         } else {
           console.warn("No projects found for this startup.");
         }
-
-        {/*// Fetch Funding Data
-        const fundingResponse = await databases.listDocuments(STAGING_DATABASE_ID, FUNDING_ID, [
-          Query.equal("startupId", startupId),
-        ]);
-
-        if (fundingResponse.documents.length > 0) {
-          const funding = fundingResponse.documents[0];
-          setValidatedFund(funding.validatedFund || null); // Set validatedFund value
-        } else {
-          console.warn("No funding data found for this startup.");
-        }*/}
       } catch (error) {
         console.error("Error fetching project data:", error);
       } finally {
@@ -83,6 +76,13 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
 
     fetchProjectData();
   }, [startupId, projectId]);
+
+  useEffect(() => {
+    if (updatedStartDate && updatedStartDate !== "") {
+      setUpdatedStartupStatus("In Progress");
+    }
+  }, [updatedStartDate]);
+  
 
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "-";
@@ -108,12 +108,25 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const handleSaveClick = async () => {
     try {
       if (projectData) {
+        let newStartupStatus = updatedStartupStatus;
+        if (updatedStartDate && updatedStartDate !== "") {
+          newStartupStatus = "In Progress";
+        }
+
         await databases.updateDocument(STAGING_DATABASE_ID, PROJECTS_ID, projectId, {
           stage: updatedStage,
           startupStatus: updatedStartupStatus,
+          startDate: updatedStartDate,
+          projectEndDate: updatedEndDate,
         });
         setProjectData((prev) =>
-          prev ? { ...prev, stage: updatedStage, startupStatus: updatedStartupStatus } : null
+          prev ? { 
+            ...prev, 
+            stage: updatedStage, 
+            startupStatus: updatedStartupStatus,
+            startDate: updatedStartDate,
+            projectEndDate: updatedEndDate, 
+          } : null
         );
       }
       setIsEditing(false);
@@ -146,14 +159,37 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   return (
     <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
-        {/*<span className="font-medium text-black text-xs sm:text-base">
-          {validatedFund !== null && !isNaN(Number(validatedFund.toString().replace(/[₹,]/g, "")))
-            ? `₹ ${(Number(validatedFund.toString().replace(/[₹,]/g, "")) / 10000000).toFixed(2)} Cr`
-            : "NA"}
-        </span>*/}
-        <span className="text-black sm:text-base">
-          {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
-        </span>
+      {isEditing ? (
+          <div className="flex flex-row gap-2">
+            <div className="flex flex-col gap-2">
+            <Label>Start Date</Label>
+            <input
+              type="date"
+              value={updatedStartDate}
+              onChange={(e) => {
+                setUpdatedStartDate(e.target.value);
+                if (e.target.value !== "") {
+                  setUpdatedStartupStatus("In Progress");
+                }
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            />
+            </div>
+            <div className="flex flex-col gap-2">
+            <Label>End Date</Label>
+            <input
+              type="date"
+              value={updatedEndDate}
+              onChange={(e) => setUpdatedEndDate(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            />
+            </div>
+          </div>
+        ) : (
+          <span className="text-black sm:text-base">
+            {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
+          </span>
+        )}
         {projectData.services && (
           <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
             {projectData.services}
@@ -161,43 +197,48 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
         )}
 
         {/* Editable Stage */}
-        {isEditing ? (
-          <div className="w-28">
-          <Select value={updatedStage} onValueChange={setUpdatedStage}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent>
-              {[
-                "Deep Dive",
-                "First Connect",
-                "Fund Release",
-                "IC",
-                "Pre First Connect",
-                "PSC",
-                "SME",
-              ].map((stage) => (
-                <SelectItem key={stage} value={stage}>
-                  {stage}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          </div>
-        ) : (
-          <>
-          {projectData.stage && (
-            <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-              <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
-              {projectData.stage}
-            </span>
-          )}
-          </>
+        {projectData.projectTemplate === 'TANSIM' && (
+          isEditing ? (
+            <div className="w-36">
+              <Label>TANSIM Stage</Label>
+              <Select value={updatedStage} onValueChange={setUpdatedStage}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "Pre First Connect",
+                    "First Connect",
+                    "SME",
+                    "Deep Dive",
+                    "IM",
+                    "IC",
+                    "PSC",
+                    "SHA",
+                  ].map((stage) => (
+                    <SelectItem key={stage} value={stage}>
+                      {stage}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <>
+              {projectData.stage && (
+                <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+                  <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
+                  {projectData.stage}
+                </span>
+              )}
+            </>
+          )
         )}
 
         {/* Editable Startup Status */}
         {isEditing ? (
-          <div className="w-28">
+          <div className="w-36">
+            <Label>Project Status</Label>
           <Select value={updatedStartupStatus} onValueChange={setUpdatedStartupStatus}>
             <SelectTrigger>
               <SelectValue placeholder="Select an option" />
