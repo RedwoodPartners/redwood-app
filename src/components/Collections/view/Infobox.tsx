@@ -38,6 +38,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [updatedStartupStatus, setUpdatedStartupStatus] = useState<string>("");
   const [updatedStartDate, setUpdatedStartDate] = useState(projectData?.startDate || "");
   const [updatedEndDate, setUpdatedEndDate] = useState(projectData?.projectEndDate || "");
+  const [receivedDate, setReceivedDate] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -51,6 +52,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
 
         if (response.documents.length > 0) {
           const project = response.documents[0];
+          setReceivedDate(project.receivedDate || null);
           setProjectData({
             startDate: project.startDate || "",
             projectEndDate: project.projectEndDate || "",
@@ -134,7 +136,21 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
       console.error("Error updating data:", error);
     }
   };
-
+  const isDateValid = (date: string, compareDate: string | null, isAfter: boolean): boolean => {
+    if (!compareDate) return true;
+    const dateToCheck = new Date(date);
+    const comparisonDate = new Date(compareDate);
+    return isAfter ? dateToCheck > comparisonDate : dateToCheck < comparisonDate;
+  };
+  
+  const isStartDateValid = (date: string): boolean => {
+    return isDateValid(date, receivedDate, true);
+  };
+  
+  const isEndDateValid = (date: string): boolean => {
+    return isDateValid(date, updatedStartDate, true);
+  };
+  
   if (loading) {
     return (
       <div className="p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
@@ -161,30 +177,45 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
       <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
       {isEditing ? (
           <div className="flex flex-row gap-2">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <Label>Start Date</Label>
             <input
               type="date"
               value={updatedStartDate}
+              min={receivedDate || undefined}
               onChange={(e) => {
-                setUpdatedStartDate(e.target.value);
-                if (e.target.value !== "") {
-                  setUpdatedStartupStatus("In Progress");
+                const newDate = e.target.value;
+                if (isStartDateValid(newDate)) {
+                  setUpdatedStartDate(newDate);
+                  if (newDate !== "") {
+                    setUpdatedStartupStatus("In Progress");
+                  }
+                } else {
+                  console.log("Start date must be after the received date.");
                 }
               }}
               className="border rounded px-2 py-1 text-sm"
             />
-            </div>
-            <div className="flex flex-col gap-2">
+          </div>
+          <div className="flex flex-col gap-2">
             <Label>End Date</Label>
             <input
               type="date"
               value={updatedEndDate}
-              onChange={(e) => setUpdatedEndDate(e.target.value)}
+              min={updatedStartDate || undefined}
+              onChange={(e) => {
+                const newDate = e.target.value;
+                if (isEndDateValid(newDate)) {
+                  setUpdatedEndDate(newDate);
+                } else {
+                  console.log("End date must be after the start date.");
+                }
+              }}
               className="border rounded px-2 py-1 text-sm"
             />
-            </div>
           </div>
+        </div>
+        
         ) : (
           <span className="text-black sm:text-base">
             {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}

@@ -85,7 +85,7 @@ const ProjectsPage: React.FC = () => {
   const [isCreatingNewRecord, setIsCreatingNewRecord] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [customService, setCustomService] = useState("");
-
+  
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -373,13 +373,13 @@ const ProjectsPage: React.FC = () => {
               <TableHead>Select</TableHead>
               <TableHead>View</TableHead>
               <TableHead>Startup Name</TableHead>
-              <TableHead>Start Date</TableHead>
               <TableHead>Received Date</TableHead>
+              <TableHead>Start Date</TableHead>
               <TableHead>Project End Date</TableHead>
               <TableHead>Funding Need</TableHead>
               <TableHead>Services</TableHead>
               <TableHead>Project Template</TableHead>
-              <TableHead>Startup Status</TableHead>
+              <TableHead>Project Status</TableHead>
               <TableHead>Stage</TableHead>
             </TableRow>
           </TableHeader>
@@ -427,8 +427,8 @@ const ProjectsPage: React.FC = () => {
                     {project.name}
                     </button>
                   </TableCell>
-                  <TableCell>{formatDate(project.startDate)}</TableCell>
                   <TableCell>{formatDate(project.receivedDate)}</TableCell>
+                  <TableCell>{formatDate(project.startDate)}</TableCell>
                   <TableCell>{formatDate(project.projectEndDate)}</TableCell>
                   <TableCell>{project.appliedFor}</TableCell>
                   <TableCell>{project.services}</TableCell>
