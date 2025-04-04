@@ -181,7 +181,11 @@ const ProjectsPage: React.FC = () => {
       if (editedProject.projectTemplate === "TANSIM" && editedProject.startDate) {
         editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
       }
-  
+      // Step 2 validation for required fields
+        if (!editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services) {
+            setIsSubmitting(false);
+            return;
+        }
       // Generate `projectId`
       const generatedProjectId = nanoid(6);
   
@@ -529,7 +533,7 @@ const ProjectsPage: React.FC = () => {
                   <p className="h-9 w-full py-1 rounded-md border px-3">{editedProject.name}</p>
                 </div>
                 <div>
-                  <Label htmlFor="receivedDate">Received Date</Label>
+                  <Label htmlFor="receivedDate">Received Date<span className="text-red-500">*</span></Label>
                   <Input
                     id="receivedDate"
                     type="date"
@@ -544,7 +548,7 @@ const ProjectsPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="appliedFor">Funding Need</Label>
+                  <Label htmlFor="appliedFor">Funding Need<span className="text-red-500">*</span></Label>
                   <Select
                     value={editedProject.appliedFor}
                     onValueChange={(value) =>
@@ -564,7 +568,7 @@ const ProjectsPage: React.FC = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="services">Services</Label>
+                  <Label htmlFor="services">Services<span className="text-red-500">*</span></Label>
                   <Select
                     value={editedProject.services}
                     onValueChange={(value) => {
@@ -591,7 +595,7 @@ const ProjectsPage: React.FC = () => {
 
                 {editedProject.services === "Other" && (
                   <div>
-                    <Label htmlFor="customService">Other Service</Label>
+                    <Label htmlFor="customService">Other Service<span className="text-red-500">*</span></Label>
                     <Input
                       id="customService"
                       value={customService}
@@ -601,7 +605,7 @@ const ProjectsPage: React.FC = () => {
                   </div>
                 )}
                 <div>
-                  <Label htmlFor="projectTemplate">Project Template</Label>
+                  <Label htmlFor="projectTemplate">Project Template<span className="text-red-500">*</span></Label>
                   <Select
                     value={editedProject.projectTemplate}
                     onValueChange={(value) =>
@@ -823,7 +827,9 @@ const ProjectsPage: React.FC = () => {
                       Delete
                     </Button>
                   )}
-                  <Button onClick={handleConfirmChanges} disabled={isSubmitting}>
+                  <Button onClick={handleConfirmChanges} disabled={isSubmitting}
+                  className={(!editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services) ? "opacity-50 cursor-not-allowed" : ""}
+                  >
                     {isAddingNewProject ? "Add Project" : "Save"}
                     {isSubmitting && "..."}
                   </Button>
