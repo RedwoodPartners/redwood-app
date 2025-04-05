@@ -245,14 +245,14 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   return (
     <div>
       <div className="flex">
-        <h3 className="container text-lg font-medium mb-2 -mt-4">Fund Raised So Far</h3>
+        <h3 className="container text-lg font-medium mb-2 -mt-4">Funds Raised So Far</h3>
         <div className="justify-end" onClick={() => openDialog()}>
           <ButtonWithIcon label="Add" />
         </div>
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
-          <TableCaption>A list of recent investments.</TableCaption>
+          <TableCaption>A list of recent investments</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Mode of Investment</TableHead>
@@ -267,7 +267,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableRow key={investment.$id} onDoubleClick={() => openDialog(investment, true)}>
                 <TableCell>{investment.mode}</TableCell>
                 <TableCell>{formatDate(investment.date)}</TableCell>
-                <TableCell>{investment.amount}</TableCell>
+                <TableCell className="text-right">{investment.amount}</TableCell>
                 <TableCell>{investment.description}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
@@ -320,7 +320,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             ))}
             <TableRow className="font-bold">
               <TableCell colSpan={2}>Total Investment Amount</TableCell>
-              <TableCell>
+              <TableCell className="text-right">
                 {calculateTotalInvestment(investments).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </TableCell>
             </TableRow>
@@ -330,15 +330,15 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "Edit Investment" : "Add New Investment"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit Funds Raised So Far" : "Add New Funds Raised So Far"}</DialogTitle>
             <DialogDescription>
-              {isEditMode ? "Edit the details of the investment." : "Fill out the details for the new investment."}
+              {isEditMode ? "Edit the details of the investment." : "Fill out the details to add New Funds Raised So Far"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
-              <Label className="">Mode of Investment</Label>
+              <Label>Mode of Investment</Label>
               <Select
                 value={selectedInvestment?.mode || ""}
                 onValueChange={(value) => setSelectedInvestment({ ...selectedInvestment, mode: value } as Investment)}
@@ -347,13 +347,15 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   <SelectValue placeholder="Select Mode" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="select">Select</SelectItem>
                   <SelectItem value="Equity">Equity</SelectItem>
                   <SelectItem value="CCPS">CCPS</SelectItem>
                   <SelectItem value="CCD">CCD</SelectItem>
                   <SelectItem value="OCD">OCD</SelectItem>
                   <SelectItem value="SAFE Notes">SAFE Notes</SelectItem>
                   <SelectItem value="Grant">Grant</SelectItem>
+                  <SelectItem value="Secured Debt">Secured Debt</SelectItem>
+                  <SelectItem value="Unsecured Debt">Unsecured Debt</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
               </Select>
               </div>

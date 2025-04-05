@@ -582,8 +582,7 @@ const ProjectsPage: React.FC = () => {
                       <SelectValue placeholder="Select an option" />
                     </SelectTrigger>
                     <SelectContent>
-                      {["Consulting", "BDD", "Business Structuring", "Events", "Investment Raise", "Advisory-Workshop",
-                      "Advisory-Mock Session", "Advisory-Pitch Fest", "Other"
+                      {["Consulting", "BDD", "Investment Raise", "Other"
                       ].map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
