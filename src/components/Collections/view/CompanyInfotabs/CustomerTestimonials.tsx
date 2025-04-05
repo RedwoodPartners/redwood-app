@@ -70,6 +70,11 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       const testimonialData = Object.fromEntries(
         Object.entries(currentTestimonial).filter(([key]) => !key.startsWith('$'))
       );
+      // query5 is saved as a string array [label, value]
+      if (currentTestimonial.query5 && Array.isArray(currentTestimonial.query5)) {
+        testimonialData.query5 = currentTestimonial.query5;
+      }
+
       if (currentTestimonial.$id) {
         await databases.updateDocument(
           STAGING_DATABASE_ID,
@@ -161,6 +166,18 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
   isSubmitting,
 }) => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [showCustomQuestions, setShowCustomQuestions] = useState(false);
+
+  const handleQuery5Change = (index: number, value: string) => {
+    const newQuery5 = [...(testimonial.query5 || ['', ''])];
+    newQuery5[index] = value;
+    onChange({ ...testimonial, query5: newQuery5 });
+  };
+  const handleQuery6Change = (index: number, value: string) => {
+    const newQuery6 = [...(testimonial.query6 || ['', ''])];
+    newQuery6[index] = value;
+    onChange({ ...testimonial, query6: newQuery6 });
+};
 
   const handleChange = (field: string, value: string) => {
     onChange({ ...testimonial, [field]: value });
@@ -261,7 +278,57 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             onChange={(e) => handleChange("query4", e.target.value)}
           />
         </div>
+        </div>
+        {/* Toggle Button for Custom Questions */}
+        <Button
+          variant="outline"
+          onClick={() => setShowCustomQuestions(!showCustomQuestions)}
+        >
+          Add Custom Question & Answer
+        </Button>
+        {showCustomQuestions && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+              <div>
+                <Label htmlFor="query5Label">Query 1</Label>
+                <Input
+                  id="query5Label"
+                  placeholder="Custom Question"
+                  value={testimonial.query5?.[0] || ''}
+                  onChange={(e) => handleQuery5Change(0, e.target.value)}
+                />
+              </div>
+              <div>
+                <Textarea
+                  id="query5Value"
+                  placeholder="Answer"
+                  value={testimonial.query5?.[1] || ''}
+                  onChange={(e) => handleQuery5Change(1, e.target.value)}
+                />
+              </div>
+          </div>
+          <div className="space-y-2">
+              <div>
+                <Label htmlFor="query6Label">Query 2</Label>
+                <Input
+                  id="query6Label"
+                  placeholder="Custom Question"
+                  value={testimonial.query6?.[0] || ''}
+                  onChange={(e) => handleQuery6Change(0, e.target.value)}
+                />
+              </div>
+              {/* Query6 Value */}
+              <div>
+                <Textarea
+                  id="query6Value"
+                  placeholder="Answer"
+                  value={testimonial.query6?.[1] || ''}
+                  onChange={(e) => handleQuery6Change(1, e.target.value)}
+                />
+              </div>
+          </div>
       </div>
+      )}
       <div className="flex justify-end space-x-2">
         {testimonial.$id && (
           <Button onClick={onDelete} className="bg-white text-black border border-black hover:bg-neutral-200">
@@ -337,17 +404,31 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
                         <p>{testimonial.query1}</p>
                       </div>
                       <div>
-                        <strong>Your View on Service Utilization</strong>
+                        <strong>Your View on Service Utilization-will the service/product be beneficial for your company/personal use</strong>
                         <p>{testimonial.query2}</p>
                       </div>
                       <div>
-                        <strong>Unique selling proposition of the company</strong>
+                        <strong>Unique selling proposition of the company-what made you switch to using this company s service/product-how were you doing earlier?</strong>
                         <p>{testimonial.query3}</p>
                       </div>
                       <div>
-                        <strong>Future of this Segment</strong>
+                        <strong>Future of this Segment- in your view, what will be the future of this segment?</strong>
                         <p>{testimonial.query4}</p>
                       </div>
+                      {/* Query5 Label and Value */}
+                      {testimonial.query5 && (
+                        <div>
+                          <strong>{testimonial.query5[0]}</strong>
+                          <p>{testimonial.query5[1]}</p>
+                        </div>
+                      )}
+                      {/* Query5 Label and Value */}
+                      {testimonial.query6 && (
+                        <div>
+                          <strong>{testimonial.query6[0]}</strong>
+                          <p>{testimonial.query6[1]}</p>
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

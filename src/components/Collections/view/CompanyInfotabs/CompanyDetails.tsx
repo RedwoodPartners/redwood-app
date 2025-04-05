@@ -7,10 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { databases, useIsStartupRoute } from "@/lib/utils";
-import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { PROJECTS_ID, STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
 import Link from "next/link";
+import { Query } from "appwrite";
 
 
 interface StartupData {
@@ -48,6 +49,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   const { toast } = useToast();
   const isStartupRoute = useIsStartupRoute();
 
+  const [receivedDate, setReceivedDate] = useState<string | null>(null);
+
+
   useEffect(() => {
     const fetchStartupDetails = async () => {
       if (startupId) {
@@ -73,6 +77,20 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           };
           setStartupData(parsedData);
           setUpdatedData(parsedData);
+
+          // fetch receivedDate to restrict dateOfIncorporation input date
+          const projectResponse = await databases.listDocuments(
+            STAGING_DATABASE_ID,
+            PROJECTS_ID,
+            [Query.equal("startupId", startupId)] 
+          );
+
+          if (projectResponse.documents.length > 0) {
+            const projectData = projectResponse.documents[0]; 
+            setReceivedDate(projectData.receivedDate);
+          } else {
+            console.error("No matching document found in PROJECTS_ID collection.");
+          }
         } catch (error) {
           console.error("Error fetching startup details:", error);
           setError("Failed to fetch startup details. Please try again later.");
@@ -458,6 +476,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
                   className="text-black"
                   disabled={!isEditing}
                   value={updatedData?.[key as keyof StartupData] || ""}
+                  max={receivedDate ? new Date(receivedDate).toISOString().split("T")[0] : ""}
                   onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
                 />
               ) : key === "revenue" ? (
