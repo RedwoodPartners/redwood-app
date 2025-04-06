@@ -86,6 +86,10 @@ const ProjectsPage: React.FC = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [customService, setCustomService] = useState("");
   
+  const [isDuplicateCheckPassed, setIsDuplicateCheckPassed] = useState(false);
+  const [isCheckingDuplication, setIsCheckingDuplication] = useState(false);
+  const [isFormModified, setIsFormModified] = useState(false);
+
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -323,6 +327,9 @@ const ProjectsPage: React.FC = () => {
   };
   const handleInputChange = () => {
     setIsCreatingNewRecord(false);
+    setIsDuplicateCheckPassed(false);
+    setIsFormModified(true);
+
   };
   const checkFormValidity = () => {
     if (editedProject) {
@@ -342,8 +349,144 @@ const ProjectsPage: React.FC = () => {
     month: "short",
     year: "numeric",
   });
-
   
+  //Duplication Check and creating a new startup record 
+  const fetchExistingStartup = async (): Promise<Startup | undefined> => {
+    try {
+      const existingStartup = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
+      const startupData: Startup[] = existingStartup.documents.map((doc: any) => ({
+        id: doc.$id,
+        name: doc.name,
+        founderName: doc.founderName,
+        phoneNumber: doc.phoneNumber,
+      }));
+  
+      return startupData.find(
+        (startup) =>
+          startup.name === editedProject?.name ||
+          startup.founderName === editedProject?.founderName ||
+          startup.phoneNumber === editedProject?.phoneNumber
+      );
+    } catch (error) {
+      console.error("Error fetching startup:", error);
+      return undefined;
+    }
+  };
+  
+  const handleContinueWithExistingStartup = async () => {
+    try {
+      const existingStartupDoc = await fetchExistingStartup();
+
+      if (existingStartupDoc) {
+        setEditedProject({
+          ...editedProject!,
+          startupId: existingStartupDoc.id,
+        });
+        setCurrentStep(2);
+        setErrorMessage(null);
+      }
+    } catch (error) {
+      console.error("Error continuing with existing startup:", error);
+    }
+  };
+
+  const handleCreateOrUpdateStartup = async () => {
+    setIsCheckingDuplication(true);
+
+    try {
+      const existingStartupDoc = await fetchExistingStartup();
+      
+      if (existingStartupDoc) {
+        handleDuplicateError(existingStartupDoc);
+        setIsDuplicateCheckPassed(false);
+      } else {
+        setIsDuplicateCheckPassed(true);
+        setIsFormModified(false);
+        setErrorMessage(null);
+      }
+    } catch (error) {
+      console.error("Error during duplication check:", error);
+    } finally {
+      setIsCheckingDuplication(false);
+    }
+  };
+  
+
+  const handleDuplicateError = (existingStartupDoc: Startup) => {
+    if (
+      existingStartupDoc.name === editedProject?.name &&
+      existingStartupDoc.founderName === editedProject?.founderName &&
+      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
+    ) {
+      setErrorMessage(
+        `A startup with Name "${editedProject?.name}", Founder "${editedProject?.founderName}", and Phone Number "${editedProject?.phoneNumber}" already exists.`
+      );
+    } else if (
+      existingStartupDoc.name === editedProject?.name &&
+      existingStartupDoc.founderName === editedProject?.founderName
+    ) {
+      setErrorMessage(
+        `A startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists.`
+      );
+    } else if (
+      existingStartupDoc.name === editedProject?.name &&
+      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
+    ) {
+      setErrorMessage(
+        `A startup with Name "${editedProject?.name}" and Phone Number "${editedProject?.phoneNumber}" already exists.`
+      );
+    } else if (
+      existingStartupDoc.founderName === editedProject?.founderName &&
+      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
+    ) {
+      setErrorMessage(
+        `A startup with Founder "${editedProject?.founderName}" and Phone Number "${editedProject?.phoneNumber}" already exists.`
+      );
+    } else if (existingStartupDoc.name === editedProject?.name) {
+      setErrorMessage(`A startup with Name "${editedProject?.name}" already exists.`);
+    } else if (existingStartupDoc.founderName === editedProject?.founderName) {
+      setErrorMessage(`A startup with Founder "${editedProject?.founderName}" already exists.`);
+    } else if (existingStartupDoc.phoneNumber === editedProject?.phoneNumber) {
+      setErrorMessage(`A startup with Phone Number "${editedProject?.phoneNumber}" already exists.`);
+    }
+  };
+  const createOrUpdateStartup = async () => {
+    try {
+      const response = await databases.createDocument(
+        STAGING_DATABASE_ID,
+        STARTUP_ID,
+        nanoid(6),
+        {
+          name: editedProject!.name,
+          founderName: editedProject!.founderName,
+          phoneNumber: editedProject!.phoneNumber,
+          year: formattedDate,
+        }
+      );
+
+      setEditedProject({
+        ...editedProject!,
+        startupId: response.$id,
+      });
+    } catch (error) {
+      console.error("Error creating or updating startup:", error);
+    }
+  };
+
+  const handleCreateNewStartup = async () => {
+    setIsCreatingNewRecord(true);
+    try {
+      await createOrUpdateStartup();
+      setCurrentStep(2);
+      setIsDuplicateCheckPassed(false);
+    } catch (error) {
+      console.error("Error creating startup:", error);
+    } finally {
+      setIsCreatingNewRecord(false);
+    }
+  };
+  
+
 
   return (
     <div className="p-2">
@@ -461,7 +604,7 @@ const ProjectsPage: React.FC = () => {
               <DialogDescription aria-describedby={undefined}>
               </DialogDescription>
               {errorMessage && (
-                <p className="text-red-500">{errorMessage}</p>
+                <p className="text-red-500 text-base">{errorMessage}</p>
               )}
             </DialogHeader>
 
@@ -664,157 +807,33 @@ const ProjectsPage: React.FC = () => {
 
             <DialogFooter>
             {currentStep === 1 && (
-                <>
-                  {errorMessage ? (
+              <>
+                {errorMessage ? (
+                  <Button onClick={handleContinueWithExistingStartup}>
+                    Continue with Existing Startup
+                  </Button>
+                ) : isDuplicateCheckPassed && !isFormModified ? (
+                  <div className="flex items-center gap-4">
+                    <span className="text-green-600 text-sm">
+                      Duplication check passed!
+                    </span>
                     <Button
-                      onClick={async () => {
-                        try {
-                          const existingStartup = await databases.listDocuments(
-                            STAGING_DATABASE_ID,
-                            STARTUP_ID
-                          );
-
-                          const existingStartupDoc = existingStartup.documents.find(
-                            (doc: any) =>
-                              doc.name === editedProject.name ||
-                              doc.founderName === editedProject.founderName ||
-                              doc.phoneNumber === editedProject.phoneNumber
-                          );
-
-                          if (existingStartupDoc) {
-                            setEditedProject({
-                              ...editedProject,
-                              startupId: existingStartupDoc.$id,
-                            });
-                            setCurrentStep(2);
-                            setErrorMessage(null); 
-                          }
-                        } catch (error) {
-                          console.error("Error fetching startup:", error);
-                        }
-                      }}
+                      onClick={handleCreateNewStartup}
+                      disabled={isCreatingNewRecord}
                     >
-                      Continue with Existing Startup
+                      {isCreatingNewRecord ? "Creating..." : "Create New Startup"}
                     </Button>
-                  ) : (
-                    <Button
-                      onClick={async () => {
-                        setIsCreatingNewRecord(true);
-                        try {
-                          // Check for duplication
-                          const existingStartup = await databases.listDocuments(
-                            STAGING_DATABASE_ID,
-                            STARTUP_ID
-                          );
-
-                          const existingStartupDoc = existingStartup.documents.find(
-                            (doc: any) =>
-                              doc.name === editedProject.name ||
-                              doc.founderName === editedProject.founderName ||
-                              doc.phoneNumber === editedProject.phoneNumber
-                          );
-
-                          if (existingStartupDoc) {
-                            if (
-                              existingStartupDoc.name === editedProject.name &&
-                              existingStartupDoc.founderName === editedProject.founderName &&
-                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
-                            ) {
-                              setErrorMessage(
-                                `Startup with Name "${editedProject.name}", Founder "${editedProject.founderName}", Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (
-                              existingStartupDoc.name === editedProject.name &&
-                              existingStartupDoc.founderName === editedProject.founderName
-                            ) {
-                              setErrorMessage(
-                                `Startup with Name "${editedProject.name}" and Founder "${editedProject.founderName}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (
-                              existingStartupDoc.name === editedProject.name &&
-                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
-                            ) {
-                              setErrorMessage(
-                                `Startup with Name "${editedProject.name}" and Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (
-                              existingStartupDoc.founderName === editedProject.founderName &&
-                              existingStartupDoc.phoneNumber === editedProject.phoneNumber
-                            ) {
-                              setErrorMessage(
-                                `Startup with Founder "${editedProject.founderName}" and Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (existingStartupDoc.name === editedProject.name) {
-                              setErrorMessage(
-                                `Startup with Name "${editedProject.name}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (existingStartupDoc.founderName === editedProject.founderName) {
-                              setErrorMessage(
-                                `Startup with Founder "${editedProject.founderName}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            } else if (existingStartupDoc.phoneNumber === editedProject.phoneNumber) {
-                              setErrorMessage(
-                                `Startup with Phone Number "${editedProject.phoneNumber}" already exists in specific startup record "${existingStartupDoc.name}".`
-                              );
-                            }
-                            
-                          } else {
-                            // Create or update startup
-                            const existingStartupByName = existingStartup.documents.find(
-                              (doc: any) => doc.name === editedProject.name
-                            );
-
-                            if (existingStartupByName) {
-                              // Update existing startup
-                              await databases.updateDocument(
-                                STAGING_DATABASE_ID,
-                                STARTUP_ID,
-                                existingStartupByName.$id,
-                                {
-                                  name: editedProject.name,
-                                  founderName: editedProject.founderName,
-                                  phoneNumber: editedProject.phoneNumber,
-                                }
-                              );
-                              setEditedProject({
-                                ...editedProject,
-                                startupId: existingStartupByName.$id,
-                              });
-                            } else {
-                              // Create new startup
-                              const response = await databases.createDocument(
-                                STAGING_DATABASE_ID,
-                                STARTUP_ID,
-                                nanoid(6),
-                                {
-                                  name: editedProject.name,
-                                  founderName: editedProject.founderName,
-                                  phoneNumber: editedProject.phoneNumber,
-                                  year: formattedDate,
-                                }
-                              );
-                              setEditedProject({
-                                ...editedProject,
-                                startupId: response.$id,
-                              });
-                            }
-
-                            setCurrentStep(2);
-                            setErrorMessage(null); 
-                          }
-                        } catch (error) {
-                          console.error("Error saving startup:", error);
-                        } finally {
-                          setIsCreatingNewRecord(false);
-                        }
-                      }}
-                      disabled={isCreatingNewRecord || !isFormValid}
-                    >
-                      {isCreatingNewRecord ? "Creating New Record..." : "Next"}
-                    </Button>
-                  )}
-                </>
-              )}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleCreateOrUpdateStartup}
+                    disabled={!isFormValid || isCheckingDuplication}
+                  >
+                    {isCheckingDuplication ? "Checking for duplication!" : "Next"}
+                  </Button>
+                )}
+              </>
+            )}
               {currentStep === 2 && (
                 <>
                   <Button onClick={() => setCurrentStep(1)}>Back</Button>
