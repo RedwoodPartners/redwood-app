@@ -7,7 +7,7 @@ import {
   PROJECTS_ID,
   STARTUP_ID
 } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { client, databases } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -51,6 +51,7 @@ type Project = {
   appliedFor: string;
   services: string;
   projectTemplate: string;
+  client: string;
   startupStatus: string;
   stage: string;
   founderName?: string;
@@ -107,6 +108,7 @@ const ProjectsPage: React.FC = () => {
           appliedFor: doc.appliedFor || "",
           services: doc.services || "",
           projectTemplate: doc.projectTemplate || "",
+          client: doc.client || "",
           startupStatus: doc.startupStatus || "",
           stage: doc.stage || "",
         }));
@@ -161,6 +163,7 @@ const ProjectsPage: React.FC = () => {
       appliedFor: "",
       services: "",
       projectTemplate: "",
+      client: "",
       startupStatus: "Pipeline",
       stage: "",
     });
@@ -177,7 +180,7 @@ const ProjectsPage: React.FC = () => {
 
  
   const handleConfirmChanges = async () => {
-    if (isSubmitting) return; // Prevent duplicate submission
+    if (isSubmitting) return; 
     setIsSubmitting(true);
   
     if (editedProject) {
@@ -186,7 +189,7 @@ const ProjectsPage: React.FC = () => {
         editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
       }
       // Step 2 validation for required fields
-        if (!editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services) {
+        if (!editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services || !editedProject.client) {
             setIsSubmitting(false);
             return;
         }
@@ -209,6 +212,7 @@ const ProjectsPage: React.FC = () => {
               appliedFor: editedProject.appliedFor,
               services: editedProject.services === "Other" ? customService : editedProject.services,
               projectTemplate: editedProject.projectTemplate,
+              client: editedProject.client,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
             }
@@ -253,6 +257,7 @@ const ProjectsPage: React.FC = () => {
               appliedFor: editedProject.appliedFor,
               services: editedProject.services,
               projectTemplate: editedProject.projectTemplate,
+              client: editedProject.client,
               startupStatus: editedProject.startupStatus,
               stage: editedProject.stage,
             }
@@ -381,6 +386,7 @@ const ProjectsPage: React.FC = () => {
         setEditedProject({
           ...editedProject!,
           startupId: existingStartupDoc.id,
+          name: existingStartupDoc.name,
         });
         setCurrentStep(2);
         setErrorMessage(null);
@@ -419,35 +425,35 @@ const ProjectsPage: React.FC = () => {
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
-        `A startup with Name "${editedProject?.name}", Founder "${editedProject?.founderName}", and Phone Number "${editedProject?.phoneNumber}" already exists.`
+        `Startup with Name "${editedProject?.name}", Founder "${editedProject?.founderName}", and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
     } else if (
       existingStartupDoc.name === editedProject?.name &&
       existingStartupDoc.founderName === editedProject?.founderName
     ) {
       setErrorMessage(
-        `A startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists.`
+        `Startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}`
       );
     } else if (
       existingStartupDoc.name === editedProject?.name &&
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
-        `A startup with Name "${editedProject?.name}" and Phone Number "${editedProject?.phoneNumber}" already exists.`
+        `Startup with Name "${editedProject?.name}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
     } else if (
       existingStartupDoc.founderName === editedProject?.founderName &&
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
-        `A startup with Founder "${editedProject?.founderName}" and Phone Number "${editedProject?.phoneNumber}" already exists.`
+        `Startup with Founder "${editedProject?.founderName}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
     } else if (existingStartupDoc.name === editedProject?.name) {
-      setErrorMessage(`A startup with Name "${editedProject?.name}" already exists.`);
+      setErrorMessage(`Startup with Name "${editedProject?.name}" already exists in startup record "${existingStartupDoc.name}".`);
     } else if (existingStartupDoc.founderName === editedProject?.founderName) {
-      setErrorMessage(`A startup with Founder "${editedProject?.founderName}" already exists.`);
+      setErrorMessage(`Startup with Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}".`);
     } else if (existingStartupDoc.phoneNumber === editedProject?.phoneNumber) {
-      setErrorMessage(`A startup with Phone Number "${editedProject?.phoneNumber}" already exists.`);
+      setErrorMessage(`Startup with Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`);
     }
   };
   const createOrUpdateStartup = async () => {
@@ -525,6 +531,7 @@ const ProjectsPage: React.FC = () => {
               <TableHead>Project End Date</TableHead>
               <TableHead>Funding Need</TableHead>
               <TableHead>Services</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead>Project Template</TableHead>
               <TableHead>Project Status</TableHead>
               <TableHead>Stage</TableHead>
@@ -535,7 +542,7 @@ const ProjectsPage: React.FC = () => {
               // Find the corresponding startup for the project
               const startup = startups.find((s) => s.name === project.name);
               return (
-                <TableRow key={project.id} onDoubleClick={() => handleEditProject(project)}>
+                <TableRow key={project.id}>
                   <TableCell>
                     <Checkbox
                       checked={selectedProjects.includes(project.id)}
@@ -579,6 +586,7 @@ const ProjectsPage: React.FC = () => {
                   <TableCell>{formatDate(project.projectEndDate)}</TableCell>
                   <TableCell>{project.appliedFor}</TableCell>
                   <TableCell>{project.services}</TableCell>
+                  <TableCell>{project.client}</TableCell>
                   <TableCell>{project.projectTemplate}</TableCell>
                   <TableCell>{project.startupStatus}</TableCell>
                   <TableCell>{project.stage}</TableCell>
@@ -747,6 +755,19 @@ const ProjectsPage: React.FC = () => {
                   </div>
                 )}
                 <div>
+                  <Label htmlFor="client">Client<span className="text-red-500">*</span></Label>
+                  <Input
+                    id="client"
+                    value={editedProject.client || ""}
+                    onChange={(e) =>
+                      setEditedProject({
+                        ...editedProject!,
+                        client: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
                   <Label htmlFor="projectTemplate">Project Template<span className="text-red-500">*</span></Label>
                   <Select
                     value={editedProject.projectTemplate}
@@ -846,7 +867,7 @@ const ProjectsPage: React.FC = () => {
                     </Button>
                   )}
                   <Button onClick={handleConfirmChanges} disabled={isSubmitting}
-                  className={(!editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services) ? "opacity-50 cursor-not-allowed" : ""}
+                  className={(!editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services || !editedProject?.client) ? "opacity-50 cursor-not-allowed" : ""}
                   >
                     {isAddingNewProject ? "Add Project" : "Save"}
                     {isSubmitting && "..."}
