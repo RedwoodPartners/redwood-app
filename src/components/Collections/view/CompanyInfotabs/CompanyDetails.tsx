@@ -182,14 +182,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     ],
     businessType: [
       "Select",
-      "Business Model Trading",
-      "Services",
-      "Product Manufacturing",
-      "Subcontract",
-      "Product+Services",
-      "Both",
       "Product",
       "Service",
+      "Product & Service",
+      "Trading",
     ],
     natureOfCompany: [
       "Select",
