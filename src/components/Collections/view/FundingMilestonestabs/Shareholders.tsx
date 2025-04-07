@@ -24,8 +24,6 @@ import {
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
-import { PlusCircle } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -34,12 +32,27 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import ButtonWithIcon from "@/lib/addButton";
+import { ChevronRightIcon } from "lucide-react";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
 interface ShareholdersProps {
   startupId: string;
 }
+interface EducationRow {
+  qualification: string;
+  institution: string;
+  fromDate: string;
+  toDate: string;
+}
+interface WorkExperienceRow {
+  organisation: string;
+  positionDescription: string;
+  fromDate: string;
+  toDate: string;
+}
+
+
 
 const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
@@ -49,6 +62,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [educationRows, setEducationRows] = useState<EducationRow[]>([]);
+  const [workExperienceRows, setWorkExperienceRows] = useState<WorkExperienceRow[]>([]);
+
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -57,6 +74,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
         SHAREHOLDERS_ID,
         [Query.equal("startupId", startupId)]
       );
+      const shareholders = response.documents.map((doc) => ({
+        ...doc,
+        educationalQualifications: doc.educationalQualifications || [],
+      }));
       setAllShareholders(response.documents);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -77,10 +98,9 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   }, [editingShareholder]);
 
   const handleSave = async () => {
-
-    if (isSubmitting) return; // Prevent duplicate submission
+    if (isSubmitting) return; 
     setIsSubmitting(true);
-
+    
     if (!data["shareholderName"]) {
       setErrors((prevErrors) => ({
         ...prevErrors,
@@ -90,21 +110,22 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       return;
     }
     try {
+      const educationalQualifications = educationRows.map(
+        (row) => `${row.qualification} at ${row.institution} (${row.fromDate} - ${row.toDate})`
+      );
+
+      const formattedWorkExperience = workExperienceRows.map(
+        (row) => `${row.organisation} as ${row.positionDescription} (${row.fromDate} - ${row.toDate})`
+    );
+    
+
       const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, ...dataToUpdate } = data;
+      const updatedData = { ...dataToUpdate, educationalQualifications, workExperience: formattedWorkExperience };
+
       if (editingShareholder) {
-        await databases.updateDocument(
-          STAGING_DATABASE_ID,
-          SHAREHOLDERS_ID,
-          editingShareholder.$id,
-          { ...dataToUpdate }
-        );
+        await databases.updateDocument(STAGING_DATABASE_ID, SHAREHOLDERS_ID, editingShareholder.$id, updatedData);
       } else {
-        await databases.createDocument(
-          STAGING_DATABASE_ID,
-          SHAREHOLDERS_ID,
-          "unique()",
-          { startupId, ...dataToUpdate }
-        );
+        await databases.createDocument(STAGING_DATABASE_ID, SHAREHOLDERS_ID, "unique()", { startupId, ...updatedData });
       }
       setData({});
       setEditingShareholder(null);
@@ -156,7 +177,60 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const handleDoubleTap = (shareholder: any) => {
     setEditingShareholder(shareholder);
     setIsDialogOpen(true);
+  
+    // Parse educational qualifications into rows
+    const parsedEducationRows = shareholder.educationalQualifications?.map((qualification: string) => {
+      const [qual, rest] = qualification.split(" at ");
+      const [institution, dateRange] = rest?.split(" (") || [];
+      const [fromDate, toDate] = dateRange?.replace(")", "").split(" - ") || [];
+      return { qualification: qual || "", institution: institution || "", fromDate: fromDate || "", toDate: toDate || "" };
+    }) || [];
+    const parsedWorkExperienceRows = shareholder.workExperience?.map((experience: string) => {
+      const [org, rest] = experience.split(" as ");
+      const [positionDescription, dateRange] = rest?.split(" (") || [];
+      const [fromDate, toDate] = dateRange?.replace(")", "").split(" - ") || [];
+      return { organisation: org || "", positionDescription: positionDescription || "", fromDate: fromDate || "", toDate: toDate || "" };
+  }) || [];
+  
+    setWorkExperienceRows(parsedWorkExperienceRows);
+    setEducationRows(parsedEducationRows);
   };
+  
+  const handleEducationChange = (index: number, field: keyof EducationRow, value: string) => {
+    const updatedRows = [...educationRows];
+    updatedRows[index][field] = value;
+    setEducationRows(updatedRows);
+  };
+  
+
+  const addEducationRow = () => {
+    setEducationRows([
+      ...educationRows,
+      { qualification: "", institution: "", fromDate: "", toDate: "" },
+    ]);
+  };
+  
+  const educationalQualifications = educationRows.map(
+    (row) => `${row.qualification} at ${row.institution} (${row.fromDate} - ${row.toDate})`
+  );
+  const toggleRow = (id: string) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
+  const handleWorkExperienceChange = (index: number, field: keyof WorkExperienceRow, value: string) => {
+    const updatedRows = [...workExperienceRows];
+    updatedRows[index][field] = value;
+    setWorkExperienceRows(updatedRows);
+  };
+  const addWorkExperienceRow = () => {
+    setWorkExperienceRows([
+        ...workExperienceRows,
+        { organisation: "", positionDescription: "", fromDate: "", toDate: "" },
+    ]);
+  };
+  const formattedWorkExperience = workExperienceRows.map(
+    (row) => `${row.organisation} as ${row.positionDescription} (${row.fromDate} - ${row.toDate})`
+  );
+
 
   return (
     <div>
@@ -167,6 +241,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           if (!open) {
             setEditingShareholder(null);
             setErrors({});
+          } else if (!editingShareholder) {
+            setData({});
+            setEducationRows([]);
+            setWorkExperienceRows([]);
           }
         }}>
           <DialogTrigger asChild>
@@ -176,7 +254,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               </div>
             </button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl p-6">
+          <DialogContent className="w-full max-w-5xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingShareholder ? 'Edit Shareholder' : 'Add Shareholder'}</DialogTitle>
               <DialogDescription aria-describedby={undefined}>
@@ -197,21 +275,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     <p className="text-red-500 text-sm mt-1">{errors.shareholderName}</p>
                   )}
                 </div>
-                <div>
-                  <Label>Is Community Certificate Holder?</Label>
-                  <Select
-                    value={data["isCommunityHolder"] || ""}
-                    onValueChange={(value) => handleChange("isCommunityHolder", value)}
-                  >
-                    <SelectTrigger className="border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                
                 <div>
                   <Label>Gender</Label>
                   <Select
@@ -238,8 +302,6 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     onChange={(e) => handleChange("linkedinProfile", e.target.value)}
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <Label>Is Partner/Director?</Label>
                   <Select
@@ -288,33 +350,122 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                <div>
+              <div>
+                <div className="border border-gray-100 rounded-xl p-4">
                   <Label>Educational Qualifications</Label>
-                  <Textarea
-                    id="educationalQualifications"
-                    placeholder="Educational Qualifications"
-                    value={data["educationalQualifications"] || ""}
-                    onChange={(e) => handleChange("educationalQualifications", e.target.value)}
-                  />
+                  <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Qualification</TableHead>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>From Date</TableHead>
+                      <TableHead>To Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {educationRows.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Input
+                            placeholder="Qualification"
+                            value={row.qualification}
+                            onChange={(e) =>
+                              handleEducationChange(index, "qualification", e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            placeholder="Institution"
+                            value={row.institution}
+                            onChange={(e) =>
+                              handleEducationChange(index, "institution", e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.fromDate}
+                            onChange={(e) =>
+                              handleEducationChange(index, "fromDate", e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.toDate}
+                            onChange={(e) =>
+                              handleEducationChange(index, "toDate", e.target.value)
+                            }
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Button variant={"outline"} type="button" onClick={addEducationRow} className="mt-2">
+                  Add Row
+                </Button>
                 </div>
                 <div>
+                <div className="border border-gray-100 rounded-xl p-4">
                   <Label>Work Experience</Label>
-                  <Textarea
-                    id="workExperience"
-                    placeholder="Work Experience"
-                    value={data["workExperience"] || ""}
-                    onChange={(e) => handleChange("workExperience", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Associated Companies</Label>
-                  <Textarea
-                    id="associatedCompanies"
-                    placeholder="Associated Companies"
-                    value={data["associatedCompanies"] || ""}
-                    onChange={(e) => handleChange("associatedCompanies", e.target.value)}
-                  />
+                  <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Organisation</TableHead>
+                            <TableHead>Position Description</TableHead>
+                            <TableHead>From Date</TableHead>
+                            <TableHead>To Date</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {workExperienceRows.map((row, index) => (
+                            <TableRow key={index}>
+                                <TableCell>
+                                    <Input
+                                        placeholder="Organisation"
+                                        value={row.organisation}
+                                        onChange={(e) =>
+                                            handleWorkExperienceChange(index, "organisation", e.target.value)
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <Input
+                                        placeholder="Position Description"
+                                        value={row.positionDescription}
+                                        onChange={(e) =>
+                                            handleWorkExperienceChange(index, "positionDescription", e.target.value)
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <Input
+                                        placeholder="From Date"
+                                        value={row.fromDate}
+                                        onChange={(e) =>
+                                            handleWorkExperienceChange(index, "fromDate", e.target.value)
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <Input
+                                        placeholder="To Date"
+                                        value={row.toDate}
+                                        onChange={(e) =>
+                                            handleWorkExperienceChange(index, "toDate", e.target.value)
+                                        }
+                                    />
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                    <Button variant={"outline"} type="button" onClick={addWorkExperienceRow} className="mt-2">
+                        Add Row
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end mt-4 space-x-2">
@@ -337,23 +488,24 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Is Community Certificate Holder</TableHead>
               <TableHead>Gender</TableHead>
               <TableHead>LinkedIn Profile</TableHead>
               <TableHead>Is Partner/Director</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {allShareholders.map((shareholder) => (
+              <React.Fragment key={shareholder.$id}>
               <TableRow
                 key={shareholder.$id}
                 onDoubleClick={() => handleDoubleTap(shareholder)}
-                style={{ cursor: 'pointer' }}
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => toggleRow(shareholder.$id)}
               >
                 <TableCell>{shareholder.shareholderName || "N/A"}</TableCell>
-                <TableCell>{shareholder.isCommunityHolder || "N/A"}</TableCell>
                 <TableCell>{shareholder.gender || "N/A"}</TableCell>
                 <TableCell>
                   {shareholder.linkedinProfile ? (
@@ -376,7 +528,96 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 <TableCell>{shareholder.isPartner || "N/A"}</TableCell>
                 <TableCell>{shareholder.email || "N/A"}</TableCell>
                 <TableCell>{shareholder.phone || "N/A"}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRow(shareholder.$id);
+                    }}
+                  >
+                    <ChevronRightIcon
+                      className={`transition-transform ${
+                        expandedRow === shareholder.$id ? "rotate-90" : ""
+                      }`}
+                    />
+                  </Button>
+                </TableCell>
+                  </TableRow>
+                  {expandedRow === shareholder.$id && (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <div>
+                        {shareholder.educationalQualifications?.length > 0 ? (
+                          <div>
+                            <Label>Educational Qualification</Label>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Qualification</TableHead>
+                                <TableHead>Institution</TableHead>
+                                <TableHead>From Date</TableHead>
+                                <TableHead>To Date</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {shareholder.educationalQualifications.map((qualification: string, index: number) => {
+                                // string formatted as "Qualification at Institution (FromDate - ToDate)"
+                                const [qual, rest] = qualification.split(" at ");
+                                const [institution, dateRange] = rest?.split(" (") || [];
+                                const [fromDate, toDate] = dateRange?.replace(")", "").split(" - ") || [];
+
+                                return (
+                                  <TableRow key={index}>
+                                    <TableCell>{qual || "N/A"}</TableCell>
+                                    <TableCell>{institution || "N/A"}</TableCell>
+                                    <TableCell>{fromDate || "N/A"}</TableCell>
+                                    <TableCell>{toDate || "N/A"}</TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                          </div>
+                        ) : (
+                          <p>No educational qualifications available.</p>
+                        )}
+                    {/* Work Experience */}
+                    {shareholder.workExperience?.length > 0 && (
+                      <div className="mt-4">
+                          <Label>Work Experience</Label>
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead>Organisation</TableHead>
+                                      <TableHead>Position Description</TableHead>
+                                      <TableHead>From Date</TableHead>
+                                      <TableHead>To Date</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {shareholder.workExperience.map((experience: string, index: number) => {
+                                      const [org, rest] = experience.split(" as ");
+                                      const [positionDescription, dateRange] = rest?.split(" (") || [];
+                                      const [fromDate, toDate] = dateRange?.replace(")", "").split(" - ") || [];
+                                      return (
+                                          <TableRow key={index}>
+                                              <TableCell>{org || "N/A"}</TableCell>
+                                              <TableCell>{positionDescription || "N/A"}</TableCell>
+                                              <TableCell>{fromDate || "N/A"}</TableCell>
+                                              <TableCell>{toDate || "N/A"}</TableCell>
+                                          </TableRow>
+                                      );
+                                  })}
+                              </TableBody>
+                          </Table>
+                      </div>
+                  )}
+                  </div>
+                </TableCell>
               </TableRow>
+            )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
