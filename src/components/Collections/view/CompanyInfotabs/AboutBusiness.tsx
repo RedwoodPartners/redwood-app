@@ -1,4 +1,6 @@
 "use client";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -222,12 +224,13 @@ const AccordionDemo: React.FC<AccordionDemoProps> = ({
           <AccordionTrigger className="text-sm font-semibold">
             {field.label}
           </AccordionTrigger>
-          <AccordionContent className="mt-2 text-black">
-            <Textarea
+          <AccordionContent>
+            <ReactQuill
+              theme={isEditing ? "snow" : "bubble"}
               value={data[field.id] || ""} 
-              onChange={(e) => onChange(field.id, e.target.value)}
-              disabled={!isEditing} 
-              className="h-80"
+              onChange={(value) => onChange(field.id, value)}
+              readOnly={!isEditing} 
+              className="h-96"
             />
           </AccordionContent>
         </AccordionItem>
