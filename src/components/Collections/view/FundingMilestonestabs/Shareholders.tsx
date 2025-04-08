@@ -350,8 +350,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
-              <div>
-                <div className="border border-gray-100 rounded-xl p-4">
+              <div className="space-y-2 mt-4">
+                <div className="border border-gray-300 rounded-xl p-4">
                   <Label>Educational Qualifications</Label>
                   <Table>
                   <TableHeader>
@@ -408,7 +408,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                 </Button>
                 </div>
                 <div>
-                <div className="border border-gray-100 rounded-xl p-4">
+                <div className="border border-gray-300 rounded-xl p-4">
                   <Label>Work Experience</Label>
                   <Table>
                     <TableHeader>
@@ -549,8 +549,8 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     <TableCell colSpan={7}>
                       <div>
                         {shareholder.educationalQualifications?.length > 0 ? (
-                          <div>
-                            <Label>Educational Qualification</Label>
+                          <div className="border border-gray-300 rounded-xl p-4">
+                          <Label>Educational Qualification</Label>
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -584,7 +584,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                         )}
                     {/* Work Experience */}
                     {shareholder.workExperience?.length > 0 && (
-                      <div className="mt-4">
+                      <div className="mt-4 border border-gray-300 rounded-xl p-4">
                           <Label>Work Experience</Label>
                           <Table>
                               <TableHeader>
