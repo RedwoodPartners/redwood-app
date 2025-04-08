@@ -150,6 +150,14 @@ const ProjectsPage: React.FC = () => {
       );
     }
   }, [searchQuery, startups]);
+  
+  useEffect(() => {
+  if (currentStep === 2 && !editedProject?.startupId) {
+    setCurrentStep(1); 
+    setErrorMessage(null);
+  }
+  }, [currentStep, editedProject?.startupId]);
+
 
   // Open dialog for adding a new project
   const handleAddNewProject = () => {
@@ -189,7 +197,7 @@ const ProjectsPage: React.FC = () => {
         editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
       }
       // Step 2 validation for required fields
-        if (!editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services || !editedProject.client) {
+        if (!editedProject.startupId || !editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services || !editedProject.client) {
             setIsSubmitting(false);
             return;
         }
@@ -368,8 +376,8 @@ const ProjectsPage: React.FC = () => {
   
       return startupData.find(
         (startup) =>
-          startup.name === editedProject?.name ||
-          startup.founderName === editedProject?.founderName ||
+          startup.name.toLowerCase() === editedProject?.name?.toLowerCase() ||
+          startup.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() ||
           startup.phoneNumber === editedProject?.phoneNumber
       );
     } catch (error) {
@@ -420,42 +428,43 @@ const ProjectsPage: React.FC = () => {
 
   const handleDuplicateError = (existingStartupDoc: Startup) => {
     if (
-      existingStartupDoc.name === editedProject?.name &&
-      existingStartupDoc.founderName === editedProject?.founderName &&
+      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
+      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() &&
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
         `Startup with Name "${editedProject?.name}", Founder "${editedProject?.founderName}", and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
     } else if (
-      existingStartupDoc.name === editedProject?.name &&
-      existingStartupDoc.founderName === editedProject?.founderName
+      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
+      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase()
     ) {
       setErrorMessage(
-        `Startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}`
+        `Startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}"`
       );
     } else if (
-      existingStartupDoc.name === editedProject?.name &&
+      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
         `Startup with Name "${editedProject?.name}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
     } else if (
-      existingStartupDoc.founderName === editedProject?.founderName &&
+      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() &&
       existingStartupDoc.phoneNumber === editedProject?.phoneNumber
     ) {
       setErrorMessage(
         `Startup with Founder "${editedProject?.founderName}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
       );
-    } else if (existingStartupDoc.name === editedProject?.name) {
+    } else if (existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase()) {
       setErrorMessage(`Startup with Name "${editedProject?.name}" already exists in startup record "${existingStartupDoc.name}".`);
-    } else if (existingStartupDoc.founderName === editedProject?.founderName) {
+    } else if (existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase()) {
       setErrorMessage(`Startup with Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}".`);
     } else if (existingStartupDoc.phoneNumber === editedProject?.phoneNumber) {
       setErrorMessage(`Startup with Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`);
     }
   };
+  
   const createOrUpdateStartup = async () => {
     try {
       const response = await databases.createDocument(
@@ -609,7 +618,8 @@ const ProjectsPage: React.FC = () => {
               <DialogTitle>
                 {isAddingNewProject ? "Add New Project" : "Edit Project"}
               </DialogTitle>
-              <DialogDescription aria-describedby={undefined}>
+              <DialogDescription>
+                Enter Startup Details to check Project Status
               </DialogDescription>
               {errorMessage && (
                 <p className="text-red-500 text-base">{errorMessage}</p>
@@ -867,7 +877,7 @@ const ProjectsPage: React.FC = () => {
                     </Button>
                   )}
                   <Button onClick={handleConfirmChanges} disabled={isSubmitting}
-                  className={(!editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services || !editedProject?.client) ? "opacity-50 cursor-not-allowed" : ""}
+                  className={(!editedProject?.startupId || !editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services || !editedProject?.client) ? "opacity-50 cursor-not-allowed" : ""}
                   >
                     {isAddingNewProject ? "Add Project" : "Save"}
                     {isSubmitting && "..."}
