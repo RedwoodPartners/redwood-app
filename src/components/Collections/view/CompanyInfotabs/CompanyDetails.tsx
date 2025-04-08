@@ -30,7 +30,6 @@ interface StartupData {
   natureOfCompany: string;
   registeredCountry: string;
   subDomain: string;
-  communityCertificate: string;
   employees: string;
 }
 
@@ -72,7 +71,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
             revenue: data.revenue,
             businessModel: data.businessModel,
             subDomain: data.subDomain,
-            communityCertificate: data.communityCertificate,
             employees: data.employees,
           };
           setStartupData(parsedData);
@@ -269,10 +267,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       "Yes",
       "No",
     ],
-    communityCertificate: [
-      "Yes",
-      "No",
-    ],
     patentsCertifications: [
       "Yes",
       "No",
@@ -400,7 +394,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     natureOfCompany: "Nature of Company",
     registeredCountry: "Registered Country",
     subDomain: "Sub-Domain",
-    communityCertificate: "Community Certificate",
     employees: "Employees (last FY)",
   };
 
@@ -453,74 +446,77 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-4 gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
-        {Object.entries(startupData).map(([key, value]) => (
-          <div key={key} className="space-y-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label className="font-semibold text-gray-700">
-                {fieldLabels[key as keyof StartupData] || key}
-              </Label>
-              {key === "businessModel" ? (
-                <BusinessModelSelect
-                value={updatedData?.businessModel || []} // Pass selected values as an array
-                disabled={!isEditing}
-                onChange={(value) => handleChange("businessModel", value)}
-              />
-              ) : key === "dateOfIncorporation" ? (
-                <Input
-                  type="date"
-                  className="text-black"
-                  disabled={!isEditing}
-                  value={updatedData?.[key as keyof StartupData] || ""}
-                  max={receivedDate ? new Date(receivedDate).toISOString().split("T")[0] : ""}
-                  onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
-                />
-              ) : key === "revenue" ? (
-                <Input
-                  type="text"
-                  className="text-black"
-                  placeholder="0 INR"
-                  disabled={!isEditing}
-                  value={`₹${updatedData?.[key as keyof StartupData] || "0"}`}
-                  onChange={(e) => {
-                    const numericValue = e.target.value.replace(/[^0-9,]/g, "");
-                    const formattedValue = numericValue.replace(/,/g, "");
-                    const parsedValue = parseInt(formattedValue, 10);
-                    const finalValue = isNaN(parsedValue) ? "0" : parsedValue.toLocaleString("en-IN");
-                    handleChange(key as keyof StartupData, finalValue);
-                  }}
-                />
-              ) : key === "employees" ? (
-                <Input
-                  type="number"
-                  className="text-black"
-                  placeholder="0"
-                  disabled={!isEditing}
-                  value={updatedData?.[key as keyof StartupData] || ""}
-                  onChange={(e) => {
-                    const numericValue = e.target.value.replace(/[^0-9]/g, "0");
-                    handleChange(key as keyof StartupData, numericValue);
-                  }}
-                  min="0"
-                />
-                
-              ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "communityCertificate", "patentsCertifications"].includes(key) ? (
-                renderDropdown(key as keyof StartupData)
-                
-              ) : (
-                <Input
-                  className="text-black"
-                  disabled={!isEditing}
-                  value={updatedData?.[key as keyof StartupData] || ""}
-                  onChange={(e) => handleChange(key as keyof StartupData, e.target.value)}
-                  onKeyPress={(e) => {
-                    if ((key === 'subDomain' || key === 'registeredState' || key === 'registeredCountry') && !/[a-zA-Z\s]/.test(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              )}
-            </div>
+      <div className="grid gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
+        {[
+          ["brandName", "registeredCompanyName", "natureOfCompany", "businessModel"],
+          ["businessType", "dateOfIncorporation", "domain", "subDomain"],
+          ["companyStage", "patentsCertifications", "incubated", "revenue"],
+          ["employees", "registeredCountry", "registeredState"],
+        ].map((row, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-4 gap-4">
+            {row.map((key) => (
+              <div key={key} className="space-y-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="font-semibold text-gray-700">
+                    {fieldLabels[key] || key}
+                  </Label>
+                  {key === "businessModel" ? (
+                    <BusinessModelSelect
+                      value={updatedData?.businessModel || []}
+                      disabled={!isEditing}
+                      onChange={(value) => handleChange("businessModel", value)}
+                    />
+                  ) : key === "dateOfIncorporation" ? (
+                    <Input
+                      type="date"
+                      disabled={!isEditing}
+                      value={updatedData?.[key] || ""}
+                      max={receivedDate ? new Date(receivedDate).toISOString().split("T")[0] : ""}
+                      onChange={(e) => handleChange(key, e.target.value)}
+                    />
+                  ) : key === "revenue" ? (
+                    <Input
+                      type="text"
+                      placeholder="0 INR"
+                      disabled={!isEditing}
+                      value={`₹${updatedData?.[key] || "0"}`}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = numericValue.replace(/,/g, "");
+                        const parsedValue = parseInt(formattedValue, 10);
+                        const finalValue = isNaN(parsedValue) ? "0" : parsedValue.toLocaleString("en-IN");
+                        handleChange(key, finalValue);
+                      }}
+                    />
+                  ) : key === "employees" ? (
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      disabled={!isEditing}
+                      value={updatedData?.[key] || ""}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/[^0-9]/g, "");
+                        handleChange(key, numericValue);
+                      }}
+                      min="0"
+                    />
+                  ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "patentsCertifications"].includes(key) ? (
+                    renderDropdown(key)
+                  ) : (
+                    <Input
+                      disabled={!isEditing}
+                      value={updatedData?.[key] || ""}
+                      onChange={(e) => handleChange(key, e.target.value)}
+                      onKeyPress={(e) => {
+                        if (["subDomain", "registeredState", "registeredCountry"].includes(key) && !/[a-zA-Z\s]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

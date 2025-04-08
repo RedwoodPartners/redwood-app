@@ -128,7 +128,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
               <ButtonWithIcon label="Add" />
             </div>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl">
+          <DialogContent className="w-full max-w-5xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{currentTestimonial.$id ? "Edit" : "Add"} Testimonial</DialogTitle>
               <DialogDescription>

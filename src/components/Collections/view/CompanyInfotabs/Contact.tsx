@@ -27,6 +27,22 @@ type ContactData = {
   postalCode2: string;
 };
 
+const MAX_CHAR_LIMITS = {
+  companyWebsite: 200,
+  email: 50,
+  primaryPhone: 10,
+  secondaryPhone: 10,
+  registeredAddress1: 100,
+  registeredAddress2: 100,
+  registeredCity: 50,
+  state: 50,
+  postalCode: 6,
+  communicationAddress1: 100,
+  communicationAddress2: 100,
+  communicationCity: 50,
+  communicationState: 50,
+};
+
 export const CONTACT_ID = "672bac4a0017528d75ae";
 export const CONTACT_HISTORY_COLLECTION_ID = "67cc7e6c002757b5375a";
 
@@ -65,6 +81,8 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const [postalCodeError, setPostalCodeError] = useState<string | null>(null);
   const [previousData, setPreviousData] = useState<ContactData | null>(null);
   const isStartupRoute = useIsStartupRoute();
+
+  const [errors, setErrors] = useState<{ [key in keyof ContactData]?: string }>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -195,6 +213,27 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
     field: keyof ContactData
   ) => {
     const value = e.target.value;
+    // Validate character limit
+  const maxLimit = MAX_CHAR_LIMITS[field as keyof typeof MAX_CHAR_LIMITS];
+  if (maxLimit && value.length > maxLimit) {
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [field]: `Maximum ${maxLimit} characters allowed.`,
+    }));
+    return;
+  }
+  // Clear error if within limit
+  setErrors((prevErrors) => ({
+    ...prevErrors,
+    [field]: undefined,
+  }));
+
+  // Update contact data
+  setContactData((prevData) => ({
+    ...prevData,
+    [field]: value,
+  }));
+
     if (field === "companyWebsite") {
       validateWebsite(value);
     } else if (field === "email") {
@@ -381,6 +420,9 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
               onChange={(e) => handleInputChange(e, "companyWebsite")}
               className={websiteError ? "border-red-500" : ""}
             />
+            {errors.companyWebsite && (
+              <p className="text-red-500 text-sm mt-1">{errors.companyWebsite}</p>
+            )}
             {websiteError && <p className="text-red-500 text-sm mt-1">{websiteError}</p>}
           </div>
           <div className="w-full">
@@ -392,6 +434,9 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
               onChange={(e) => handleInputChange(e, "email")}
               className={emailError ? "border-red-500" : ""}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
             {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
           </div>
           <div className="w-full">
@@ -437,6 +482,11 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
                   onChange={(e) => handleInputChange(e, field as keyof ContactData)}
                   className={field === "postalCode" && postalCodeError ? "border-red-500" : ""}
                 />
+                {errors[field as keyof ContactData] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors[field as keyof ContactData]}
+                  </p>
+                )}
                 {field === "postalCode" && postalCodeError && (
                   <p className="text-red-500 text-sm mt-1">{postalCodeError}</p>
                 )}
@@ -477,6 +527,11 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
                   onChange={(e) => handleInputChange(e, field as keyof ContactData)}
                   className={field === "postalCode2" && postalCodeError ? "border-red-500" : ""}
                 />
+                {errors[field as keyof ContactData] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors[field as keyof ContactData]}
+                  </p>
+                )}
               </div>
             ))}
           </div>
