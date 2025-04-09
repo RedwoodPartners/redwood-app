@@ -39,7 +39,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   const [updatedStartDate, setUpdatedStartDate] = useState(projectData?.startDate || "");
   const [updatedEndDate, setUpdatedEndDate] = useState(projectData?.projectEndDate || "");
   const [receivedDate, setReceivedDate] = useState<string | null>(null);
-
+  const [updatedAppliedFor, setUpdatedAppliedFor] = useState<string>("");
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -120,6 +120,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           startupStatus: updatedStartupStatus,
           startDate: updatedStartDate,
           projectEndDate: updatedEndDate,
+          appliedFor: updatedAppliedFor,
         });
         setProjectData((prev) =>
           prev ? { 
@@ -128,6 +129,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             startupStatus: updatedStartupStatus,
             startDate: updatedStartDate,
             projectEndDate: updatedEndDate, 
+            appliedFor: updatedAppliedFor,
           } : null
         );
       }
@@ -225,6 +227,29 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
             {projectData.services}
           </span>
+        )}
+        {/* Funding Need Field */}
+        {isEditing ? (
+          <div>
+            <Label htmlFor="appliedFor">Funding Need</Label>
+            <Select
+              value={updatedAppliedFor}
+              onValueChange={setUpdatedAppliedFor}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select an option" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Equity", "Grant", "Debt"].map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <span className="text-black sm:text-base">{projectData?.appliedFor}</span>
         )}
 
         {/* Editable Stage */}

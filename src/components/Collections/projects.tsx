@@ -40,6 +40,7 @@ import { Checkbox } from "../ui/checkbox";
 
 import { nanoid } from "nanoid";
 import LoadingSpinner from "../ui/loading";
+import { Query } from "appwrite";
 
 type Project = {
   id: string;
@@ -75,6 +76,7 @@ const ProjectsPage: React.FC = () => {
   const [editedProject, setEditedProject] = useState<Project | null>(null);
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [projectCountError, setProjectCountError] = useState<string | null>(null);
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const router = useRouter();
@@ -90,7 +92,13 @@ const ProjectsPage: React.FC = () => {
   const [isDuplicateCheckPassed, setIsDuplicateCheckPassed] = useState(false);
   const [isCheckingDuplication, setIsCheckingDuplication] = useState(false);
   const [isFormModified, setIsFormModified] = useState(false);
+   
+  const [currentStartup, setCurrentStartup] = useState<Startup | null>(null);
 
+  const [isForm2Disabled, setIsForm2Disabled] = useState(true); 
+  const [isForm1Disabled, setIsForm1Disabled] = useState(false);
+
+  const [isDuplicationButtonVisible, setIsDuplicationButtonVisible] = useState(true);
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -150,13 +158,10 @@ const ProjectsPage: React.FC = () => {
       );
     }
   }, [searchQuery, startups]);
-  
   useEffect(() => {
-  if (currentStep === 2 && !editedProject?.startupId) {
-    setCurrentStep(1); 
-    setErrorMessage(null);
-  }
-  }, [currentStep, editedProject?.startupId]);
+    setIsForm1Disabled(!isForm2Disabled);
+  }, [isForm2Disabled]);
+  
 
 
   // Open dialog for adding a new project
@@ -178,14 +183,6 @@ const ProjectsPage: React.FC = () => {
     setIsAddingNewProject(true);
     setShowModal(true);
   };
-
-  // Open edit dialog on double-tap
-  const handleEditProject = (project: Project) => {
-    setEditedProject(project);
-    setIsAddingNewProject(false);
-    setShowModal(true);
-  };
-
  
   const handleConfirmChanges = async () => {
     if (isSubmitting) return; 
@@ -197,7 +194,7 @@ const ProjectsPage: React.FC = () => {
         editedProject.projectEndDate = calculateEndDate(editedProject.startDate);
       }
       // Step 2 validation for required fields
-        if (!editedProject.startupId || !editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.appliedFor || !editedProject.services || !editedProject.client) {
+        if (!editedProject.startupId || !editedProject.receivedDate || !editedProject.projectTemplate || !editedProject.services || (editedProject?.services === "BDD" && !editedProject?.client)) {
             setIsSubmitting(false);
             return;
         }
@@ -342,14 +339,17 @@ const ProjectsPage: React.FC = () => {
     setIsCreatingNewRecord(false);
     setIsDuplicateCheckPassed(false);
     setIsFormModified(true);
-
+    setProjectCountError(null);
+    setIsDuplicationButtonVisible(true);
   };
   const checkFormValidity = () => {
     if (editedProject) {
+      const isClientMandatory = editedProject.services === "BDD";
       const isValid = Boolean(
         editedProject.name && 
         editedProject.founderName && 
-        editedProject.phoneNumber
+        editedProject.phoneNumber &&
+        (!isClientMandatory || editedProject.client) // 'client' is mandatory only if 'services' is 'BDD'
       );
       setIsFormValid(isValid);
     } else {
@@ -395,14 +395,39 @@ const ProjectsPage: React.FC = () => {
           ...editedProject!,
           startupId: existingStartupDoc.id,
           name: existingStartupDoc.name,
+          founderName: existingStartupDoc.founderName,  
+          phoneNumber: existingStartupDoc.phoneNumber,
         });
         setCurrentStep(2);
         setErrorMessage(null);
+        setIsForm2Disabled(false);
+        setIsForm1Disabled(true);
+        setIsDuplicationButtonVisible(false);
+        setProjectCountError(null);
       }
     } catch (error) {
       console.error("Error continuing with existing startup:", error);
     }
   };
+
+  const fetchProjectStatusesForStartup = async (startupId: string): Promise<string[]> => {
+    try {
+      const response = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        PROJECTS_ID,
+        [Query.equal("startupId", startupId)]
+      );
+  
+      // Extract and return the startupStatus values
+      return response.documents.map((doc: any, index: number) => 
+        `Project ${index + 1} Status: ${doc.startupStatus || "Unknown"}`
+      );
+    } catch (error) {
+      console.error("Error fetching project statuses:", error);
+      return [];
+    }
+  };
+  
 
   const handleCreateOrUpdateStartup = async () => {
     setIsCheckingDuplication(true);
@@ -413,10 +438,16 @@ const ProjectsPage: React.FC = () => {
       if (existingStartupDoc) {
         handleDuplicateError(existingStartupDoc);
         setIsDuplicateCheckPassed(false);
+        
+        setCurrentStartup(existingStartupDoc);
+        // Fetch project statuses for existing startup
+        const projectStatuses = await fetchProjectStatusesForStartup(existingStartupDoc.id);
+        setProjectCountError(projectStatuses.join(", "));
       } else {
         setIsDuplicateCheckPassed(true);
         setIsFormModified(false);
         setErrorMessage(null);
+        setCurrentStartup(null);
       }
     } catch (error) {
       console.error("Error during duplication check:", error);
@@ -494,6 +525,9 @@ const ProjectsPage: React.FC = () => {
       await createOrUpdateStartup();
       setCurrentStep(2);
       setIsDuplicateCheckPassed(false);
+      setIsForm2Disabled(false);
+      setIsForm1Disabled(true);
+      setIsDuplicationButtonVisible(false);
     } catch (error) {
       console.error("Error creating startup:", error);
     } finally {
@@ -610,10 +644,13 @@ const ProjectsPage: React.FC = () => {
         <Dialog open={showModal} onOpenChange={(isOpen) => {
           if (!isOpen) {
             setErrorMessage(null);
+            setProjectCountError(null);
+            setIsForm1Disabled(false);
+            setIsForm2Disabled(true);
           }
           setShowModal(isOpen);
         }}>
-          <DialogContent className="w-full max-w-5xl p-6">
+          <DialogContent className="w-full max-w-5xl p-6 max-h-[55vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {isAddingNewProject ? "Add New Project" : "Edit Project"}
@@ -621,14 +658,24 @@ const ProjectsPage: React.FC = () => {
               <DialogDescription>
                 Enter Startup Details to check Project Status
               </DialogDescription>
-              {errorMessage && (
-                <p className="text-red-500 text-base">{errorMessage}</p>
-              )}
+              {(errorMessage || projectCountError) && (
+              <div>
+                {errorMessage && (
+                  <Label className="text-red-500 text-base mb-1">{errorMessage}</Label>
+                )}
+                {projectCountError && (
+                  <div className="text-gray-800 text-base mt-2">
+                    <Label className="flex text-lg">Previous Projects for {currentStartup?.name}</Label>
+                    {projectCountError.split(', ').map((status, index) => (
+                      <Label className="flex text-sm mt-2" key={index}>{status}</Label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             </DialogHeader>
-
-            {/* Conditional rendering based on currentStep */}
-            {currentStep === 1 && (
-              <div className="grid grid-cols-3 gap-4 py-2">
+            {/*Form 1*/}
+              <div className={`grid grid-cols-3 gap-4 py-2 ${isForm1Disabled ? 'opacity-60 pointer-events-none' : ''}`}>
                 <div>
                   <Label htmlFor="name">Startup Name<span className="text-red-500">*</span></Label>
                   <Input
@@ -684,20 +731,45 @@ const ProjectsPage: React.FC = () => {
                       <p className="text-red-500 text-sm">Phone number must be 10 digits</p>
                     )}
                 </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="grid grid-cols-3 gap-4 py-2">
-                <div>
-                  <Label>Startup Name</Label>
-                  <p className="h-9 w-full py-1 rounded-md border px-3">{editedProject.name}</p>
                 </div>
+                <div className="text-right">
+                {errorMessage ? (
+                  <Button onClick={handleContinueWithExistingStartup}>
+                    Continue with Existing Startup
+                  </Button>
+                ) : isDuplicateCheckPassed && !isFormModified ? (
+                  <div className="flex justify-end items-center gap-4">
+                    <span className="text-green-600 text-sm">
+                      Duplication check passed!
+                    </span>
+                    <Button
+                      onClick={handleCreateNewStartup}
+                      disabled={isCreatingNewRecord}
+                    >
+                      {isCreatingNewRecord ? "Creating..." : "Create New Startup"}
+                    </Button>
+                  </div>
+                ) : (
+                  isDuplicationButtonVisible && ( 
+                    <Button
+                      onClick={handleCreateOrUpdateStartup}
+                      disabled={!isFormValid || isCheckingDuplication || isDuplicateCheckPassed}
+                      variant={"outline"}
+                    >
+                      {isCheckingDuplication ? "Checking for duplication!" : "Check for duplication!"}
+                    </Button>
+                  )
+                )}
+              </div>
+              {/*Form 2*/}
+              <div className={`grid grid-cols-3 gap-4 py-2 ${isForm2Disabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div>
                   <Label htmlFor="receivedDate">Received Date<span className="text-red-500">*</span></Label>
                   <Input
                     id="receivedDate"
                     type="date"
+                    min={new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    max={new Date().toISOString().split('T')[0]}
                     value={editedProject.receivedDate}
                     onChange={(e) =>
                       setEditedProject({
@@ -707,26 +779,6 @@ const ProjectsPage: React.FC = () => {
                     }
                     className="col-span-3"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="appliedFor">Funding Need<span className="text-red-500">*</span></Label>
-                  <Select
-                    value={editedProject.appliedFor}
-                    onValueChange={(value) =>
-                      setEditedProject({ ...editedProject!, appliedFor: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["Equity", "Grant", "Debt"].map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="services">Services<span className="text-red-500">*</span></Label>
@@ -765,7 +817,7 @@ const ProjectsPage: React.FC = () => {
                   </div>
                 )}
                 <div>
-                  <Label htmlFor="client">Client<span className="text-red-500">*</span></Label>
+                  <Label htmlFor="client">Client{editedProject?.services === "BDD" && <span className="text-red-500">*</span>}</Label>
                   <Input
                     id="client"
                     value={editedProject.client || ""}
@@ -833,41 +885,9 @@ const ProjectsPage: React.FC = () => {
                     </Select>
                   </div>
                 )}
-              </div>
-            )}
-
-            <DialogFooter>
-            {currentStep === 1 && (
-              <>
-                {errorMessage ? (
-                  <Button onClick={handleContinueWithExistingStartup}>
-                    Continue with Existing Startup
-                  </Button>
-                ) : isDuplicateCheckPassed && !isFormModified ? (
-                  <div className="flex items-center gap-4">
-                    <span className="text-green-600 text-sm">
-                      Duplication check passed!
-                    </span>
-                    <Button
-                      onClick={handleCreateNewStartup}
-                      disabled={isCreatingNewRecord}
-                    >
-                      {isCreatingNewRecord ? "Creating..." : "Create New Startup"}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={handleCreateOrUpdateStartup}
-                    disabled={!isFormValid || isCheckingDuplication}
-                  >
-                    {isCheckingDuplication ? "Checking for duplication!" : "Next"}
-                  </Button>
-                )}
-              </>
-            )}
-              {currentStep === 2 && (
-                <>
-                  <Button onClick={() => setCurrentStep(1)}>Back</Button>
+                </div>
+                <div className="text-right">
+              
                   {!isAddingNewProject && (
                     <Button
                       onClick={handleDeleteProject}
@@ -877,13 +897,14 @@ const ProjectsPage: React.FC = () => {
                     </Button>
                   )}
                   <Button onClick={handleConfirmChanges} disabled={isSubmitting}
-                  className={(!editedProject?.startupId || !editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.appliedFor || !editedProject?.services || !editedProject?.client) ? "opacity-50 cursor-not-allowed" : ""}
+                  className={(!editedProject?.startupId || !editedProject?.receivedDate || !editedProject?.projectTemplate || !editedProject?.services || (editedProject?.services === "BDD" && !editedProject?.client)) ? "opacity-50 cursor-not-allowed" : ""}
                   >
                     {isAddingNewProject ? "Add Project" : "Save"}
                     {isSubmitting && "..."}
                   </Button>
-                </>
-              )}
+                </div>
+            <DialogFooter>
+              
             </DialogFooter>
 
           </DialogContent>
