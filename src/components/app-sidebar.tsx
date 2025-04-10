@@ -170,27 +170,6 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {/* Collapsible Menu Item */}
-              <SidebarMenu>
-                <Collapsible defaultOpen className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton>
-                        <Grid className="mr-2" />
-                        <span>Tables</span>
-                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {/*<SidebarMenuSubItem>
-                          <Link href="/contact">Contacts</Link>
-                        </SidebarMenuSubItem>*/}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              </SidebarMenu>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
