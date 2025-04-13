@@ -66,6 +66,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           setUpdatedStartupStatus(project.startupStatus || "");
           setUpdatedStartDate(project.startDate || "");
           setUpdatedEndDate(project.projectEndDate || "");
+          setUpdatedAppliedFor(project.appliedFor || "");
         } else {
           console.warn("No projects found for this startup.");
         }

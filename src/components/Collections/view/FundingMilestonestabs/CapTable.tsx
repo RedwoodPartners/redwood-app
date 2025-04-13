@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
@@ -12,38 +11,128 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ButtonWithIcon from "@/lib/addButton";
+import { Textarea } from "@/components/ui/textarea";
 
 export const CAP_TABLE_ID = "67339ad7000ee8d123a9";
+export const CAP_TABLE_COUNT_ID = "67fb95da0005c69e7fdf";
 
 interface CapTableProps {
   startupId: string;
 }
+interface TableData {
+  tableId: string;
+  formData: {
+    tableDated: string;
+    round: string;
+    totalShares: string;
+    upload: string;
+    note: string;
+  };
+  capTableData: any[];
+}
 
 const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
+  const [tables, setTables] = useState<TableData[]>([]);
+  const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [capTableData, setCapTableData] = useState<any[]>([]);
   const [editingRow, setEditingRow] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const[isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    tableDated: "",
+    round: "",
+    totalShares: "",
+    upload: "",
+    note: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [existingDocId, setExistingDocId] = useState<string | null>(null);
 
-  const fetchCapTableData = useCallback(async () => {
+  const fetchAllTables = useCallback(async () => {
     try {
-      const response = await databases.listDocuments(STAGING_DATABASE_ID, CAP_TABLE_ID, [
-        Query.equal("startupId", startupId),
-      ]);
-      setCapTableData(response.documents);
+      const tablesResponse = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        CAP_TABLE_COUNT_ID,
+        [Query.equal("startupId", startupId)]
+      );
+
+      const tablesData = await Promise.all(
+        tablesResponse.documents.map(async (tableDoc) => {
+          const rowsResponse = await databases.listDocuments(
+            STAGING_DATABASE_ID,
+            CAP_TABLE_ID,
+            [
+              Query.equal("startupId", startupId),
+              Query.equal("tableId", tableDoc.tableId)
+            ]
+          );
+          return {
+            tableId: tableDoc.tableId,
+            formData: {
+              tableDated: tableDoc.tableDated,
+              round: tableDoc.round,
+              totalShares: tableDoc.totalShares,
+              upload: tableDoc.upload,
+              note: tableDoc.note,
+            },
+            capTableData: rowsResponse.documents
+          };
+        })
+      );
+
+      setTables(tablesData);
+      if (tablesData.length > 0 && !activeTableId) {
+        setActiveTableId(tablesData[0].tableId);
+      }
     } catch (error) {
-      console.error("Error fetching cap table data:", error);
+      console.error("Error fetching tables:", error);
     }
-  }, [startupId]);
+  }, [startupId, activeTableId]);
 
   useEffect(() => {
-    fetchCapTableData();
-  }, [fetchCapTableData]);
+    fetchAllTables();
+  }, [fetchAllTables]);
 
-  const calculateTotalCapital = (): number => {
-    return capTableData.reduce((total, row) => {
+  const handleAddNewTable = async () => {
+    try {
+      const newTableId = `table_${Date.now()}`;
+      await databases.createDocument(
+        STAGING_DATABASE_ID,
+        CAP_TABLE_COUNT_ID,
+        "unique()",
+        {
+          startupId,
+          tableId: newTableId,
+          tableDated: "",
+          round: "",
+          totalShares: "",
+          upload: "",
+          note: "",
+        }
+      );
+
+      setTables(prev => [
+        ...prev,
+        {
+          tableId: newTableId,
+          formData: { tableDated: "", round: "", totalShares: "", upload: "", note: "" },
+          capTableData: []
+        }
+      ]);
+      setActiveTableId(newTableId);
+    } catch (error) {
+      console.error("Error creating new table:", error);
+    }
+  };
+  
+
+  const calculateTotalCapital = (tableId: string): number => {
+    const table = tables.find(t => t.tableId === tableId);
+    if (!table) return 0;
+    
+    return table.capTableData.reduce((total, row) => {
       if (row.capitalStructure && typeof row.capitalStructure === 'string') {
         const value = parseFloat(row.capitalStructure.replace("%", "")) || 0;
         return total + value;
@@ -53,48 +142,65 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   };
 
   const handleSaveInvestment = async (row: any) => {
-    if (isSubmitting) return; 
+    if (isSubmitting || !activeTableId) return;
     setIsSubmitting(true);
+    
     try {
-      // Check if shareholderName is provided
-      if (!row.shareholderName || row.shareholderName.trim() === "") {
+      if (!row.shareholderName?.trim()) {
         setError("Shareholder Name is required.");
         return;
       }
-      
-      const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, $permissions, ...fieldsToUpdate } = row;
-      const newCapitalStructure = fieldsToUpdate.capitalStructure ? parseFloat(fieldsToUpdate.capitalStructure.replace("%", "")) || 0 : null;
-      
-      let totalCapital = calculateTotalCapital();
+
+      const table = tables.find(t => t.tableId === activeTableId);
+      if (!table) return;
+
+      const { 
+        $id, 
+        $databaseId, 
+        $collectionId, 
+        $createdAt, 
+        $updatedAt, 
+        $permissions, 
+        ...fieldsToUpdate 
+      } = row;
+      const newCapitalStructure = fieldsToUpdate.capitalStructure ? 
+        parseFloat(fieldsToUpdate.capitalStructure.replace("%", "")) || 0 : 0;
+
+      let totalCapital = calculateTotalCapital(activeTableId);
       if ($id) {
-        const existingRow = capTableData.find(r => r.$id === $id);
-        const existingCapital = existingRow?.capitalStructure ? parseFloat(existingRow.capitalStructure.replace("%", "")) || 0 : 0;
-        totalCapital = totalCapital - existingCapital + (newCapitalStructure || 0);
-      } else if (newCapitalStructure !== null) {
+        const existingRow = table.capTableData.find(r => r.$id === $id);
+        const existingCapital = existingRow?.capitalStructure ? 
+          parseFloat(existingRow.capitalStructure.replace("%", "")) || 0 : 0;
+        totalCapital = totalCapital - existingCapital + newCapitalStructure;
+      } else {
         totalCapital += newCapitalStructure;
       }
-  
+
       if (totalCapital > 100) {
         setError("Total Capital Structure cannot exceed 100%");
         return;
       }
-  
+
       if ($id) {
-        await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, $id, fieldsToUpdate);
+        await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, $id, {
+          ...fieldsToUpdate,
+          tableId: activeTableId
+        });
       } else {
         await databases.createDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, "unique()", {
           ...fieldsToUpdate,
           startupId,
+          tableId: activeTableId
         });
       }
-      
-      fetchCapTableData();
+
+      fetchAllTables();
       setIsDialogOpen(false);
       setEditingRow(null);
       setError(null);
     } catch (error) {
-      console.error("Error saving cap table data:", error);
-      setError("An error occurred while saving the data");
+      console.error("Error saving data:", error);
+      setError("An error occurred while saving");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +210,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const handleDeleteRow = async (id: string) => {
     try {
       await databases.deleteDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, id);
-      fetchCapTableData();
+      fetchAllTables();
       setIsDialogOpen(false);
       setEditingRow(null);
     } catch (error) {
@@ -119,18 +225,82 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
     "Preferred Stock Holder", "Common Stock Holder", "Employee Stock Option Plan (ESOP) Holder",
     "Strategic Investor", "Lead Investor", "Syndicate Member", "Secondary Market Investor",
   ];
+  const residentialStatusOptions = ["Resident", "Non Resident"];
+  const boardMemberOptions = ["Yes", "No"];
+  const leadInvestorOptions = ["Yes", "No"];
+  const typeOptions = ["Individual", "Institutional Investor", "Fund"];
+  
+
+  const debounce = (fn: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn(...args), delay);
+    };
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+  if (!activeTableId) return;
+
+  // Update local state immediately for responsive UI
+  setTables(prev => prev.map(t => 
+    t.tableId === activeTableId ? { 
+      ...t, 
+      formData: { ...t.formData, [field]: value } 
+    } : t
+  ));
+
+  // Create debounced save function
+  const debouncedSave = debounce(async (currentValue: string) => {
+    try {
+      setIsSaving(true);
+      const table = tables.find(t => t.tableId === activeTableId);
+      if (!table) return;
+
+      const tableDoc = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        CAP_TABLE_COUNT_ID,
+        [Query.equal("tableId", activeTableId)]
+      );
+
+      if (tableDoc.documents[0]) {
+        await databases.updateDocument(
+          STAGING_DATABASE_ID,
+          CAP_TABLE_COUNT_ID,
+          tableDoc.documents[0].$id,
+          { ...table.formData, [field]: currentValue }
+        );
+      }
+    } catch (error) {
+      console.error("Error saving form:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, 500); // 500ms delay
+
+  debouncedSave(value);
+  };
+  const activeTable = tables.find(t => t.tableId === activeTableId);
+
 
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h3 className="container text-lg font-medium mb-2 -mt-4">Capital Table</h3>
-        <div onClick={() => {
-          setEditingRow({});
-          setIsDialogOpen(true);
-          setError(null);
-        }}>
-          <ButtonWithIcon label="Add" />
+        <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium">Capital Table</h3>
+            <ButtonWithIcon label="Add Round" onClick={handleAddNewTable} />
         </div>
+          <div className="flex gap-2 p-2">
+            {tables.map(table => (
+              <Button
+                key={table.tableId}
+                variant={activeTableId === table.tableId ? "default" : "outline"}
+                onClick={() => setActiveTableId(table.tableId)}
+              >
+                Round {tables.indexOf(table) + 1}
+              </Button>
+            ))}
+          </div>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         setIsDialogOpen(open);
@@ -154,18 +324,27 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             e.preventDefault();
             handleSaveInvestment(editingRow);
           }}>
-            <div className="flex flex-row gap-4 py-4">
-              {/*<div className="flex-1">
-                <Label htmlFor="round" className="block mb-2">Round Name</Label>
-                <Input id="round" placeholder="Round Name" value={editingRow?.round || ""} onChange={(e) => setEditingRow({ ...editingRow, round: e.target.value })} />
-              </div>*/}
-              <div className="flex-1">
-                <Label htmlFor="shareholderName" className="block mb-2">Shareholder Name</Label>
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="shareholderName">Shareholder Name</Label>
                 <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} onChange={(e) => setEditingRow({ ...editingRow, shareholderName: e.target.value })} />
                 
               </div>
-              <div className="flex-1">
-                <Label htmlFor="role" className="block mb-2">Role</Label>
+              <div>
+                <Label htmlFor="type">Type</Label>
+                <Select value={editingRow?.type || ""} onValueChange={(value) => setEditingRow({ ...editingRow, type: value })}>
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typeOptions.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>  
+              <div>
+                <Label htmlFor="role">Role</Label>
                 <Select value={editingRow?.role || ""} onValueChange={(value) => setEditingRow({ ...editingRow, role: value })}>
                   <SelectTrigger id="role" className="w-full p-2 text-sm border border-gray-300 rounded">
                     <SelectValue placeholder="Select Role" />
@@ -177,19 +356,73 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex-1">
-                <Label htmlFor="capitalStructure" className="block mb-2">Capital Structure (%)</Label>
+              <div>
+                <Label htmlFor="residentialStatus">Residential Status</Label>
+                <Select value={editingRow?.residentialStatus || ""} onValueChange={(value) => setEditingRow({ ...editingRow, residentialStatus: value })}>
+                  <SelectTrigger id="residentialStatus">
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {residentialStatusOptions.map((residentialStatus) => (
+                      <SelectItem key={residentialStatus} value={residentialStatus}>{residentialStatus}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="instrument">Instrument</Label>
+                <Input id="Instrument" placeholder="Instrument" value={editingRow?.instrument || ""} onChange={(e) => setEditingRow({ ...editingRow, instrument: e.target.value })} />  
+              </div>
+              <div>
+                <Label htmlFor="class">Class</Label>
+                <Input id="class" placeholder="Class" value={editingRow?.class || ""} onChange={(e) => setEditingRow({ ...editingRow, class: e.target.value })} />  
+              </div>
+              <div>
+                <Label htmlFor="shares">No of Shares</Label>
+                <Input id="shares" type="number" placeholder="No of Shares" value={editingRow?.shares || ""} onChange={(e) => setEditingRow({ ...editingRow, shares: e.target.value })} />  
+              </div>
+              <div>
+                <Label htmlFor="capitalStructure">Shareholding (%)</Label>
                 <Input
                   id="capitalStructure"
                   placeholder="Capital Structure (%)"
                   value={editingRow?.capitalStructure || ""}
                   onChange={(e) => {
-                  let value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and dots
-                  value = value ? `${value}%` : ""; // Append "%" symbol
+                  let value = e.target.value.replace(/[^0-9.]/g, ""); 
+                  value = value ? `${value}%` : ""; 
                   setEditingRow({ ...editingRow, capitalStructure: value });
                   }}
                 />
-
+              </div>
+              <div>
+                <Label htmlFor="boardMember">Board Member</Label>
+                <Select value={editingRow?.boardMember || ""} onValueChange={(value) => setEditingRow({ ...editingRow, boardMember: value })}>
+                  <SelectTrigger id="boardMember">
+                    <SelectValue placeholder="Yes/No" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {boardMemberOptions.map((boardMember) => (
+                      <SelectItem key={boardMember} value={boardMember}>{boardMember}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="leadInvestor">Lead Investor</Label>
+                <Select value={editingRow?.leadInvestor || ""} onValueChange={(value) => setEditingRow({ ...editingRow, leadInvestor: value })}>
+                  <SelectTrigger id="leadInvestor">
+                    <SelectValue placeholder="Yes/No" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {leadInvestorOptions.map((leadInvestor) => (
+                      <SelectItem key={leadInvestor} value={leadInvestor}>{leadInvestor}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="clauses">Important Clauses</Label>
+                <Textarea id="clauses" value={editingRow?.clauses || ""} onChange={(e) => setEditingRow({ ...editingRow, clauses: e.target.value })} />  
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-4">
@@ -205,36 +438,123 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           </form>
         </DialogContent>
       </Dialog>
+      {activeTable && (
       <div className="bg-white p-1 shadow-md rounded-lg border border-gray-300">
+      <div onClick={() => {
+          setEditingRow({});
+          setIsDialogOpen(true);
+          setError(null);
+        }} className="float-right text-blue-500">
+          <ButtonWithIcon label="Add Shareholder" />
+        </div>
+        <div className="grid grid-cols-5 gap-4 p-3">
+          <div>
+          <Label htmlFor="tableDated">Cap Table Dated</Label>
+          <Input
+          id="tableDated"
+          type="month"
+          value={activeTable.formData.tableDated}
+          onChange={(e) => handleInputChange("tableDated", e.target.value)}
+          />
+          </div>
+          <div>
+          <Label htmlFor="round">Round</Label>
+          <Input
+          id="round"
+          type="number"
+          placeholder="Round"
+          value={activeTable.formData.round}
+          onChange={(e) => handleInputChange("round", e.target.value)}
+          />
+          </div>
+          <div>
+            <Label htmlFor="totalShares">Total No of Shares</Label>
+            <Input
+              id="totalShares"
+              type="number"
+              placeholder="Total No of Shares"
+              value={activeTable.formData.totalShares}
+              onChange={(e) => handleInputChange("totalShares", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="upload">Excel Tracker of Round</Label>
+            <Input
+              id="upload"
+              type="text"
+              placeholder="Upload Excel Tracker"
+              value={activeTable.formData.upload}
+              onChange={(e) => handleInputChange("upload", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="note">Note about Round</Label>
+            <Textarea
+              id="note"
+              placeholder="Note about Round"
+              className="resize-none"
+              value={activeTable.formData.note}
+              onChange={(e) => handleInputChange("note", e.target.value)}
+            />
+          </div>
+        </div>
         <Table>
-          <TableCaption>A list of capital contributions.</TableCaption>
+          <TableCaption>A list of capital contributions</TableCaption>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              {/*<TableHead>Round Name</TableHead>*/}
               <TableHead>Shareholder Name</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Capital Structure (%)</TableHead>
+              <TableHead>Residential Status</TableHead>
+              <TableHead>Instrument</TableHead>
+              <TableHead>Class</TableHead>
+              <TableHead>No of Shares</TableHead>
+              <TableHead>Shareholding (%)</TableHead>
+              <TableHead>Board Member</TableHead>
+              <TableHead>Lead Investor</TableHead>
+              <TableHead>Important Clauses</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {capTableData.map((row) => (
-              <TableRow key={row.$id} onDoubleClick={() => {
-                setEditingRow(row);
-                setIsDialogOpen(true);
-              }} className="cursor-pointer hover:bg-gray-100">
-                {/*<TableCell>{row.round}</TableCell>*/}
+          {activeTable.capTableData.map((row) => (
+                <TableRow key={row.$id} onDoubleClick={() => {
+                  setEditingRow(row);
+                  setIsDialogOpen(true);
+                }}className="cursor-pointer hover:bg-gray-100">
                 <TableCell>{row.shareholderName}</TableCell>
+                <TableCell>{row.type}</TableCell>
                 <TableCell>{row.role}</TableCell>
+                <TableCell>{row.residentialStatus}</TableCell>
+                <TableCell>{row.instrument}</TableCell>
+                <TableCell>{row.class}</TableCell>
+                <TableCell>{row.shares}</TableCell>
                 <TableCell>{row.capitalStructure}</TableCell>
+                <TableCell>{row.boardMember}</TableCell>
+                <TableCell>{row.leadInvestor}</TableCell>
+                <TableCell>{row.clauses}</TableCell>
               </TableRow>
             ))}
-            <TableRow className={`font-semibold ${calculateTotalCapital() > 100 ? 'bg-red-100 text-red-700' : 'bg-gray-100'}`}>
-              <TableCell colSpan={2} className="text-right">Total Capital Structure:</TableCell>
-              <TableCell className="text-left">{calculateTotalCapital().toFixed(2)}%</TableCell>
-            </TableRow>
+            <TableRow className={`font-semibold ${calculateTotalCapital(activeTableId!) > 100 ? 'bg-red-100 text-red-700' : 'bg-gray-100'}`}>
+                <TableCell colSpan={2} className="text-right">Total Capital Structure:</TableCell>
+                <TableCell className="text-left">{calculateTotalCapital(activeTableId!).toFixed(2)}%</TableCell>
+              </TableRow>
           </TableBody>
         </Table>
       </div>
+      )}
+      <Label className="p-2 text-gray-800 text-sm">Note About Cap Table</Label>
+      <ol className="list-decimal list-inside space-y-3 bg-gray-50 p-6 rounded-xl shadow-sm text-gray-800 text-sm">	
+          <li className="text-green-500">Add Table by clicking Add Round - Same For Next Rounds</li>								
+					<li>You can include round details as a text note</li>					
+          <li>Ensure the cap table reflects the right number of shares as reflected in the latest SHA of a particular round</li>       										
+          <li>All these details will be contained in the Shareholders Agreement</li>								
+          <li>It will be helpful to you if you can upload the relevant documents in the placeholders for each round</li>    										
+          <li>You can also mention any specific clauses that you would like to keep tabs on - for example if there are revenue or fund raise conditions, floor and cap for conversion of instruments, etc</li>    
+          <li>Keeping as many details as possible handy will give all users the much needed clarity</li>     										
+          <li>Esop plan can be mentioned as a line item indicating the shares allocated to the ESOP pool</li>      										
+          <li>Keep a tab on what is vested and what is exercised or lapsed and make changes accordingly in a new cap table to reflect the updated shareholding</li>       										
+                    										
+      </ol>
     </div>
   );
 };
