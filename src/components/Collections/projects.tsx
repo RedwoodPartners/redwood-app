@@ -650,7 +650,7 @@ const ProjectsPage: React.FC = () => {
           }
           setShowModal(isOpen);
         }}>
-          <DialogContent className="w-full max-w-5xl p-6 max-h-[55vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-5xl p-6 max-h-[70vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {isAddingNewProject ? "Add New Project" : "Edit Project"}

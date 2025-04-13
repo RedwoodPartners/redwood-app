@@ -230,6 +230,16 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const formattedWorkExperience = workExperienceRows.map(
     (row) => `${row.organisation} as ${row.positionDescription} (${row.fromDate} - ${row.toDate})`
   );
+  const removeEducationRow = (index: number) => {
+    const updatedRows = educationRows.filter((_, i) => i !== index);
+    setEducationRows(updatedRows);
+  };
+  
+  const removeWorkExperienceRow = (index: number) => {
+    const updatedRows = workExperienceRows.filter((_, i) => i !== index);
+    setWorkExperienceRows(updatedRows);
+  };
+  
 
 
   return (
@@ -399,6 +409,15 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                             }
                           />
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => removeEducationRow(index)}
+                          >
+                            -
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -457,6 +476,15 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                                             handleWorkExperienceChange(index, "toDate", e.target.value)
                                         }
                                     />
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => removeWorkExperienceRow(index)}
+                                  >
+                                    -
+                                  </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
