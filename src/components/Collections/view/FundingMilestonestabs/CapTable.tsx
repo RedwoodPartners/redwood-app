@@ -3,18 +3,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
+import { client, databases } from "@/lib/utils";
+import { Storage, ID } from "appwrite";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ButtonWithIcon from "@/lib/addButton";
+import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { InfoIcon, Trash2, UploadCloud } from "lucide-react";
+import { FaEye } from "react-icons/fa";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const CAP_TABLE_ID = "67339ad7000ee8d123a9";
 export const CAP_TABLE_COUNT_ID = "67fb95da0005c69e7fdf";
+export const CAP_TABLE_DOCUMENTS = "67fc9fb1002803d6b91c";
 
 interface CapTableProps {
   startupId: string;
@@ -49,6 +55,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [existingDocId, setExistingDocId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const storage = useMemo(() => new Storage(client), []);
 
   const fetchAllTables = useCallback(async () => {
     try {
@@ -219,7 +227,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   };
 
   const roleOptions = [
-    "Select", "Founder", "Co-Founder", "Employee", "Advisor", "Angel Investor", "Venture Capitalist",
+    "Select", "Founder", "Co-Founder", "Employee", "Angel Investor",
     "Board Member", "Institutional Investor", "Seed Investor", "Series A Investor",
     "Series B Investor", "Series C and Beyond Investors", "Convertible Note Holder",
     "Preferred Stock Holder", "Common Stock Holder", "Employee Stock Option Plan (ESOP) Holder",
@@ -283,6 +291,52 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const activeTable = tables.find(t => t.tableId === activeTableId);
 
 
+  const handleUploadFileForCapTable = async (tableId: string, rowId: string, file: File) => {
+    if (!tableId || !rowId) return;
+
+    try {
+      const uploadResponse = await storage.createFile(CAP_TABLE_DOCUMENTS, ID.unique(), file);
+      await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, rowId, {
+        fileId: uploadResponse.$id,
+        fileName: file.name,
+      });
+      fetchAllTables();
+      toast({
+        title: "Document upload successful",
+        description: "Your document has been uploaded successfully!",
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload the document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteFileForCapTable = async (rowId: string, fileId: string) => {
+    try {
+      await storage.deleteFile(CAP_TABLE_DOCUMENTS, fileId);
+      await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, rowId, {
+        fileId: null,
+        fileName: null,
+      });
+      fetchAllTables();
+      toast({
+        title: "File deleted",
+        description: "The file has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
     <div>
       <div className="flex justify-between items-center">
@@ -398,7 +452,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 <Label htmlFor="boardMember">Board Member</Label>
                 <Select value={editingRow?.boardMember || ""} onValueChange={(value) => setEditingRow({ ...editingRow, boardMember: value })}>
                   <SelectTrigger id="boardMember">
-                    <SelectValue placeholder="Yes/No" />
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {boardMemberOptions.map((boardMember) => (
@@ -411,7 +465,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                 <Label htmlFor="leadInvestor">Lead Investor</Label>
                 <Select value={editingRow?.leadInvestor || ""} onValueChange={(value) => setEditingRow({ ...editingRow, leadInvestor: value })}>
                   <SelectTrigger id="leadInvestor">
-                    <SelectValue placeholder="Yes/No" />
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {leadInvestorOptions.map((leadInvestor) => (
@@ -423,7 +477,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               <div>
                 <Label htmlFor="clauses">Important Clauses</Label>
                 <Textarea id="clauses" value={editingRow?.clauses || ""} onChange={(e) => setEditingRow({ ...editingRow, clauses: e.target.value })} />  
-              </div>
+              </div>  
             </div>
             <div className="flex justify-end space-x-2 mt-4">
               {editingRow?.$id && (
@@ -447,24 +501,24 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
         }} className="float-right text-blue-500">
           <ButtonWithIcon label="Add Shareholder" />
         </div>
-        <div className="grid grid-cols-5 gap-4 p-3">
+        <div className="grid grid-cols-5 gap-4 p-2 mb-4">
           <div>
           <Label htmlFor="tableDated">Cap Table Dated</Label>
           <Input
-          id="tableDated"
-          type="month"
-          value={activeTable.formData.tableDated}
-          onChange={(e) => handleInputChange("tableDated", e.target.value)}
+            id="tableDated"
+            type="month"
+            value={activeTable.formData.tableDated}
+            onChange={(e) => handleInputChange("tableDated", e.target.value)}
           />
           </div>
           <div>
           <Label htmlFor="round">Round</Label>
           <Input
-          id="round"
-          type="number"
-          placeholder="Round"
-          value={activeTable.formData.round}
-          onChange={(e) => handleInputChange("round", e.target.value)}
+            id="round"
+            type="number"
+            placeholder="Round"
+            value={activeTable.formData.round}
+            onChange={(e) => handleInputChange("round", e.target.value)}
           />
           </div>
           <div>
@@ -489,9 +543,9 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           </div>
           <div>
             <Label htmlFor="note">Note about Round</Label>
-            <Textarea
+            <Input
               id="note"
-              placeholder="Note about Round"
+              placeholder="Enter.."
               className="resize-none"
               value={activeTable.formData.note}
               onChange={(e) => handleInputChange("note", e.target.value)}
@@ -502,41 +556,94 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           <TableCaption>A list of capital contributions</TableCaption>
           <TableHeader>
             <TableRow className="bg-gray-50">
+              <TableHead>S.No</TableHead>
               <TableHead>Shareholder Name</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Residential Status</TableHead>
+              <TableHead className="w-28">Role</TableHead>
+              <TableHead >Residential Status</TableHead>
               <TableHead>Instrument</TableHead>
-              <TableHead>Class</TableHead>
+              <TableHead className="w-28">Class</TableHead>
               <TableHead>No of Shares</TableHead>
               <TableHead>Shareholding (%)</TableHead>
               <TableHead>Board Member</TableHead>
               <TableHead>Lead Investor</TableHead>
               <TableHead>Important Clauses</TableHead>
+              <TableHead>Upload SSHA</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-          {activeTable.capTableData.map((row) => (
+          {activeTable.capTableData.map((row, index) => (
                 <TableRow key={row.$id} onDoubleClick={() => {
                   setEditingRow(row);
                   setIsDialogOpen(true);
                 }}className="cursor-pointer hover:bg-gray-100">
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>{row.shareholderName}</TableCell>
                 <TableCell>{row.type}</TableCell>
                 <TableCell>{row.role}</TableCell>
                 <TableCell>{row.residentialStatus}</TableCell>
                 <TableCell>{row.instrument}</TableCell>
                 <TableCell>{row.class}</TableCell>
-                <TableCell>{row.shares}</TableCell>
-                <TableCell>{row.capitalStructure}</TableCell>
+                <TableCell className="text-right">{row.shares}</TableCell>
+                <TableCell className="text-right">{row.capitalStructure}</TableCell>
                 <TableCell>{row.boardMember}</TableCell>
                 <TableCell>{row.leadInvestor}</TableCell>
                 <TableCell>{row.clauses}</TableCell>
+                <TableCell>
+                <div className="flex items-center space-x-2">
+                  {row.fileId ? (
+                    <>
+                      <a
+                        href={`${API_ENDPOINT}/storage/buckets/${CAP_TABLE_DOCUMENTS}/files/${row.fileId}/view?project=${PROJECT_ID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        <div className="relative group">
+                          <FaEye size={20} className="inline" />
+                          <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                            View & Download
+                          </span>
+                        </div>
+                      </a>
+                      <span className="w-10 h-10 text-xs text-gray-500">{row.fileName}</span>
+                      <Popover>
+                        <PopoverTrigger>
+                          <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteFileForCapTable(row.$id!, row.fileId!)}
+                            className="flex items-center"
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete File
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                    </>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => 
+                          e.target.files && 
+                          handleUploadFileForCapTable(activeTableId!, row.$id!, e.target.files[0])
+                        }
+                      />
+                      <UploadCloud size={20} className="cursor-pointer" />
+                    </label>
+                  )}
+                </div>
+                </TableCell>
               </TableRow>
             ))}
-            <TableRow className={`font-semibold ${calculateTotalCapital(activeTableId!) > 100 ? 'bg-red-100 text-red-700' : 'bg-gray-100'}`}>
-                <TableCell colSpan={2} className="text-right">Total Capital Structure:</TableCell>
-                <TableCell className="text-left">{calculateTotalCapital(activeTableId!).toFixed(2)}%</TableCell>
+            <TableRow className={`font-semibold ${calculateTotalCapital(activeTableId!) > 100 ? 'bg-red-100 text-red-700' : ''}`}>
+                <TableCell colSpan={8} className="text-right">Total Capital Structure:</TableCell>
+                <TableCell className="text-right">{calculateTotalCapital(activeTableId!).toFixed(2)}%</TableCell>
               </TableRow>
           </TableBody>
         </Table>
@@ -552,8 +659,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
           <li>You can also mention any specific clauses that you would like to keep tabs on - for example if there are revenue or fund raise conditions, floor and cap for conversion of instruments, etc</li>    
           <li>Keeping as many details as possible handy will give all users the much needed clarity</li>     										
           <li>Esop plan can be mentioned as a line item indicating the shares allocated to the ESOP pool</li>      										
-          <li>Keep a tab on what is vested and what is exercised or lapsed and make changes accordingly in a new cap table to reflect the updated shareholding</li>       										
-                    										
+          <li>Keep a tab on what is vested and what is exercised or lapsed and make changes accordingly in a new cap table to reflect the updated shareholding</li>       										     										
       </ol>
     </div>
   );
