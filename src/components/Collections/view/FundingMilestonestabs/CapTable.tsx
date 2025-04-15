@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ButtonWithIcon from "@/lib/addButton";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { InfoIcon, Trash2, UploadCloud } from "lucide-react";
+import { Download, InfoIcon, Trash2, UploadCloud } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -35,6 +35,9 @@ interface TableData {
     note: string;
   };
   capTableData: any[];
+  fileId?: string | null;
+  fileName?: string | null;
+  $id?: string;
 }
 
 const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
@@ -85,7 +88,10 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               upload: tableDoc.upload,
               note: tableDoc.note,
             },
-            capTableData: rowsResponse.documents
+            capTableData: rowsResponse.documents,
+            fileId: tableDoc.fileId,
+            fileName: tableDoc.fileName,
+            $id: tableDoc.$id,
           };
         })
       );
@@ -336,6 +342,52 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
       });
     }
   };
+
+  const handleUpload = async (tableId: string, rowId: string, file: File) => {
+    if (!tableId) return;
+
+    try {
+      const uploadResponse = await storage.createFile(CAP_TABLE_DOCUMENTS, ID.unique(), file);
+      await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_COUNT_ID, rowId, {
+        fileId: uploadResponse.$id,
+        fileName: file.name,
+      });
+      fetchAllTables();
+      toast({
+        title: "Document upload successful",
+        description: "Your document has been uploaded successfully!",
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload the document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteFile = async (rowId: string, fileId: string) => {
+    try {
+      await storage.deleteFile(CAP_TABLE_DOCUMENTS, fileId);
+      await databases.updateDocument(STAGING_DATABASE_ID, CAP_TABLE_COUNT_ID, rowId, {
+        fileId: null,
+        fileName: null,
+      });
+      fetchAllTables();
+      toast({
+        title: "File deleted",
+        description: "The file has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div>
@@ -443,7 +495,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                   value={editingRow?.capitalStructure || ""}
                   onChange={(e) => {
                   let value = e.target.value.replace(/[^0-9.]/g, ""); 
-                  value = value ? `${value}%` : ""; 
+                  value = value ? `${value}` : ""; 
                   setEditingRow({ ...editingRow, capitalStructure: value });
                   }}
                 />
@@ -532,14 +584,54 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             />
           </div>
           <div>
-            <Label htmlFor="upload">Excel Tracker of Round</Label>
-            <Input
-              id="upload"
-              type="text"
-              placeholder="Upload Excel Tracker"
-              value={activeTable.formData.upload}
-              onChange={(e) => handleInputChange("upload", e.target.value)}
-            />
+            <Label htmlFor="upload">Upload Excel</Label>
+            <div className="flex items-center space-x-2">
+              {activeTable && activeTable.$id && activeTable.fileId ? (
+                <>
+                  <a
+                    href={`${API_ENDPOINT}/storage/buckets/${CAP_TABLE_DOCUMENTS}/files/${activeTable.fileId}/view?project=${PROJECT_ID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    <div className="relative group">
+                      <Download size={20} className="inline" />
+                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                        Download
+                      </span>
+                    </div>
+                  </a>
+                  <span className="w-28 h-2 text-xs text-gray-500">{activeTable.fileName}</span>
+                  <Popover>
+                        <PopoverTrigger>
+                          <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteFile(activeTable.$id!, activeTable.fileId!)}
+                            className="flex items-center"
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete File
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                </>
+              ) : (
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) =>
+                      e.target.files && handleUpload(activeTableId!, activeTable.$id!, e.target.files[0])
+                    }
+                  />
+                  <UploadCloud size={20} className="cursor-pointer mt-2" />
+                </label>
+              )}
+            </div>
           </div>
           <div>
             <Label htmlFor="note">Note about Round</Label>

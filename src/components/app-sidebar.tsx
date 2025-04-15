@@ -15,6 +15,7 @@ import {
   Rocket,
   Folder,
   Contact,
+  CalendarHeart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -72,6 +73,11 @@ const items = [
     title: "Contacts",
     url: "/contact",
     icon: Contact,
+  },
+  {
+    title: "Events",
+    url: "#",
+    icon: CalendarHeart,
   },
   {
     title: "Settings",
