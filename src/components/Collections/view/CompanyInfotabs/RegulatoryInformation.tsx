@@ -142,28 +142,43 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
       shopsActRegNumber: "TN-AAAAAA-AAAA-00-00-00000",
     };
   
-    const rawValue = e.target.value.toUpperCase().replace(/-/g, "");
     const format = formats[field];
-    
+    const input = e.target.value.toUpperCase();
+    const prevValue = regulatoryData[field];
+  
+    // Check if the user is deleting
+    const isDeleting = input.length < prevValue.length;
+    // Remove dashes from input for processing
+    const rawValue = input.replace(/-/g, "");
     let formattedValue = "";
     let rawIndex = 0;
   
     for (let i = 0; i < format.length; i++) {
+      if (rawIndex >= rawValue.length) break;
+  
       if (format[i] === "-") {
-        if (rawIndex > i - formattedValue.split("-").length) {
-          formattedValue += "-";
-        }
-      } else if (rawValue[rawIndex]) {
+        formattedValue += "-";
+      } else {
         formattedValue += rawValue[rawIndex];
         rawIndex++;
       }
+    }
+    // Handle edge case: deleting near a dash
+    if (isDeleting && prevValue.endsWith("-") && !formattedValue.endsWith("-")) {
+      formattedValue = formattedValue.slice(0, -1);
     }
   
     setRegulatoryData({
       ...regulatoryData,
       [field]: formattedValue,
     });
+    
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
   };
+  
   
 
   const handleEdit = () => {
@@ -224,6 +239,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         title: "Please correct the errors before saving",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -327,7 +343,6 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
               <SaveIcon
                 size={15}
                 className="cursor-pointer text-green-500"
-                aria-disabled={isSubmitting}
               />
               <span className="text-xs">
                 {isSubmitting ? "Saving..." : "Save"}

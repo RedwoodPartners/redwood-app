@@ -101,14 +101,37 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
     
+    let validationErrors: { [key: string]: string } = {};
+
     if (!data["shareholderName"]) {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        shareholderName: "Shareholder Name is required",
-      }));
+      validationErrors["shareholderName"] = "Shareholder Name is required";
+    }
+    if (!data["email"]) {
+      validationErrors["email"] = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data["email"])) {
+        validationErrors["email"] = "Invalid email format";
+      }
+    }
+    if (!data["phone"]) {
+      validationErrors["phone"] = "Phone number is required";
+    } else {
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(data["phone"])) {
+        validationErrors["phone"] = "Phone number must be 10 digits";
+      }
+    }
+
+    if (data["isPartner"] === "Yes" && !data["directorId"]) {
+      validationErrors["directorId"] = "Director ID is required";
+    }
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       setIsSubmitting(false);
       return;
     }
+
     try {
       const educationalQualifications = educationRows.map(
         (row) => `${row.qualification} at ${row.institution} (${row.fromDate} - ${row.toDate})`
@@ -273,7 +296,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
             <form>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <Label>Shareholder Name</Label>
+                  <Label>Shareholder Name<span className="text-red-500">*</span></Label>
                   <Input
                     id="shareholderName"
                     type="text"
@@ -328,7 +351,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Director Identification Number</Label>
+                  <Label>Director Identification Number{data["isPartner"] === "Yes" && (<span className="text-red-500">*</span>)}</Label>
                   <Input
                     id="directorId"
                     type="text"
@@ -336,9 +359,12 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                     value={data["directorId"] || ""}
                     onChange={(e) => handleChange("directorId", e.target.value)}
                   />
+                  {errors.directorId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.directorId}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Phone</Label>
+                  <Label>Phone<span className="text-red-500">*</span></Label>
                   <Input
                     id="phone"
                     type="number"
@@ -349,7 +375,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
                 <div>
-                  <Label>Email</Label>
+                  <Label>Email<span className="text-red-500">*</span></Label>
                   <Input
                     id="email"
                     type="email"
@@ -519,6 +545,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
               <TableHead>Gender</TableHead>
               <TableHead>LinkedIn Profile</TableHead>
               <TableHead>Is Partner/Director</TableHead>
+              <TableHead>Director ID</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead></TableHead>
@@ -554,6 +581,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
                   )}
                 </TableCell>
                 <TableCell>{shareholder.isPartner || "N/A"}</TableCell>
+                <TableCell>{shareholder.directorId || "N/A"}</TableCell>
                 <TableCell>{shareholder.email || "N/A"}</TableCell>
                 <TableCell>{shareholder.phone || "N/A"}</TableCell>
                 <TableCell>

@@ -48,7 +48,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [otherMode, setOtherMode] = useState<string>("");
   const storage = useMemo(() => new Storage(client), []);
 
   const fetchInvestments = useCallback(async () => {
@@ -73,11 +73,29 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
 
   const handleAddOrUpdateInvestment = async () => {
     if (!selectedInvestment) return;
+
+    const modeToSave = selectedInvestment.mode === "Other" ? otherMode : selectedInvestment.mode;
     
     if (!selectedInvestment.date) {
       toast({
         title: "Error",
         description: "Investment date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!selectedInvestment.mode) {
+      toast({
+        title: "Error",
+        description: "Mode of Investment is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!selectedInvestment.amount) {
+      toast({
+        title: "Error",
+        description: "Investment Amount is required.",
         variant: "destructive",
       });
       return;
@@ -94,7 +112,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           STAGING_DATABASE_ID,
           FUND_RAISED_ID,
           $id,
-          cleanInvestment
+          { ...cleanInvestment, mode: modeToSave }
         );
         toast({
           title: "Investment updated",
@@ -105,7 +123,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           STAGING_DATABASE_ID,
           FUND_RAISED_ID,
           ID.unique(),
-          { ...cleanInvestment, startupId }
+          { ...cleanInvestment, startupId, mode: modeToSave }
         );
         toast({
           title: "Investment added",
@@ -122,7 +140,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false); // Ensure this runs after saving or if an error occurs
+      setIsSubmitting(false); 
     }
   };
 
@@ -181,6 +199,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
     });
     setIsEditMode(edit);
     setIsDialogOpen(true);
+    setOtherMode(investment?.mode === 'Other' ? investment.mode : '');
   };
 
   const calculateTotalInvestment = (investments: Investment[]): number => {
@@ -267,7 +286,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
               <TableRow key={investment.$id} onDoubleClick={() => openDialog(investment, true)}>
                 <TableCell>{investment.mode}</TableCell>
                 <TableCell>{formatDate(investment.date)}</TableCell>
-                <TableCell className="text-right">{investment.amount}</TableCell>
+                <TableCell className="text-left">{investment.amount}</TableCell>
                 <TableCell>{investment.description}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
@@ -320,7 +339,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
             ))}
             <TableRow className="font-bold">
               <TableCell colSpan={2}>Total Investment Amount</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-left">
                 {calculateTotalInvestment(investments).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0  })}
               </TableCell>
             </TableRow>
@@ -337,30 +356,49 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mt-4">
-              <div>
-              <Label>Mode of Investment</Label>
-              <Select
-                value={selectedInvestment?.mode || ""}
-                onValueChange={(value) => setSelectedInvestment({ ...selectedInvestment, mode: value } as Investment)}
-              >
-                <SelectTrigger className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select Mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Equity">Equity</SelectItem>
-                  <SelectItem value="CCPS">CCPS</SelectItem>
-                  <SelectItem value="CCD">CCD</SelectItem>
-                  <SelectItem value="OCD">OCD</SelectItem>
-                  <SelectItem value="SAFE Notes">SAFE Notes</SelectItem>
-                  <SelectItem value="Grant">Grant</SelectItem>
-                  <SelectItem value="Secured Debt">Secured Debt</SelectItem>
-                  <SelectItem value="Unsecured Debt">Unsecured Debt</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+            <div>
+                <Label>Mode of Investment<span className="text-red-500">*</span></Label>
+                <Select
+                  value={selectedInvestment?.mode || ""}
+                  onValueChange={(value) => {
+                    setSelectedInvestment({
+                      ...selectedInvestment,
+                      mode: value,
+                    } as Investment);
+                    if (value !== "Other") {
+                      setOtherMode(""); // Clear the Other mode input when a different mode is selected
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Equity">Equity</SelectItem>
+                    <SelectItem value="CCPS">CCPS</SelectItem>
+                    <SelectItem value="CCD">CCD</SelectItem>
+                    <SelectItem value="OCD">OCD</SelectItem>
+                    <SelectItem value="SAFE Notes">SAFE Notes</SelectItem>
+                    <SelectItem value="Grant">Grant</SelectItem>
+                    <SelectItem value="Secured Debt">Secured Debt</SelectItem>
+                    <SelectItem value="Unsecured Debt">Unsecured Debt</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
-              </Select>
+                </Select>
               </div>
+                {selectedInvestment?.mode === "Other" && (
+                  <div>
+                  <Label>Specify Other Mode<span className="text-red-500">*</span></Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter mode of investment"
+                    value={otherMode}
+                    onChange={(e) => setOtherMode(e.target.value)}
+                  />
+                  </div>
+                )}
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Investment Date</Label>
+                <Label>Investment Date<span className="text-red-500">*</span></Label>
                 <Input
                   type="date"
                   value={selectedInvestment?.date || ""}
@@ -369,7 +407,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 />
               </div>
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Investment Amount (INR)</Label>
+                <Label>Investment Amount (INR)<span className="text-red-500">*</span></Label>
                 <Input
                   type="text"
                   required
@@ -385,16 +423,15 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                   }).format(Number(rawValue) || 0);
                   setSelectedInvestment({ ...selectedInvestment, amount: formattedValue } as Investment);
                   }}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Description</Label>
+                <Label>Description</Label>
                 <Textarea
                   placeholder="Enter a description for the investment"
                   value={selectedInvestment?.description || ""}
                   onChange={(e) => setSelectedInvestment({ ...selectedInvestment, description: e.target.value } as Investment)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  
                 />
               </div>
               {/* File Upload */}
