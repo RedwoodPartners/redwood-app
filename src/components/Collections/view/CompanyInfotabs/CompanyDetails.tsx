@@ -448,7 +448,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
       </div>
       <div className="grid gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">
         {[
-          ["brandName", "registeredCompanyName", "natureOfCompany", "businessModel"],
+          ["brandName", "natureOfCompany","registeredCompanyName", "businessModel"],
           ["businessType", "dateOfIncorporation", "domain", "subDomain"],
           ["companyStage", "patentsCertifications", "incubated", "revenue"],
           ["employees", "registeredCountry", "registeredState"],
