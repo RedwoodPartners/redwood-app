@@ -33,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ButtonWithIcon from "@/lib/addButton";
 
 const ROC_ID = "6739c2c40032254ca4b6";
 export const FORMS_ID = "67b45189001e40764c83";
@@ -56,6 +55,8 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
   const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("");
   const [formsData, setFormsData] = useState<any[]>([]);
+  
+  const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -106,13 +107,15 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         const formData = formsData.find((doc) => doc.query === queryValue);
         if (formData && formData.yesNo && Array.isArray(formData.yesNo) && formData.yesNo.length > 0) {
             const index = yesNoValue === 'Yes' ? 0 : 1;
-            return formData.yesNo[index] || ''; // Return corresponding description or empty string if not found
+            return formData.yesNo[index] || '';
         }
         return '';
     };
 
   //when editing
   const handleSaveCompliance = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     if (!editingCompliance) return;
 
     try {
@@ -133,6 +136,8 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
       setEditingCompliance(null);
     } catch (error) {
       console.error("Error saving compliance data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,15 +180,6 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     }
   };
 
-  const handleYesNoChange = (value: string) => {
-    const description = getDescriptionForYesNo(value, newCompliance.query);
-    setNewCompliance({
-      ...newCompliance,
-      yesNo: value,
-      description: description, // description based on Yes/No selection
-    });
-  };
-
   const handleEditYesNoChange = (value: string) => {
     if (editingCompliance) {
       const description = getDescriptionForYesNo(value, editingCompliance.query);
@@ -195,11 +191,87 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     }
   };
 
+  const handleGenerateDocuments = async () => {
+    if (!queryOptions.length) {
+      console.warn("No query options available to generate documents.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Identify missing documents
+      const missing = queryOptions.filter(
+        (query) => !complianceData.some((doc) => doc.query === query)
+      );
+      setMissingDocuments(missing);
+
+      for (const query of missing) {
+        const defaultYesNo = "";
+        const defaultDate = ""; 
+        const defaultDescription = "";
+
+        await databases.createDocument(
+          STAGING_DATABASE_ID,
+          ROC_ID,
+          "unique()",
+          {
+            startupId: startupId,
+            query: query,
+            yesNo: defaultYesNo,
+            date: defaultDate,
+            description: defaultDescription,
+          }
+        );
+      }
+
+      // After generating documents, refresh the compliance data
+      const fetchComplianceData = async () => {
+        try {
+          const response = await databases.listDocuments(STAGING_DATABASE_ID, ROC_ID, [
+            Query.equal("startupId", startupId),
+          ]);
+          const filteredDocuments = response.documents.map((doc) => {
+            const { $id, query, yesNo, date, description } = doc;
+            return { $id, query, yesNo, date, description };
+          });
+          setComplianceData(filteredDocuments);
+        } catch (error) {
+          console.error("Error fetching compliance data:", error);
+        }
+      };
+      await fetchComplianceData();
+
+      console.log("Documents generated successfully.");
+    } catch (error) {
+      console.error("Error generating documents:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  // Determine if all documents are created
+  const allDocumentsCreated =
+    queryOptions.length > 0 &&
+    queryOptions.every((query) =>
+      complianceData.some((doc) => doc.query === query)
+    );
+
+
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h3 className="container text-lg font-medium mb-2 -mt-4">ROC Compliance</h3>
-          <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
+        <div className="flex items-center space-x-2 p-2">
+        <h3 className="text-lg font-medium">ROC Compliance</h3>
+        {!allDocumentsCreated && (
+            <Button
+              onClick={handleGenerateDocuments}
+              disabled={isSubmitting}
+              variant={"outline"}
+            >
+              {isSubmitting ? "Generating..." : "Generate Documents"}
+            </Button>
+          )}
+        </div>
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
@@ -224,109 +296,18 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           </TableBody>
         </Table>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-full max-w-5xl p-6">
-          <DialogHeader>
-            <DialogTitle>Add New Compliance</DialogTitle>
-            <DialogDescription aria-describedby={undefined}></DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-4 gap-4 py-4">
-            <div>
-              <Label htmlFor="query" className="text-right">
-                Form Query
-              </Label>
-              <Select
-                value={newCompliance.query}
-                onValueChange={(value) => setNewCompliance({ ...newCompliance, query: value })}
-              >
-                <SelectTrigger id="query" className="col-span-3">
-                  <SelectValue placeholder="Select Form Query" />
-                </SelectTrigger>
-                <SelectContent>
-                  {queryOptions.map((option, index) => (
-                    <SelectItem key={index} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="yesNo" className="text-right">
-                Yes/No
-              </Label>
-              <Select
-                value={newCompliance.yesNo}
-                onValueChange={handleYesNoChange}
-              >
-                <SelectTrigger id="yesNo" className="col-span-3">
-                  <SelectValue placeholder="Select Yes/No" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="date" className="text-right">
-                Date
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                value={newCompliance.date}
-                onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                value={newCompliance.description}
-                onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {editingCompliance && (
         <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
-          <DialogContent className="w-full max-w-5xl p-6">
+          <DialogContent className="w-full max-w-4xl">
             <DialogHeader>
               <DialogTitle>Edit Compliance</DialogTitle>
-              <DialogDescription aria-describedby={undefined}></DialogDescription>
+              {editingCompliance.query && (
+                <DialogDescription>
+                  {editingCompliance.query}
+                </DialogDescription>
+              )}
             </DialogHeader>
-            <div className="grid grid-cols-4 gap-4 py-4">
-              <div>
-                <Label htmlFor="edit-query" className="text-right">
-                  Form Query
-                </Label>
-                <Select
-                  value={editingCompliance.query}
-                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, query: value })}
-                >
-                  <SelectTrigger id="edit-query" className="col-span-3">
-                    <SelectValue placeholder="Edit Form Query" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {queryOptions.map((option, index) => (
-                      <SelectItem key={index} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="edit-yesNo" className="text-right">
                   Yes/No
@@ -375,8 +356,8 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               >
                 Delete
               </Button>
-              <Button onClick={handleSaveCompliance} className="mr-2">
-                Save
+              <Button onClick={handleSaveCompliance} disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
           </DialogContent>

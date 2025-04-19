@@ -36,6 +36,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [newDoc, setNewDoc] = useState({
     docName: "",
     docType: "",
@@ -54,6 +55,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [newDocFile, setNewDocFile] = useState<File | null>(null); 
   const [editingDocFile, setEditingDocFile] = useState<File | null>(null);
+  const [isCreatingDocuments, setIsCreatingDocuments] = useState(false);
 
 
   useEffect(() => {
@@ -102,7 +104,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
             offset += limit; // Move to the next batch
           }
         }
-    
         // Store all fetched documents in state
         setFetchedDocumentOptions(allDocuments);
       } catch (error) {
@@ -113,7 +114,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     
     fetchDocuments();
   }, [startupId]);
-
+  
+  // Function to handle file selection for new document
   const handleSaveDocument = async () => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
@@ -164,6 +166,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   };
 
   const handleEditDocument = async () => {
+    setIsSavingEdit(true);
     try {
       let updatedFields = { ...editingDoc };
 
@@ -190,6 +193,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         description: "Failed to update the document.",
         variant: "destructive",
       });
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -336,132 +341,76 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     }
   };
-  
- 
-  const getDocumentType = (docName: string): string => {
-    const document = fetchedDocumentOptions.find((doc: any) => doc.docName === docName);
-    return document?.docType || "";
-  };
 
-  // Render options dynamically based on natureOfCompany
-  const renderOptions = (natureOfCompany: string) => {
-    return fetchedDocumentOptions
-      .filter((doc: any) => doc.natureOfCompany.includes(natureOfCompany)) // Filter by natureOfCompany
-      .map((doc: any) => (
-        <SelectItem key={doc.docName} value={doc.docName}>
-          {doc.docName}
-        </SelectItem>
-      ));
+  const createDocumentsForCompany = async () => {
+    setIsCreatingDocuments(true);
+    try {
+      if (!natureOfCompany || fetchedDocumentOptions.length === 0) return;
+  
+      const applicableDocs = fetchedDocumentOptions.filter((doc) =>
+        doc.natureOfCompany.includes(natureOfCompany)
+      );
+  
+      for (const docOption of applicableDocs) {
+        const exists = docData.some((doc) => doc.docName === docOption.docName);
+        if (!exists) {
+          try {
+            await databases.createDocument(
+              STAGING_DATABASE_ID,
+              DOC_CHECKLIST_ID,
+              ID.unique(),
+              {
+                docName: docOption.docName,
+                docType: docOption.docType,
+                status: "Pending",
+                description: docOption.description || "",
+                financialYear: "",
+                startupId,
+              }
+            );
+          } catch (error) {
+            console.error("Error creating document:", error);
+          }
+        }
+      }
+      // Refresh document checklist after creation
+      const updatedDocs = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        DOC_CHECKLIST_ID,
+        [Query.equal("startupId", startupId)]
+      );
+      setDocData(updatedDocs.documents);
+    } finally {
+      setIsCreatingDocuments(false);
+    }
   };
+  
+  const requiredDocNames = fetchedDocumentOptions
+  .filter((doc: any) => doc.natureOfCompany.includes(natureOfCompany))
+  .map((doc: any) => doc.docName);
+  const createdDocNames = docData.map((doc: any) => doc.docName);
+  const allDocsCreated = requiredDocNames.every(docName =>
+    createdDocNames.includes(docName)
+  );
+
   
   
 
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h3 className="container text-lg font-medium mb-2 -mt-4">Document Checklist</h3>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <ButtonWithIcon label="Add" />
-          </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl p-6">
-            <DialogHeader>
-              <DialogTitle>Add New Document</DialogTitle>
-              <DialogDescription>Enter the details for the new document.</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-3 gap-4 mt-4">
-              <div>
-                <Label>Document Name</Label>
-                <Select
-                  value={newDoc.docName}
-                  onValueChange={(value) => {
-                  setNewDoc({
-                    ...newDoc,
-                    docName: value,
-                    docType: getDocumentType(value), // Automatically set docType based on selection
-                  });
-                  }}
-                >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Document Name" />
-                </SelectTrigger>
-                <SelectContent className="absolute z-50 w-96 h-72">
-                  {renderOptions(natureOfCompany)}
-                <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-                </Select>
-
-              </div>
-              <div>
-                <Label>Document Type</Label>
-                <Input
-                  placeholder="Document Type"
-                  value={newDoc.docType}
-                  readOnly
-                />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Select
-                  value={newDoc.status}
-                  onValueChange={(value) => setNewDoc({ ...newDoc, status: value })}
-                >
-                  <SelectTrigger className="w-full p-2 text-sm border rounded">
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Received">Received</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Description"
-                  value={newDoc.description}
-                  onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Financial Year</Label>
-                <Select
-                  value={newDoc.financialYear}
-                  onValueChange={(value) => setNewDoc({ ...newDoc, financialYear: value })}
-                >
-                <SelectTrigger className="w-full p-2 text-sm border rounded">
-                  <SelectValue placeholder="Select Financial Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2020-21">2020-21</SelectItem>
-                  <SelectItem value="2021-22">2021-22</SelectItem>
-                  <SelectItem value="2022-23">2022-23</SelectItem>
-                  <SelectItem value="2023-24">2023-24</SelectItem>
-                  <SelectItem value="2024-25">2024-25</SelectItem>
-                  <SelectItem value="2025-26">2025-26</SelectItem>
-                </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Upload File</Label>
-                <Input
-                  type="file"
-                  onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                      setNewDocFile(e.target.files[0]);
-                    }
-                  }}
-                  className="cursor-pointer"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleSaveDocument} disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save"}
-                </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center space-x-2 p-2">
+        <h3 className="text-lg font-medium">Document Checklist</h3>
+        {!allDocsCreated && (
+          <Button
+            onClick={createDocumentsForCompany}
+            disabled={isCreatingDocuments}
+            variant={"outline"}
+          >
+            {isCreatingDocuments ? "Generating..." : "Generate Document checklist"}
+          </Button>
+        )}
+        </div>
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
@@ -471,8 +420,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <TableHead>Document Name</TableHead>
               <TableHead>Document Type</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-auto">Description</TableHead>
               <TableHead>Financial Year</TableHead>
+              <TableHead className="w-auto">Description</TableHead>
               <TableHead className="w-44">Documents</TableHead>
             </TableRow>
           </TableHeader>
@@ -488,8 +437,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                 <TableCell>{row.docName}</TableCell>
                 <TableCell>{row.docType}</TableCell>
                 <TableCell>{row.status}</TableCell>
-                <TableCell>{row.description}</TableCell>
                 <TableCell>{row.financialYear}</TableCell>
+                <TableCell>{row.description}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-start space-x-4">
                     {row.fileId ? (
@@ -624,9 +573,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                     </div>
                   </div>
                   </div>
-                  
                 </TableCell>
-
               </TableRow>
             ))}
           </TableBody>
@@ -636,45 +583,11 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Edit Document</DialogTitle>
-            <DialogDescription>Modify the document details below.</DialogDescription>
+            {editingDoc?.docName && (
+             <DialogDescription>{editingDoc.docName}</DialogDescription>
+             )}
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <Label>Document Name</Label>
-            <Select
-              value={editingDoc?.docName || ""}
-              onValueChange={(value) => {
-              setEditingDoc({
-                ...editingDoc,
-                docName: value,
-                docType: getDocumentType(value), // Automatically update docType
-                });
-              }}
-            >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Document Name" />
-            </SelectTrigger>
-            <SelectContent className="absolute z-50 w-96 h-72">
-               {/* Dynamically render document options based on natureOfCompany */}
-                {fetchedDocumentOptions
-                  .filter((option: any) => option.natureOfCompany.includes(natureOfCompany)) // Filter by natureOfCompany
-                  .map((option: any) => (
-                <SelectItem key={option.docName} value={option.docName}>
-                  {option.docName}
-                </SelectItem>
-                ))}
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Document Type</Label>
-            <Input
-              placeholder="Document Type"
-              value={editingDoc?.docType || ""}
-              readOnly 
-              />
-          </div>
             <div>
               <Label>Status</Label>
               <Select
@@ -689,14 +602,6 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                   <SelectItem value="Received">Received</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                placeholder="Description"
-                value={editingDoc?.description}
-                onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
-              />
             </div>
             <div>
               <Label>Financial Year</Label>
@@ -718,32 +623,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               </Select>
             </div>
             <div>
-              <Label>Upload File</Label>
-              <Input
-                type="file"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setEditingDocFile(e.target.files[0]);
-                  }
-                }}
+              <Label>Description</Label>
+              <Textarea
+                placeholder="Description"
+                value={editingDoc?.description}
+                onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
               />
-              <div>
-                {editingDoc?.fileId && (
-                <a
-                  href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${editingDoc.fileId}/view?project=${PROJECT_ID}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline text-xs"
-                >
-                ({editingDoc.fileName})
-                </a>
-                )}
-              </div>
             </div>
           </div>
           <DialogFooter>
             <Button onClick={handleDeleteDocument} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
-            <Button onClick={handleEditDocument}>Save</Button>
+            <Button onClick={handleEditDocument} disabled={isSavingEdit}>
+              {isSavingEdit ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -48,6 +48,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [otherMode, setOtherMode] = useState<string>("");
   const storage = useMemo(() => new Storage(client), []);
 
@@ -168,6 +169,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
   const handleUploadFile = async (index: number, file: File) => {
     const documentId = investments[index].$id;
     if (!documentId) return;
+    setIsUploading(true);
 
     try {
       const uploadResponse = await storage.createFile(FUND_DOCUMENTS_ID, ID.unique(), file);
@@ -187,6 +189,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
         description: "Failed to upload the document. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -482,7 +486,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
                 Delete
               </Button>
             )}
-            <Button onClick={handleAddOrUpdateInvestment} disabled={isSubmitting}>
+            <Button onClick={handleAddOrUpdateInvestment} disabled={isSubmitting || isUploading}>
               {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
