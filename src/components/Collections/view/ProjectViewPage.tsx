@@ -18,6 +18,17 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 // Import components for tabs
 import CompanyInformation from "@/components/Collections/view/CompanyInformation";
@@ -71,6 +82,10 @@ const ProjectViewPage = ({ id }: { id: string }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const [isDirty, setIsDirty] = useState(false);
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchProjectDetails = async () => {
       try {
@@ -109,6 +124,28 @@ const ProjectViewPage = ({ id }: { id: string }) => {
     fetchProjectDetails();
   }, [id, router]);
 
+  const handleTabChange = (newTab: string) => {
+    if (isDirty) {
+      setShowAlertDialog(true);
+      setPendingTab(newTab);
+    } else {
+      setActiveTab(newTab);
+    }
+  };
+
+  const confirmTabChange = () => {
+    setIsDirty(false);
+    setActiveTab(pendingTab!);
+    setShowAlertDialog(false);
+    setPendingTab(null);
+  };
+
+  const cancelTabChange = () => {
+    setShowAlertDialog(false);
+    setPendingTab(null);
+  };
+
+
   
   if (loading) {
     return (
@@ -126,15 +163,15 @@ const ProjectViewPage = ({ id }: { id: string }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
-        return <CompanyInformation startupId={project?.startupId} activeTab={activeTab} setActiveTab={setActiveTab} />;
+        return <CompanyInformation startupId={project?.startupId} activeTab={activeTab} setActiveTab={setActiveTab} setIsDirty={setIsDirty} />;
       case "regulatoryInfo":
-        return <RegulatoryInformation startupId={project?.startupId}/>;
+        return <RegulatoryInformation startupId={project?.startupId} setIsDirty={setIsDirty} />;
       case "contact":
-        return <Contact startupId={project?.startupId}/>;
+        return <Contact startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "aboutBusiness":
-        return <AboutBusiness startupId={project?.startupId}/>;
+        return <AboutBusiness startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "customerTestimonials":
-        return <CustomerTestimonials startupId={project?.startupId}/>
+        return <CustomerTestimonials startupId={project?.startupId} setIsDirty={setIsDirty}/>
 
       case "fundingMilestones":
         return <FundingMilestones startupId={project?.startupId} activeTab={activeTab} />;
@@ -177,6 +214,21 @@ const ProjectViewPage = ({ id }: { id: string }) => {
 
   return (
     <>
+    {/* Alert Dialog */}
+    <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to switch tabs?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelTabChange}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmTabChange}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Header */}
       <div className="p-2">
         {startupData && (
@@ -204,7 +256,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                           <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
-                                onClick={() => setActiveTab("companyInfo")}
+                                onClick={() => handleTabChange("companyInfo")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Company Details
@@ -212,7 +264,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("regulatoryInfo")}
+                                onClick={() => handleTabChange("regulatoryInfo")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Regulatory Information
@@ -220,7 +272,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("contact")}
+                                onClick={() => handleTabChange("contact")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Contact
@@ -228,7 +280,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("aboutBusiness")}
+                                onClick={() => handleTabChange("aboutBusiness")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 About Business
@@ -236,7 +288,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("customerTestimonials")}
+                                onClick={() => handleTabChange("customerTestimonials")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Customer Testimonials

@@ -21,9 +21,10 @@ export const ABOUT_BUSINESS_HISTORY_COLLECTION_ID = "67cd3c3200358b51bdc9";
 
 interface AboutBusinessProps {
   startupId: string;
+  setIsDirty?: (isDirty: boolean) => void;
 }
 
-const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
+const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId, setIsDirty }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [originalData, setOriginalData] = useState<{ [key: string]: string | null }>({});
@@ -63,11 +64,13 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const handleEdit = () => {
     setIsEditing(true);
     setOriginalData(data);
+    setIsDirty && setIsDirty(true);
   };
 
   const handleSave = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setIsDirty && setIsDirty(false);
     try {
       const { $id, $databaseId, $collectionId, ...userDefinedData } = data;
 
@@ -108,6 +111,7 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ startupId }) => {
   const handleCancel = () => {
     setData(originalData);
     setIsEditing(false);
+    setIsDirty && setIsDirty(false);
   };
 
   const handleChange = (field: string, value: string) => {

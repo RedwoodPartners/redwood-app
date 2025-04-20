@@ -48,9 +48,10 @@ export const CONTACT_HISTORY_COLLECTION_ID = "67cc7e6c002757b5375a";
 
 interface ContactInformationProps {
   startupId: string;
+  setIsDirty?: (isDirty: boolean) => void;
 }
 
-const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) => {
+const ContactInformation: React.FC<ContactInformationProps> = ({ startupId, setIsDirty }) => {
   const [contactData, setContactData] = useState<ContactData>({
     companyWebsite: "",
     email: "",
@@ -212,6 +213,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof ContactData
   ) => {
+    setIsDirty && setIsDirty(true);
     const value = e.target.value;
     // Validate character limit
   const maxLimit = MAX_CHAR_LIMITS[field as keyof typeof MAX_CHAR_LIMITS];
@@ -273,6 +275,7 @@ const ContactInformation: React.FC<ContactInformationProps> = ({ startupId }) =>
   const handleSave = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setIsDirty && setIsDirty(false);
   
     try {
       const { companyWebsite, email, primaryPhone, secondaryPhone, registeredAddress1, registeredAddress2, registeredCity, state, postalCode, communicationAddress1, communicationAddress2, communicationCity, communicationState, postalCode2 } = contactData;

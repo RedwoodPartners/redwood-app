@@ -35,10 +35,11 @@ interface StartupData {
 
 interface CompanyDetailsProps {
   startupId: string | undefined;
+  setIsDirty: (isDirty: boolean) => void;
 }
 export const HISTORY_COLLECTON_ID = "67c82d7b000b564ff2e4";
 
-const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
+const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
@@ -107,7 +108,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
     if (!updatedData || !startupId) return;
     if (isSubmitting) return;
     setIsSubmitting(true);
-  
+    setIsDirty(false);
     try {
       const changes = [];
       for (const key in updatedData) {
@@ -160,6 +161,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId }) => {
   
 
   const handleChange = (key: keyof StartupData, value: any) => {
+    setIsDirty(true); 
     if (updatedData) {
       let newValue = value;
       if (key === "subDomain" || key === "registeredState" || key === "registeredCountry") {

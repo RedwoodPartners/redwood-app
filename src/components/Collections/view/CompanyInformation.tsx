@@ -11,26 +11,27 @@ interface CompanyInformationProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
-const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab, startupId }) => {
+const CompanyInformation: React.FC<CompanyInformationProps> = ({ activeTab, setActiveTab, startupId, setIsDirty }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
       case "Company Details":
-        return <CompanyDetails startupId={startupId} />;
+        return <CompanyDetails startupId={startupId} setIsDirty={setIsDirty}/>;
       case "regulatoryInfo":
       case "Regulatory Information":
-        return <RegulatoryInformation startupId={startupId} />;
+        return <RegulatoryInformation startupId={startupId} setIsDirty={setIsDirty}/>;
       case "contact":
       case "Contact":
-        return <Contact startupId={startupId} />;
+        return <Contact startupId={startupId} setIsDirty={setIsDirty}/>;
       case "aboutBusiness":
       case "About Business":
-        return <AboutBusiness startupId={startupId} />;
+        return <AboutBusiness startupId={startupId} setIsDirty={setIsDirty}/>;
       case "customerTestimonials":
       case "Customer Testimonials":
-        return <CustomerTestimonials startupId={startupId} />;
+        return <CustomerTestimonials startupId={startupId} setIsDirty={setIsDirty}/>;
       default:
         return null;
     }

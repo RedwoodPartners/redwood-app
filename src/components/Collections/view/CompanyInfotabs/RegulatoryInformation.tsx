@@ -30,9 +30,10 @@ export const REGULATORY_HISTORY_COLLECTION_ID = "67cb2f3b002e2a70248d";
 
 interface RegulatoryInformationProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
-const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId }) => {
+const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId, setIsDirty }) => {
   const [regulatoryData, setRegulatoryData] = useState<RegulatoryData>({
     dpiitNumber: "",
     cinNumber: "",
@@ -128,9 +129,11 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   };
 
   const handleInputChange = (
+    
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof RegulatoryData
   ) => {
+    setIsDirty(true);
     const formats = {
       dpiitNumber: "AAAA000000000",
       cinNumber: "A-00000-AA-0000-AAA-000000",
@@ -198,6 +201,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const handleSave = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setIsDirty(false);
     const formats = {
       dpiitNumber: 'AAAA000000000',
       cinNumber: 'A-00000-AA-0000-AAA-000000',

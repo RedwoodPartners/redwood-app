@@ -10,7 +10,6 @@ import Compliance from "@/components/Collections/view/Compliance";
 import Documents from "@/components/Collections/view/Documents";
 import CompanyInformation from "@/components/Collections/view/CompanyInformation";
 
-
 import RegulatoryInformation from "@/components/Collections/view/CompanyInfotabs/RegulatoryInformation";
 import Contact from "@/components/Collections/view/CompanyInfotabs/Contact";
 import AboutBusiness from "@/components/Collections/view/CompanyInfotabs/AboutBusiness";
@@ -41,9 +40,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-
-import InfoBox from "./Infobox";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -52,6 +48,17 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface StartupDetailsPageProps {
   startupId: string;
@@ -68,6 +75,10 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   const [startupData, setStartupData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("companyInfo");
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
@@ -87,15 +98,15 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
   const renderTabContent = () => {
     switch (activeTab) {
       case "companyInfo":
-        return <CompanyInformation startupId={startupId} activeTab={activeTab} setActiveTab={setActiveTab} />;
+        return <CompanyInformation startupId={startupId} activeTab={activeTab} setActiveTab={setActiveTab} setIsDirty={setIsDirty} />;
       case "regulatoryInfo":
-        return <RegulatoryInformation startupId={startupId} />;
+        return <RegulatoryInformation startupId={startupId} setIsDirty={setIsDirty}/>;
       case "contact":
-        return <Contact startupId={startupId} />;
+        return <Contact startupId={startupId} setIsDirty={setIsDirty}/>;
       case "aboutBusiness":
-        return <AboutBusiness startupId={startupId} />;
+        return <AboutBusiness startupId={startupId} setIsDirty={setIsDirty}/>;
       case "customerTestimonials":
-        return <CustomerTestimonials startupId={startupId} />;
+        return <CustomerTestimonials startupId={startupId} setIsDirty={setIsDirty}/>;
 
       case "fundingMilestones":
         return <FundingMilestones startupId={startupId} activeTab={activeTab} />;
@@ -138,11 +149,47 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
     }
   };
 
+  const handleTabChange = (newTab: string) => {
+    if (isDirty) {
+      setShowAlertDialog(true);
+      setPendingTab(newTab);
+    } else {
+      setActiveTab(newTab);
+    }
+  };
+
+  const confirmTabChange = () => {
+    setIsDirty(false);
+    setActiveTab(pendingTab!);
+    setShowAlertDialog(false);
+    setPendingTab(null);
+  };
+
+  const cancelTabChange = () => {
+    setShowAlertDialog(false);
+    setPendingTab(null);
+  };
+
   return (
     <div className="p-2">
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {startupData ? (
         <>
+        {/* Alert Dialog */}
+        <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You have unsaved changes. Are you sure you want to switch tabs?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={cancelTabChange}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmTabChange}>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
               <Label className="text-2xl font-semibold text-gray-800 ml-2">{startupData.name}</Label>
@@ -176,7 +223,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   <ul className="flex flex-col text-sm font-semibold">
                     <li>
                       <button
-                        onClick={() => setActiveTab("companyInfo")}
+                        onClick={() => handleTabChange("companyInfo")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Company Details
@@ -184,7 +231,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("regulatoryInfo")}
+                        onClick={() => handleTabChange("regulatoryInfo")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Regulatory Information
@@ -192,7 +239,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("contact")}
+                        onClick={() => handleTabChange("contact")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Contact
@@ -200,7 +247,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("aboutBusiness")}
+                        onClick={() => handleTabChange("aboutBusiness")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         About Business
@@ -208,7 +255,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("customerTestimonials")}
+                        onClick={() => handleTabChange("customerTestimonials")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Customer Testimonials

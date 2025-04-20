@@ -33,6 +33,7 @@ export const CUSTOMER_COLLECTION_ID = "6731d3a0001a04a8f849";
 
 interface CustomerTestimonialsProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }) => {
