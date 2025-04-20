@@ -11,7 +11,6 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
@@ -34,7 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FORMS_ID } from "./ROCcompliance";
-import ButtonWithIcon from "@/lib/addButton";
 
 const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
 
@@ -46,16 +44,11 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newCompliance, setNewCompliance] = useState({
-    query: "",
-    yesNo: "",
-    date: "",
-    description: "",
-  });
   const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("");
   const [formsData, setFormsData] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -87,7 +80,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       try {
         const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
           Query.equal("natureOfCompany", natureOfCompany),
-          Query.equal("types", "it"), // Additional query to filter by type "it"
+          Query.equal("types", "it"),
         ]);
         const documents = response.documents;
         const options = documents.map((doc) => doc.query);
@@ -110,6 +103,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
   };
 
   const handleSaveCompliance = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     if (!editingCompliance) return;
     try {
       const allowedFields = ["query", "yesNo", "date", "description"];
@@ -124,6 +119,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       setEditingCompliance(null);
     } catch (error) {
       console.error("Error saving compliance data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -139,41 +136,6 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     }
   };
 
-  const handleAddComplianceData = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const { query, yesNo, date, description } = newCompliance;
-      const response = await databases.createDocument(
-        STAGING_DATABASE_ID,
-        INCOME_TAX_TABLE_ID,
-        "unique()",
-        { query, yesNo, date, description, startupId }
-      );
-      setComplianceData([...complianceData, response]);
-      setIsDialogOpen(false);
-      setNewCompliance({
-        query: "",
-        yesNo: "",
-        date: "",
-        description: "",
-      });
-    } catch (error) {
-      console.error("Error adding compliance data:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleYesNoChange = (value: string) => {
-    const description = getDescriptionForYesNo(value, newCompliance.query);
-    setNewCompliance({
-      ...newCompliance,
-      yesNo: value,
-      description: description,
-    });
-  };
-
   const handleEditYesNoChange = (value: string) => {
     if (editingCompliance) {
       const description = getDescriptionForYesNo(value, editingCompliance.query);
@@ -185,11 +147,86 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     }
   };
 
+  const handleGenerateDocuments = async () => {
+    if (!queryOptions.length) {
+      console.warn("No query options available to generate documents.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Identify missing documents
+      const missing = queryOptions.filter(
+        (query) => !complianceData.some((doc) => doc.query === query)
+      );
+      setMissingDocuments(missing);
+
+      for (const query of missing) {
+        const defaultYesNo = "";
+        const defaultDate = "";
+        const defaultDescription = "";
+
+        await databases.createDocument(
+          STAGING_DATABASE_ID,
+          INCOME_TAX_TABLE_ID,
+          "unique()",
+          {
+            startupId: startupId,
+            query: query,
+            yesNo: defaultYesNo,
+            date: defaultDate,
+            description: defaultDescription,
+          }
+        );
+      }
+
+      // After generating documents, refresh the compliance data
+      const fetchComplianceData = async () => {
+        try {
+          const response = await databases.listDocuments(STAGING_DATABASE_ID, INCOME_TAX_TABLE_ID, [
+            Query.equal("startupId", startupId),
+          ]);
+          const filteredDocuments = response.documents.map((doc) => {
+            const { $id, query, yesNo, date, description } = doc;
+            return { $id, query, yesNo, date, description };
+          });
+          setComplianceData(filteredDocuments);
+        } catch (error) {
+          console.error("Error fetching compliance data:", error);
+        }
+      };
+      await fetchComplianceData();
+
+      console.log("Documents generated successfully.");
+    } catch (error) {
+      console.error("Error generating documents:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Determine if all documents are created
+  const allDocumentsCreated =
+    queryOptions.length > 0 &&
+    queryOptions.every((query) =>
+      complianceData.some((doc) => doc.query === query)
+    );
+
+
   return (
     <div>
-      <div className="flex justify-between items-center">
-        <h3 className="container text-lg font-medium mb-2 -mt-4">Income Tax Compliance</h3>
-        <ButtonWithIcon label="Add" onClick={() => setIsDialogOpen(true)} />
+      <div className="flex items-center space-x-2 p-2">
+        <h3 className="text-lg font-medium">Income Tax Compliance</h3>
+        {!allDocumentsCreated && (
+            <Button
+              onClick={handleGenerateDocuments}
+              disabled={isSubmitting}
+              variant={"outline"}
+            >
+              {isSubmitting ? "Generating..." : "Generate Documents"}
+            </Button>
+          )}
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
@@ -215,97 +252,18 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
         </Table>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-full max-w-5xl p-6">
-          <DialogHeader>
-            <DialogTitle>Add New Compliance</DialogTitle>
-            <DialogDescription aria-describedby={undefined}>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-4 gap-4 py-4">
-            <div>
-              <Label htmlFor="query" className="text-right">Form Query</Label>
-              <Select
-                value={newCompliance.query}
-                onValueChange={(value) => setNewCompliance({ ...newCompliance, query: value })}
-              >
-                <SelectTrigger id="query" className="col-span-3">
-                  <SelectValue placeholder="Select a query" />
-                </SelectTrigger>
-                <SelectContent>
-                  {queryOptions.length > 0 ? (
-                    queryOptions.map((option, index) => (
-                      <SelectItem key={index} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <p>error</p>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="yesNo" className="text-right">Yes/No</Label>
-              <Select
-                value={newCompliance.yesNo}
-                onValueChange={handleYesNoChange}
-              >
-                <SelectTrigger id="yesNo" className="col-span-3">
-                  <SelectValue placeholder="Select Yes/No" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="date" className="text-right">Date</Label>
-              <Input id="date" type="date" value={newCompliance.date} onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })} className="col-span-3" />
-            </div>
-            <div>
-              <Label htmlFor="description" className="text-right">Description</Label>
-              <Textarea id="description" value={newCompliance.description} onChange={(e) => setNewCompliance({ ...newCompliance, description: e.target.value })} className="col-span-3" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {editingCompliance && (
         <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
-          <DialogContent className="w-full max-w-5xl p-6">
+          <DialogContent className="w-full max-w-5xl">
             <DialogHeader>
               <DialogTitle>Edit Compliance</DialogTitle>
+              {editingCompliance.query && (
+                <DialogDescription>
+                  {editingCompliance.query}
+                </DialogDescription>
+              )}
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4 py-4">
-              <div>
-                <Label htmlFor="edit-query" className="text-right">Form Query</Label>
-                <Select
-                  value={editingCompliance.query}
-                  onValueChange={(value) => setEditingCompliance({ ...editingCompliance, query: value })}
-                >
-                  <SelectTrigger id="edit-query" className="col-span-3">
-                    <SelectValue placeholder="Select a query" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {queryOptions.length > 0 ? (
-                      queryOptions.map((option, index) => (
-                        <SelectItem key={index} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <p>error</p>
-                    )}
-                </SelectContent>
-                </Select>
-              </div>
               <div>
                 <Label htmlFor="edit-yesNo" className="text-right">Yes/No</Label>
                 <Select value={editingCompliance.yesNo}
@@ -330,7 +288,9 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
             </div>
             <DialogFooter>
               <Button onClick={handleDeleteCompliance} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
-              <Button onClick={handleSaveCompliance} className="mr-2">Save</Button>
+              <Button onClick={handleSaveCompliance} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
