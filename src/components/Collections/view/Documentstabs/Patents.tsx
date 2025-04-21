@@ -18,6 +18,7 @@ const PATENTS_ID = "673add4700120ef26d13";
 
 interface PatentsProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const Patents: React.FC<PatentsProps> = ({ startupId }) => {

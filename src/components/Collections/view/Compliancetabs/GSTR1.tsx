@@ -10,7 +10,6 @@ import {
   TableRow,
   TableHead,
 } from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
@@ -31,6 +30,7 @@ const GSTR_ID = "673b1988001c3d93380e";
 
 interface GstrComplianceProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {

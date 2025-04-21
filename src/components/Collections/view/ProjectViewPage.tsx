@@ -174,38 +174,38 @@ const ProjectViewPage = ({ id }: { id: string }) => {
         return <CustomerTestimonials startupId={project?.startupId} setIsDirty={setIsDirty}/>
 
       case "fundingMilestones":
-        return <FundingMilestones startupId={project?.startupId} activeTab={activeTab} />;
+        return <FundingMilestones startupId={project?.startupId} activeTab={activeTab} setIsDirty={setIsDirty} />;
       case "fundraisedsofar":
-        return <FundRaisedSoFar startupId={project?.startupId} />;
+        return <FundRaisedSoFar startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "shareholders":
-        return <Shareholders startupId={project?.startupId} />;
+        return <Shareholders startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "captable":
-        return <CapTable startupId={project?.startupId} />;
+        return <CapTable startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "fundask":
-        return <FundAsk startupId={project?.startupId} />;
+        return <FundAsk startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "milestones":
-        return <TranchesMilestones startupId={project?.startupId} />;
+        return <TranchesMilestones startupId={project?.startupId} setIsDirty={setIsDirty}/>;
 
       case "compliance":
-        return <Compliance startupId={project?.startupId} activeTab={activeTab} />;
+        return <Compliance startupId={project?.startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
   
       case "incometax":
-        return <IncomeTaxCompliance startupId={project?.startupId} />;
+        return <IncomeTaxCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "roccompliance":
-        return <RocCompliance startupId={project?.startupId} />;
+        return <RocCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "gstcompliance":
-        return <GstCompliance startupId={project?.startupId} />;
+        return <GstCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "gstrcompliance":
-        return <GstrCompliance startupId={project?.startupId} />;
+        return <GstrCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
 
       case "documents":
-        return <Documents startupId={project?.startupId} activeTab={activeTab} />;
+        return <Documents startupId={project?.startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
       case "documentchecklist":
-        return <DocumentChecklist startupId={project?.startupId} />;
+        return <DocumentChecklist startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "patents":
-        return <Patents startupId={project?.startupId} />;
+        return <Patents startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "incubation":
-        return <Incubation startupId={project?.startupId} />;
+        return <Incubation startupId={project?.startupId} setIsDirty={setIsDirty}/>;
 
       default:
         return null;
@@ -305,7 +305,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                           <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
-                                onClick={() => setActiveTab("fundraisedsofar")}
+                                onClick={() => handleTabChange("fundraisedsofar")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Funds Raised So Far
@@ -313,7 +313,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("shareholders")}
+                                onClick={() => handleTabChange("shareholders")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Shareholders
@@ -321,7 +321,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("captable")}
+                                onClick={() => handleTabChange("captable")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Cap Table
@@ -329,7 +329,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("fundask")}
+                                onClick={() => handleTabChange("fundask")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Fund Ask
@@ -337,7 +337,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("milestones")}
+                                onClick={() => handleTabChange("milestones")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Tranches Milestones
@@ -354,7 +354,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                           <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
-                                onClick={() => setActiveTab("roccompliance")}
+                                onClick={() => handleTabChange("roccompliance")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 ROC Compliance
@@ -362,7 +362,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("incometax")}
+                                onClick={() => handleTabChange("incometax")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Income Tax
@@ -370,7 +370,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("gstcompliance")}
+                                onClick={() => handleTabChange("gstcompliance")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 GST Compliance
@@ -378,7 +378,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("gstrcompliance")}
+                                onClick={() => handleTabChange("gstrcompliance")}
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 GSTR Compliance
@@ -396,7 +396,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                           <ul className="flex flex-col text-sm font-semibold">
                             <li>
                               <button
-                                onClick={() => setActiveTab("documentchecklist")}
+                                onClick={() => handleTabChange("documentchecklist")}
                                 className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Document Checklist
@@ -404,7 +404,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("patents")}
+                                onClick={() => handleTabChange("patents")}
                                 className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Patents
@@ -412,7 +412,7 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveTab("incubation")}
+                                onClick={() => handleTabChange("incubation")}
                                 className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 Incubation

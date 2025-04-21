@@ -11,22 +11,23 @@ import TranchesMilestones from "./FundingMilestonestabs/Milestones";
 interface FundingMilestonesProps {
   startupId: string;
   activeTab: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
-const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startupId }) => {
+const FundingMilestones: React.FC<FundingMilestonesProps> = ({ activeTab, startupId, setIsDirty }) => {
   // Function to render content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case "Fund Raised So Far":
-        return <FundRaisedSoFar startupId={startupId} />;
+        return <FundRaisedSoFar startupId={startupId} setIsDirty={setIsDirty}/>;
       case "Shareholders":
-        return <Shareholders startupId={startupId} />;
+        return <Shareholders startupId={startupId} setIsDirty={setIsDirty}/>;
       case "Cap Table":
-        return <CapTable startupId={startupId} />;
+        return <CapTable startupId={startupId} setIsDirty={setIsDirty}/>;
       case "Fund Ask":
-        return <FundAsk startupId={startupId} />;
+        return <FundAsk startupId={startupId} setIsDirty={setIsDirty}/>;
       case "Tranches & Milestones":
-        return <TranchesMilestones startupId={startupId} />;
+        return <TranchesMilestones startupId={startupId} setIsDirty={setIsDirty}/>;
       default:
         return null;
     }

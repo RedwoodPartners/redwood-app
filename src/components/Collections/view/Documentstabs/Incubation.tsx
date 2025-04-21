@@ -18,6 +18,7 @@ const INCUBATION_ID = "673c2945001eddd9aea3";
 
 interface IncubationProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const Incubation: React.FC<IncubationProps> = ({ startupId }) => {

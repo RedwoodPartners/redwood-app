@@ -21,6 +21,7 @@ export const FUNDING_ID = "67ab9fd800164cfd7b09";
 
 interface FundAskProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 interface FundItem {

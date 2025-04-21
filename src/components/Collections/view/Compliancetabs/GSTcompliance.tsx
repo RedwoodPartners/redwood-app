@@ -38,6 +38,7 @@ const GST_ID = "6739ce42002b5b5036a8";
 
 interface GstComplianceProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {

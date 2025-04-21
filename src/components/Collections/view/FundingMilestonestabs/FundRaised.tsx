@@ -23,6 +23,7 @@ const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
 
 interface FundRaisedSoFarProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 interface Investment {
@@ -41,7 +42,7 @@ interface Investment {
   fileName?: string;
 }
 
-const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId }) => {
+const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty }) => {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
