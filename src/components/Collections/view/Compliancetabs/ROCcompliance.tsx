@@ -39,6 +39,7 @@ export const FORMS_ID = "67b45189001e40764c83";
 
 interface RocComplianceProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {

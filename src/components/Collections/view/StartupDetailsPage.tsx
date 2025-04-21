@@ -109,41 +109,41 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         return <CustomerTestimonials startupId={startupId} setIsDirty={setIsDirty}/>;
 
       case "fundingMilestones":
-        return <FundingMilestones startupId={startupId} activeTab={activeTab} />;
+        return <FundingMilestones startupId={startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
       case "fundraisedsofar":
-        return <FundRaisedSoFar startupId={startupId} />;
+        return <FundRaisedSoFar startupId={startupId} setIsDirty={setIsDirty}/>;
       case "shareholders":
-        return <Shareholders startupId={startupId} />;
+        return <Shareholders startupId={startupId} setIsDirty={setIsDirty}/>;
       case "captable":
-        return <CapTable startupId={startupId} />;
+        return <CapTable startupId={startupId} setIsDirty={setIsDirty}/>;
       case "fundask":
-        return <FundAsk startupId={startupId} />;
+        return <FundAsk startupId={startupId} setIsDirty={setIsDirty}/>;
       case "milestones":
-        return <TranchesMilestones startupId={startupId} />;
+        return <TranchesMilestones startupId={startupId} setIsDirty={setIsDirty}/>;
 
       case "compliance":
-        return <Compliance startupId={startupId} activeTab={activeTab} />;
+        return <Compliance startupId={startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
 
       case "incometax":
-        return <IncomeTaxCompliance startupId={startupId} />;
+        return <IncomeTaxCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "roccompliance":
-        return <RocCompliance startupId={startupId} />;
+        return <RocCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "gstcompliance":
-        return <GstCompliance startupId={startupId} />;
+        return <GstCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "gstrcompliance":
-        return <GstrCompliance startupId={startupId} />;
+        return <GstrCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "audits":
         return <Audits startupId={startupId} />;
 
 
       case "documents":
-        return <Documents startupId={startupId} activeTab={activeTab} />;
+        return <Documents startupId={startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
         case "documentchecklist":
-        return <DocumentChecklist startupId={startupId} />;
+        return <DocumentChecklist startupId={startupId} setIsDirty={setIsDirty}/>;
         case "patents":
-        return <Patents startupId={startupId} />;
+        return <Patents startupId={startupId} setIsDirty={setIsDirty}/>;
         case "incubation":
-        return <Incubation startupId={startupId} />;
+        return <Incubation startupId={startupId} setIsDirty={setIsDirty}/>;
       default:
         return null;
     }
@@ -272,7 +272,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   <ul className="flex flex-col text-sm font-semibold">
                     <li>
                       <button
-                        onClick={() => setActiveTab("fundraisedsofar")}
+                        onClick={() => handleTabChange("fundraisedsofar")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Funds Raised So Far
@@ -280,7 +280,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("shareholders")}
+                        onClick={() => handleTabChange("shareholders")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Shareholders
@@ -288,7 +288,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("captable")}
+                        onClick={() => handleTabChange("captable")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Cap Table
@@ -296,7 +296,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("fundask")}
+                        onClick={() => handleTabChange("fundask")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Fund Ask
@@ -304,7 +304,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("milestones")}
+                        onClick={() => handleTabChange("milestones")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Tranches Milestones
@@ -321,7 +321,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   <ul className="flex flex-col text-sm font-semibold">
                     <li>
                       <button
-                        onClick={() => setActiveTab("roccompliance")}
+                        onClick={() => handleTabChange("roccompliance")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         ROC Compliance
@@ -329,7 +329,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("incometax")}
+                        onClick={() => handleTabChange("incometax")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Income Tax
@@ -337,7 +337,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("gstcompliance")}
+                        onClick={() => handleTabChange("gstcompliance")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         GST Compliance
@@ -345,7 +345,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("gstrcompliance")}
+                        onClick={() => handleTabChange("gstrcompliance")}
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         GSTR Compliance
@@ -363,7 +363,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   <ul className="flex flex-col text-sm font-semibold">
                     <li>
                       <button
-                        onClick={() => setActiveTab("documentchecklist")}
+                        onClick={() => handleTabChange("documentchecklist")}
                         className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Document Checklist
@@ -371,7 +371,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("patents")}
+                        onClick={() => handleTabChange("patents")}
                         className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Patents
@@ -379,7 +379,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                     </li>
                     <li>
                       <button
-                        onClick={() => setActiveTab("incubation")}
+                        onClick={() => handleTabChange("incubation")}
                         className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         Incubation

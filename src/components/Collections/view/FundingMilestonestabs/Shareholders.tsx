@@ -38,6 +38,7 @@ export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
 interface ShareholdersProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 interface EducationRow {
   qualification: string;

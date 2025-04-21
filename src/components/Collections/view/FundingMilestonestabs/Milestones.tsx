@@ -24,6 +24,7 @@ export const TRANCHES_DOCUMENTS = "67fea484003599336a83";
 
 interface TranchesMilestones {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 interface TableData {
   tableId: string;

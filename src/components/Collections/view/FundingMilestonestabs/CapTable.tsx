@@ -24,6 +24,7 @@ export const CAP_TABLE_DOCUMENTS = "67fc9fb1002803d6b91c";
 
 interface CapTableProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 interface TableData {
   tableId: string;

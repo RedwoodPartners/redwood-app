@@ -24,6 +24,7 @@ const DOCUMENT_OPTIONS_COLLECTION_ID = "67b4b97900371c532d9a";
 
 interface DocChecklistProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 interface Document {
   [key: string]: any; 

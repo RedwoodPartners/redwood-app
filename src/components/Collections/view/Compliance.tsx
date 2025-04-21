@@ -10,20 +10,21 @@ import Audits from "./Compliancetabs/Audit";
 interface ComplianceProps {
   startupId: string;
   activeTab: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
-const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId }) => {
+const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId, setIsDirty }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "Income Tax Compliances":
-        return <IncomeTaxCompliance startupId={startupId} />;
+        return <IncomeTaxCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "ROC Compliance":
-        return <RocCompliance startupId={startupId} />;
+        return <RocCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "GST Compliances":
-        return <GstCompliance startupId={startupId} />;
+        return <GstCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "GSTR-1 & GSTR-3B":
-        return <GstrCompliance startupId={startupId} />;
+        return <GstrCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "Audits":
         return <Audits startupId={startupId} />;
       default:

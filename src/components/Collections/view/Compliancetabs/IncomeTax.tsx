@@ -38,6 +38,7 @@ const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
 
 interface IncomeTaxComplianceProps {
   startupId: string;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) => {
