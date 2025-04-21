@@ -57,7 +57,7 @@ const formatINR = (value: string): string => {
   }).format(number);
 };
 
-const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
+const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
   const [proposedFunds, setProposedFunds] = useState<FundItem[]>([]);
   const [validatedFunds, setValidatedFunds] = useState<FundItem[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -188,6 +188,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
       } else {
         setIsEditingValidated(false);
       }
+      setIsDirty(false);
     } catch (error) {
       console.error(`Error saving ${type} fund ask:`, error);
     }
@@ -211,6 +212,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
           isEditing={isEditingProposed}
           setIsEditing={setIsEditingProposed}
           onSave={() => handleSave("proposed")}
+          setIsDirty={setIsDirty}
         />
         <FundTable
           title="Validated Fund Ask"
@@ -226,6 +228,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId }) => {
           isEditing={isEditingValidated}
           setIsEditing={setIsEditingValidated}
           onSave={() => handleSave("validated")}
+          setIsDirty={setIsDirty}
         />
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -283,6 +286,7 @@ interface FundTableProps {
   setFundAsk: (value: string) => void;
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
+  setIsDirty: (isDirty: boolean) => void;
   onSave: () => void;
 }
 
@@ -295,6 +299,7 @@ const FundTable: React.FC<FundTableProps> = ({
   setFundAsk,
   isEditing,
   setIsEditing,
+  setIsDirty,
   onSave,
 }) => {
   const total = calculateTotal(funds);
@@ -332,7 +337,10 @@ const FundTable: React.FC<FundTableProps> = ({
             type="text"
             className="w-52"
             value={fundAsk}
-            onChange={(e) => setFundAsk(formatINR(e.target.value))}
+            onChange={(e) => {
+              setFundAsk(formatINR(e.target.value));
+              setIsDirty(true);
+            }}
             disabled={!isEditing}
           />
           {isEditing ? (

@@ -11,7 +11,6 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
 import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { databases } from "@/lib/utils";
@@ -33,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { SHAREHOLDERS_ID } from "../FundingMilestonestabs/Shareholders";
 const ROC_ID = "6739c2c40032254ca4b6";
 export const FORMS_ID = "67b45189001e40764c83";
 
@@ -58,6 +57,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
   const [formsData, setFormsData] = useState<any[]>([]);
   
   const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
+  const [shareholders, setShareholders] = useState<any[]>([]);
+  const [editingShareholder, setEditingShareholder] = useState<any>(null);
+  const [isShareholderDialogOpen, setIsShareholderDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -81,6 +83,24 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         console.error("Error fetching compliance data:", error);
       }
     };
+
+    const fetchShareholders = async () => {
+      try {
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, SHAREHOLDERS_ID,
+          [Query.equal("startupId", startupId),]
+        );
+        const filtered = response.documents.map((doc) => ({
+          $id: doc.$id,
+          shareholderName: doc.shareholderName,
+          directorId: doc.directorId,
+          associatedCompany: doc.associatedCompany || "", // Optional, adjust as needed
+        }));
+        setShareholders(filtered);
+      } catch (error) {
+        console.error("Error fetching shareholders:", error);
+      }
+    };
+    fetchShareholders();
     fetchComplianceData();
   }, [startupId]);
 
@@ -126,9 +146,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           allowedFields.includes(key)
         )
       );
-
       await databases.updateDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id, updateData);
-
       // Update local state with saved data
       const updatedCompliances = complianceData.map((c) =>
         c.$id === editingCompliance.$id ? { ...c, ...updateData } : c
@@ -154,33 +172,6 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     }
   };
 
-  const handleAddComplianceData = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const { query, yesNo, date, description } = newCompliance;
-      const response = await databases.createDocument(
-        STAGING_DATABASE_ID,
-        ROC_ID,
-        "unique()",
-        { query, yesNo, date, description, startupId }
-      );
-
-      setComplianceData([...complianceData, response]);
-      setIsDialogOpen(false);
-      setNewCompliance({
-        query: "",
-        yesNo: "",
-        date: "",
-        description: "",
-      });
-    } catch (error) {
-      console.error("Error adding compliance data:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleEditYesNoChange = (value: string) => {
     if (editingCompliance) {
       const description = getDescriptionForYesNo(value, editingCompliance.query);
@@ -197,9 +188,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
       console.warn("No query options available to generate documents.");
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       // Identify missing documents
       const missing = queryOptions.filter(
@@ -255,7 +244,49 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     queryOptions.length > 0 &&
     queryOptions.every((query) =>
       complianceData.some((doc) => doc.query === query)
-    );
+  );
+  // Shareholder functions
+  const handleShareholderDoubleClick = (shareholder: any) => {
+    setEditingShareholder(shareholder);
+    setIsShareholderDialogOpen(true);
+  };
+
+  const handleSaveShareholder = async () => {
+    if (!editingShareholder) return;
+
+    try {
+        await databases.updateDocument(
+            STAGING_DATABASE_ID,
+            SHAREHOLDERS_ID,
+            editingShareholder.$id, // Make sure $id exists and is not undefined
+            {
+                associatedCompany: editingShareholder.associatedCompany,
+            }
+        );
+        const updatedShareholders = shareholders.map((shareholder) =>
+            shareholder.$id === editingShareholder.$id
+                ? { ...shareholder, associatedCompany: editingShareholder.associatedCompany }
+                : shareholder
+        );
+        setShareholders(updatedShareholders);
+        setIsShareholderDialogOpen(false);
+        setEditingShareholder(null);
+    } catch (error) {
+        console.error("Error saving shareholder data:", error);
+    }
+  };
+
+
+  const handleAssociatedCompanyChange = (value: string) => {
+    if (editingShareholder) {
+      setEditingShareholder({
+        ...editingShareholder,
+        associatedCompany: value,
+      });
+    }
+  };
+
+  
 
 
   return (
@@ -296,6 +327,29 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
             ))}
           </TableBody>
         </Table>
+      </div>
+      <div className="mt-4 p-2 bg-white shadow-md rounded-lg border border-gray-300">
+        <Label>Shareholders & Directorship Details</Label>
+        <Table>
+          <TableCaption></TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Shareholder Name</TableHead>
+              <TableHead>DIN (Director Identification Number).</TableHead>
+              <TableHead>Any Associated Company</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shareholders.map((shareholder, idx) => (
+              <TableRow key={idx} onDoubleClick={() => handleShareholderDoubleClick(shareholder)}>
+                <TableCell>{shareholder.shareholderName}</TableCell>
+                <TableCell>{shareholder.directorId}</TableCell>
+                <TableCell>{shareholder.associatedCompany}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
       </div>
       {editingCompliance && (
         <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
@@ -364,6 +418,38 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           </DialogContent>
         </Dialog>
       )}
+      {/* Shareholder Edit Dialog */}
+      <Dialog open={isShareholderDialogOpen} onOpenChange={() => setIsShareholderDialogOpen(false)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Shareholder</DialogTitle>
+            <DialogDescription>
+            </DialogDescription>
+          </DialogHeader>
+            <div>
+              <Label htmlFor="associatedCompany" >
+                Associated Company
+              </Label>
+              <Select
+                value={editingShareholder?.associatedCompany || ""}
+                onValueChange={handleAssociatedCompanyChange}
+              >
+                <SelectTrigger id="associatedCompany">
+                  <SelectValue placeholder="Select Yes/No" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          <DialogFooter>
+            <Button onClick={handleSaveShareholder}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
