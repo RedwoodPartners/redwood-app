@@ -67,8 +67,16 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
   const [validatedFundAsk, setValidatedFundAsk] = useState("");
   const [isEditingProposed, setIsEditingProposed] = useState(false);
   const [isEditingValidated, setIsEditingValidated] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   useEffect(() => {
     const fetchFunds = async () => {
@@ -117,6 +125,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       }
       setEditingFund(null);
       setIsDialogOpen(false);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error adding fund:", error);
     }finally{
@@ -139,6 +148,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       }
       setEditingFund(null);
       setIsDialogOpen(false);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error updating fund:", error);
     }
@@ -158,6 +168,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       }
       setEditingFund(null);
       setIsDialogOpen(false);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting fund:", error);
     }
@@ -191,6 +202,22 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       setIsDirty(false);
     } catch (error) {
       console.error(`Error saving ${type} fund ask:`, error);
+    }
+  };
+
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setEditingFund(null);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsDialogOpen(false);
+      setEditingFund(null);
     }
   };
 
@@ -231,7 +258,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
           setIsDirty={setIsDirty}
         />
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingFund?.$id ? "Edit Fund Item" : "Add New Fund Item"}</DialogTitle>
@@ -244,7 +271,13 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
               <Textarea
                 id="description"
                 value={editingFund?.description || ""}
-                onChange={(e) => setEditingFund({ ...editingFund!, description: e.target.value })}
+                onChange={(e) => {
+                  setEditingFund({
+                    ...editingFund!,
+                    description: e.target.value,
+                  });
+                  setHasUnsavedChanges(true);
+                }}
                 className="col-span-3"
               />
             </div>
@@ -258,6 +291,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
                 onChange={(e) => {
                   const formattedValue = formatINR(e.target.value);
                   setEditingFund({ ...editingFund!, amount: formattedValue });
+                  setHasUnsavedChanges(true);
                 }}
                 className="col-span-3"
               />

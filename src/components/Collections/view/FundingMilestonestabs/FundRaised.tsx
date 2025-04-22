@@ -52,6 +52,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
   const [isUploading, setIsUploading] = useState(false);
   const [otherMode, setOtherMode] = useState<string>("");
   const storage = useMemo(() => new Storage(client), []);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const fetchInvestments = useCallback(async () => {
     try {
@@ -72,6 +73,14 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
   useEffect(() => {
     fetchInvestments();
   }, [fetchInvestments]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   const handleAddOrUpdateInvestment = async () => {
     if (!selectedInvestment) return;
@@ -133,6 +142,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
         });
       }
       setIsDialogOpen(false);
+      setHasUnsavedChanges(false);
       fetchInvestments();
     } catch (error) {
       console.error("Error adding/updating investment:", error);
@@ -205,7 +215,23 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
     setIsEditMode(edit);
     setIsDialogOpen(true);
     setOtherMode(investment?.mode === 'Other' ? investment.mode : '');
+    setHasUnsavedChanges(false);
   };
+
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsDialogOpen(false);
+    }
+  };
+
 
   const calculateTotalInvestment = (investments: Investment[]): number => {
     return investments.reduce((total, investment) => {
@@ -351,7 +377,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
           </TableBody>
         </Table>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Edit Funds Raised So Far" : "Add New Funds Raised So Far"}</DialogTitle>
@@ -370,8 +396,9 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                       ...selectedInvestment,
                       mode: value,
                     } as Investment);
+                    setHasUnsavedChanges(true);
                     if (value !== "Other") {
-                      setOtherMode(""); // Clear the Other mode input when a different mode is selected
+                      setOtherMode(""); 
                     }
                   }}
                 >
@@ -398,7 +425,10 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                     type="text"
                     placeholder="Enter mode of investment"
                     value={otherMode}
-                    onChange={(e) => setOtherMode(e.target.value)}
+                    onChange={(e) => {
+                      setOtherMode(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
                   />
                   </div>
                 )}
@@ -407,7 +437,13 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                 <Input
                   type="date"
                   value={selectedInvestment?.date || ""}
-                  onChange={(e) => setSelectedInvestment({ ...selectedInvestment, date: e.target.value } as Investment)}
+                  onChange={(e) => {
+                    setSelectedInvestment({
+                      ...selectedInvestment,
+                      date: e.target.value,
+                    } as Investment);
+                    setHasUnsavedChanges(true);
+                  }}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -427,6 +463,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                     maximumFractionDigits: 0
                   }).format(Number(rawValue) || 0);
                   setSelectedInvestment({ ...selectedInvestment, amount: formattedValue } as Investment);
+                  setHasUnsavedChanges(true);
                   }}
                 />
               </div>
@@ -435,7 +472,10 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                 <Textarea
                   placeholder="Enter a description for the investment"
                   value={selectedInvestment?.description || ""}
-                  onChange={(e) => setSelectedInvestment({ ...selectedInvestment, description: e.target.value } as Investment)}
+                  onChange={(e) => {
+                    setSelectedInvestment({ ...selectedInvestment, description: e.target.value } as Investment);
+                    setHasUnsavedChanges(true);
+                  }}
                   
                 />
               </div>
