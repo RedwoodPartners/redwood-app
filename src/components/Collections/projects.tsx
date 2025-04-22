@@ -77,10 +77,8 @@ const ProjectsPage: React.FC = () => {
   const [isAddingNewProject, setIsAddingNewProject] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [projectCountError, setProjectCountError] = useState<string | null>(null);
-
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const router = useRouter();
-
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -92,13 +90,13 @@ const ProjectsPage: React.FC = () => {
   const [isDuplicateCheckPassed, setIsDuplicateCheckPassed] = useState(false);
   const [isCheckingDuplication, setIsCheckingDuplication] = useState(false);
   const [isFormModified, setIsFormModified] = useState(false);
-   
   const [currentStartup, setCurrentStartup] = useState<Startup | null>(null);
-
   const [isForm2Disabled, setIsForm2Disabled] = useState(true); 
   const [isForm1Disabled, setIsForm1Disabled] = useState(false);
-
   const [isDuplicationButtonVisible, setIsDuplicationButtonVisible] = useState(true);
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -161,8 +159,6 @@ const ProjectsPage: React.FC = () => {
   useEffect(() => {
     setIsForm1Disabled(!isForm2Disabled);
   }, [isForm2Disabled]);
-  
-
 
   // Open dialog for adding a new project
   const handleAddNewProject = () => {
@@ -182,6 +178,7 @@ const ProjectsPage: React.FC = () => {
     });
     setIsAddingNewProject(true);
     setShowModal(true);
+    setHasUnsavedChanges(false);
   };
  
   const handleConfirmChanges = async () => {
@@ -278,6 +275,7 @@ const ProjectsPage: React.FC = () => {
         setEditedProject(null);
         setShowModal(false);
         setIsAddingNewProject(false);
+        setHasUnsavedChanges(false);
         setErrorMessage(null);
       } catch (error) {
         console.error("Error saving project:", error);
@@ -299,6 +297,7 @@ const ProjectsPage: React.FC = () => {
 
         setEditedProject(null);
         setShowModal(false);
+        setHasUnsavedChanges(false);
       } catch (error) {
         console.error("Error deleting project:", error);
       }
@@ -341,6 +340,7 @@ const ProjectsPage: React.FC = () => {
     setIsFormModified(true);
     setProjectCountError(null);
     setIsDuplicationButtonVisible(true);
+    setHasUnsavedChanges(true);
   };
   const checkFormValidity = () => {
     if (editedProject) {
@@ -534,8 +534,24 @@ const ProjectsPage: React.FC = () => {
       setIsCreatingNewRecord(false);
     }
   };
-  
 
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close without saving?"
+      );
+      if (confirmClose) {
+        setShowModal(false);
+        setEditedProject(null);
+        setHasUnsavedChanges(false);
+        setIsAddingNewProject(false);
+      }
+    } else {
+      setShowModal(false);
+      setEditedProject(null);
+      setIsAddingNewProject(false);
+    }
+  };
 
   return (
     <div className="p-2">
@@ -641,15 +657,7 @@ const ProjectsPage: React.FC = () => {
       </div>
       )}
       {editedProject && (
-        <Dialog open={showModal} onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            setErrorMessage(null);
-            setProjectCountError(null);
-            setIsForm1Disabled(false);
-            setIsForm2Disabled(true);
-          }
-          setShowModal(isOpen);
-        }}>
+        <Dialog open={showModal} onOpenChange={(open) => { if (!open) closeDialog(); }}>
           <DialogContent className="w-full max-w-5xl p-6 max-h-[70vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -712,18 +720,20 @@ const ProjectsPage: React.FC = () => {
                   <Label htmlFor="phoneNumber">Phone Number<span className="text-red-500">*</span></Label>
                   <Input
                     id="phoneNumber"
-                    type="number"
-                    pattern="[0-9]{10}"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={10}
                     value={editedProject.phoneNumber || ""}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      handleInputChange();
+                      const rawValue = e.target.value.replace(/\D/g, '');
+                      const limitedValue = rawValue.slice(0, 10);
                       setEditedProject({
                         ...editedProject!,
-                        phoneNumber: e.target.value,
+                        phoneNumber: limitedValue,
                       });
                       setErrorMessage(null);
+                      handleInputChange();
                       checkFormValidity();
                     }}
                   />

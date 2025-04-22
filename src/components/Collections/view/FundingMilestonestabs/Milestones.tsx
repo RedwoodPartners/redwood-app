@@ -39,7 +39,7 @@ interface TableData {
   $id?: string;
 }
 
-const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
+const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirty }) => {
   const [tables, setTables] = useState<TableData[]>([]);
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [capTableData, setCapTableData] = useState<any[]>([]);
@@ -57,6 +57,15 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
   const [existingDocId, setExistingDocId] = useState<string | null>(null);
   const { toast } = useToast();
   const storage = useMemo(() => new Storage(client), []);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   const fetchAllTables = useCallback(async () => {
     try {
@@ -169,6 +178,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
       setIsDialogOpen(false);
       setEditingRow(null);
       setError(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving data:", error);
       setError("An error occurred while saving");
@@ -184,6 +194,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
       fetchAllTables();
       setIsDialogOpen(false);
       setEditingRow(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting cap table data:", error);
     }
@@ -300,6 +311,24 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
       maximumFractionDigits: 0,
     }).format(Number(rawValue) || 0);
   };
+
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setHasUnsavedChanges(false);
+        setError(null);
+        setEditingRow(null);
+      }
+    } else {
+      setIsDialogOpen(false);
+      setError(null);
+      setEditingRow(null);
+    }
+  };
   
   
   return (
@@ -321,13 +350,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
             ))}
           </div>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) {
-          setError(null);
-          setEditingRow(null);
-        }
-      }}>
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{editingRow?.$id ? "Edit" : "Add"} Tranche & Milestone</DialogTitle>
@@ -348,9 +371,10 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
               <Label htmlFor="trancheType">Tranche Type</Label>
               <Select
                 value={editingRow?.trancheType || ""}
-                onValueChange={(value) =>
-                  setEditingRow({ ...editingRow, trancheType: value })
-                }
+                onValueChange={(value) => {
+                  setEditingRow({ ...editingRow, trancheType: value });
+                  setHasUnsavedChanges(true);
+                }}
               >
                 <SelectTrigger id="trancheType">
                   <SelectValue placeholder="Select tranche" />
@@ -366,15 +390,20 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
             </div>
               <div>
                 <Label htmlFor="amount">Amount</Label>
-                <Input id="amount" type="number" placeholder="Enter Anount" value={editingRow?.amount || ""} onChange={(e) => setEditingRow({ ...editingRow, amount: e.target.value })} />  
+                <Input id="amount" type="number" placeholder="Enter Anount" value={editingRow?.amount || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, amount: e.target.value });
+                  setHasUnsavedChanges(true);
+                }} />  
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={editingRow?.status || ""}
-                  onValueChange={(value) =>
-                    setEditingRow({ ...editingRow, status: value })
-                  }
+                  onValueChange={(value) => {
+                    setEditingRow({ ...editingRow, status: value });
+                    setHasUnsavedChanges(true);
+                  }}
                 >
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Select status" />
@@ -387,15 +416,27 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId }) => {
               </div>
               <div>
                 <Label htmlFor="date">Date</Label>
-                <Input id="date" type="month" value={editingRow?.date || ""} onChange={(e) => setEditingRow({ ...editingRow, date: e.target.value })} />  
+                <Input id="date" type="month" value={editingRow?.date || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, date: e.target.value });
+                  setHasUnsavedChanges(true);
+                  }} />  
               </div>
               <div>
                 <Label htmlFor="milestones">Milestones</Label>
-                <Textarea id="milestones" value={editingRow?.milestones || ""} onChange={(e) => setEditingRow({ ...editingRow, milestones: e.target.value })} />  
+                <Textarea id="milestones" value={editingRow?.milestones || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, milestones: e.target.value });
+                  setHasUnsavedChanges(true);
+                  }} />  
               </div>  
               <div>
                 <Label htmlFor="noteMilestones">Note on Milestones</Label>
-                <Textarea id="noteMilestones" value={editingRow?.noteMilestones || ""} onChange={(e) => setEditingRow({ ...editingRow, noteMilestones: e.target.value })} />  
+                <Textarea id="noteMilestones" value={editingRow?.noteMilestones || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, noteMilestones: e.target.value });
+                  setHasUnsavedChanges(true);
+                  }} />  
               </div>  
             </div>
             <div className="flex justify-end space-x-2 mt-4">

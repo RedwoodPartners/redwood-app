@@ -270,11 +270,17 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
           <Input
-            type="number"
+            type="text"
             id="phone"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Enter phone number"
             value={testimonial.phone || ""}
-            onChange={(e) => handleChange("phone", e.target.value)}
+            onChange={(e) => {
+              const rawValue = e.target.value.replace(/\D/g, '');
+              const limitedValue = rawValue.slice(0, 10);
+              handleChange("phone", limitedValue);
+            }}
           />
           {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
         </div>
