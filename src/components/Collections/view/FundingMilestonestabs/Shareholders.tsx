@@ -55,7 +55,7 @@ interface WorkExperienceRow {
 
 
 
-const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
+const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty }) => {
   const [data, setData] = useState<{ [key: string]: string | null }>({});
   const [allShareholders, setAllShareholders] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,8 +65,16 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [educationRows, setEducationRows] = useState<EducationRow[]>([]);
   const [workExperienceRows, setWorkExperienceRows] = useState<WorkExperienceRow[]>([]);
-
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -92,8 +100,10 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   useEffect(() => {
     if (editingShareholder) {
       setData(editingShareholder);
+      setHasUnsavedChanges(true);
     } else {
       setData({});
+      setHasUnsavedChanges(false);
     }
     setErrors({});
   }, [editingShareholder]);
@@ -155,6 +165,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       setEditingShareholder(null);
       setIsDialogOpen(false);
       setErrors({});
+      setHasUnsavedChanges(false);
       fetchData();
     } catch (error) {
       console.error("Error saving data:", error);
@@ -166,6 +177,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const handleChange = (field: string, value: string) => {
     setData((prevData) => ({ ...prevData, [field]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [field]: "" }));
+    setHasUnsavedChanges(true);
 
     if (field === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -191,6 +203,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
         );
         setIsDialogOpen(false);
         setEditingShareholder(null);
+        setHasUnsavedChanges(false);
         fetchData();
       } catch (error) {
         console.error("Error deleting shareholder:", error);
@@ -218,12 +231,14 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   
     setWorkExperienceRows(parsedWorkExperienceRows);
     setEducationRows(parsedEducationRows);
+    setHasUnsavedChanges(false);
   };
   
   const handleEducationChange = (index: number, field: keyof EducationRow, value: string) => {
     const updatedRows = [...educationRows];
     updatedRows[index][field] = value;
     setEducationRows(updatedRows);
+    setHasUnsavedChanges(true);
   };
   
 
@@ -232,6 +247,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
       ...educationRows,
       { qualification: "", institution: "", fromDate: "", toDate: "" },
     ]);
+    setHasUnsavedChanges(true);
   };
   
   const educationalQualifications = educationRows.map(
@@ -244,12 +260,14 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
     const updatedRows = [...workExperienceRows];
     updatedRows[index][field] = value;
     setWorkExperienceRows(updatedRows);
+    setHasUnsavedChanges(true);
   };
   const addWorkExperienceRow = () => {
     setWorkExperienceRows([
         ...workExperienceRows,
         { organisation: "", positionDescription: "", fromDate: "", toDate: "" },
     ]);
+    setHasUnsavedChanges(true);
   };
   const formattedWorkExperience = workExperienceRows.map(
     (row) => `${row.organisation} as ${row.positionDescription} (${row.fromDate} - ${row.toDate})`
@@ -257,28 +275,55 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId }) => {
   const removeEducationRow = (index: number) => {
     const updatedRows = educationRows.filter((_, i) => i !== index);
     setEducationRows(updatedRows);
+    setHasUnsavedChanges(true);
   };
   
   const removeWorkExperienceRow = (index: number) => {
     const updatedRows = workExperienceRows.filter((_, i) => i !== index);
     setWorkExperienceRows(updatedRows);
+    setHasUnsavedChanges(true);
   };
-  
 
+  const handleDialogClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setEditingShareholder(null);
+        setErrors({});
+        setData({});
+        setEducationRows([]);
+        setWorkExperienceRows([]);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsDialogOpen(false);
+      setEditingShareholder(null);
+      setErrors({});
+      setData({});
+      setEducationRows([]);
+      setWorkExperienceRows([]);
+    }
+  }, [hasUnsavedChanges, setIsDialogOpen, setEditingShareholder, setErrors, setData, setEducationRows, setWorkExperienceRows, setHasUnsavedChanges]);
+  
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Shareholders</h2>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
           if (!open) {
-            setEditingShareholder(null);
-            setErrors({});
-          } else if (!editingShareholder) {
-            setData({});
-            setEducationRows([]);
-            setWorkExperienceRows([]);
+            handleDialogClose();
+          } else {
+            setIsDialogOpen(open);
+            if (!editingShareholder) {
+              setData({});
+              setEducationRows([]);
+              setWorkExperienceRows([]);
+              setHasUnsavedChanges(false);
+            }
           }
         }}>
           <DialogTrigger asChild>

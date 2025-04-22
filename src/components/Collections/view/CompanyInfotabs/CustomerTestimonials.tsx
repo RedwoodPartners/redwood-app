@@ -36,13 +36,21 @@ interface CustomerTestimonialsProps {
   setIsDirty: (isDirty: boolean) => void;
 }
 
-const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }) => {
+const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId, setIsDirty }) => {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [currentTestimonial, setCurrentTestimonial] = useState<any>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   const fetchTestimonials = useCallback(async () => {
     try {
@@ -94,6 +102,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       setIsDialogOpen(false);
       fetchTestimonials();
       toast({ title: "Testimonial saved successfully!" });
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving testimonial:", error);
       toast({ title: "Error saving testimonial", variant: "destructive" });
@@ -105,6 +114,7 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
   const handleEdit = (testimonial: any) => {
     setCurrentTestimonial(testimonial);
     setIsDialogOpen(true);
+    setHasUnsavedChanges(false); 
   };
 
   const handleDelete = async () => {
@@ -113,19 +123,49 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
       setIsDialogOpen(false);
       fetchTestimonials();
       toast({ title: "Testimonial deleted successfully!" });
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting testimonial:", error);
       toast({ title: "Error deleting testimonial", variant: "destructive" });
     }
   };
 
+  const handleDialogClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setCurrentTestimonial({});
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsDialogOpen(false);
+      setCurrentTestimonial({});
+    }
+  }, [hasUnsavedChanges, setIsDialogOpen, setCurrentTestimonial, setHasUnsavedChanges]);
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
         <h2 className="container text-lg font-medium mb-2 -mt-4">Customer Testimonials</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+              handleDialogClose();
+            } else {
+              setIsDialogOpen(open);
+            }
+          }}
+        >
           <DialogTrigger asChild>
-            <div className="cursor-pointer" onClick={() => setCurrentTestimonial({})}>
+          <div
+              className="cursor-pointer"
+              onClick={() => {
+                setCurrentTestimonial({});
+                setHasUnsavedChanges(false);
+              }}
+            >
               <ButtonWithIcon label="Add" />
             </div>
           </DialogTrigger>
@@ -138,7 +178,10 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId }
             </DialogHeader>
             <TestimonialForm
               testimonial={currentTestimonial}
-              onChange={setCurrentTestimonial}
+              onChange={(testimonial) => {
+                setCurrentTestimonial(testimonial);
+                setHasUnsavedChanges(true); 
+              }}
               onSave={handleSave}
               onDelete={handleDelete}
               isSubmitting={isSubmitting}
