@@ -33,7 +33,7 @@ interface GstrComplianceProps {
   setIsDirty: (isDirty: boolean) => void;
 }
 
-const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
+const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,6 +43,15 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
     gst3b: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -89,6 +98,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
       );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     }
@@ -101,6 +111,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
       const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting compliance:", error);
     }
@@ -134,6 +145,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
         gstr1: "",
         gst3b: "",
       });
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error adding compliance data:", error);
     } finally {
@@ -145,7 +157,33 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
     let value = e.target.value.replace(/[^\d,]/g, '');
     value = formatNumber(value.replace(/,/g, ''));
     setNewCompliance({ ...newCompliance, [field]: value });
+    setHasUnsavedChanges(true);
   };
+
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setHasUnsavedChanges(false);
+          setNewCompliance({  
+              date: "",
+              gstr1: "",
+              gst3b: "",
+          });
+      }
+    } else {
+      setIsDialogOpen(false);
+        setNewCompliance({  
+            date: "",
+            gstr1: "",
+            gst3b: "",
+        });
+    }
+  };
+
 
   return (
     <div>
@@ -176,7 +214,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
           </TableBody>
         </Table>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             <DialogTitle>Add New Compliance</DialogTitle>
@@ -190,7 +228,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
                 id="date"
                 type="date"
                 value={newCompliance.date}
-                onChange={(e) => setNewCompliance({ ...newCompliance, date: e.target.value })}
+                onChange={(e) => {
+                  setNewCompliance({ ...newCompliance, date: e.target.value });
+                  setHasUnsavedChanges(true);
+                  }}
                 className="col-span-3"
               />
             </div>
@@ -235,7 +276,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
                   id="edit-date"
                   type="date"
                   value={editingCompliance.date}
-                  onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })}
+                  onChange={(e) => {
+                    setEditingCompliance({ ...editingCompliance, date: e.target.value });
+                    setHasUnsavedChanges(true);
+                  }}
                   className="col-span-3"
                 />
               </div>
@@ -244,7 +288,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
                 <Input
                   id="edit-gstr1"
                   value={editingCompliance.gstr1}
-                  onChange={(e) => setEditingCompliance({ ...editingCompliance, gstr1: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) })}
+                  onChange={(e) => {
+                    setEditingCompliance({ ...editingCompliance, gstr1: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) });
+                    setHasUnsavedChanges(true);
+                  }}
                   className="col-span-3"
                 />
               </div>
@@ -253,7 +300,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId }) => {
                 <Input
                   id="edit-gst3b"
                   value={editingCompliance.gst3b}
-                  onChange={(e) => setEditingCompliance({ ...editingCompliance, gst3b: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) })}
+                  onChange={(e) => {
+                    setEditingCompliance({ ...editingCompliance, gst3b: formatNumber(e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '')) });
+                    setHasUnsavedChanges(true);
+                  }}
                   className="col-span-3"
                 />
               </div>

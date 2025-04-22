@@ -41,7 +41,7 @@ interface TableData {
   $id?: string;
 }
 
-const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
+const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const [tables, setTables] = useState<TableData[]>([]);
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [capTableData, setCapTableData] = useState<any[]>([]);
@@ -61,7 +61,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   const [existingDocId, setExistingDocId] = useState<string | null>(null);
   const { toast } = useToast();
   const storage = useMemo(() => new Storage(client), []);
-
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
   const fetchAllTables = useCallback(async () => {
     try {
       const tablesResponse = await databases.listDocuments(
@@ -109,6 +110,14 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
   useEffect(() => {
     fetchAllTables();
   }, [fetchAllTables]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   const handleAddNewTable = async () => {
     try {
@@ -213,6 +222,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
       setIsDialogOpen(false);
       setEditingRow(null);
       setError(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving data:", error);
       setError("An error occurred while saving");
@@ -228,6 +238,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
       fetchAllTables();
       setIsDialogOpen(false);
       setEditingRow(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting cap table data:", error);
     }
@@ -390,6 +401,24 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
     }
   };
   
+  const closeDialog = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsDialogOpen(false);
+        setHasUnsavedChanges(false);
+        setError(null);
+        setEditingRow(null);
+      }
+    } else {
+      setIsDialogOpen(false);
+      setError(null);
+      setEditingRow(null);
+    }
+  };
+  
   return (
     <div>
       <div className="flex justify-between items-center">
@@ -409,13 +438,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             ))}
           </div>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) {
-          setError(null);
-          setEditingRow(null);
-        }
-      }}>
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{editingRow?.$id ? "Edit" : "Add"} Investment</DialogTitle>
@@ -434,12 +457,24 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="shareholderName">Shareholder Name</Label>
-                <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} onChange={(e) => setEditingRow({ ...editingRow, shareholderName: e.target.value })} />
+                <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} 
+                onChange={(e) => {
+                  setEditingRow({
+                    ...editingRow,
+                    shareholderName: e.target.value,
+                  });
+                  setHasUnsavedChanges(true);
+                }} 
+                />
                 
               </div>
               <div>
                 <Label htmlFor="type">Type</Label>
-                <Select value={editingRow?.type || ""} onValueChange={(value) => setEditingRow({ ...editingRow, type: value })}>
+                <Select value={editingRow?.type || ""} 
+                  onValueChange={(value) => {
+                    setEditingRow({ ...editingRow, type: value });
+                    setHasUnsavedChanges(true);
+                  }}>
                   <SelectTrigger id="type">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -452,7 +487,11 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>  
               <div>
                 <Label htmlFor="role">Role</Label>
-                <Select value={editingRow?.role || ""} onValueChange={(value) => setEditingRow({ ...editingRow, role: value })}>
+                <Select value={editingRow?.role || ""} 
+                onValueChange={(value) => {
+                  setEditingRow({ ...editingRow, role: value });
+                  setHasUnsavedChanges(true);
+                }}>
                   <SelectTrigger id="role" className="w-full p-2 text-sm border border-gray-300 rounded">
                     <SelectValue placeholder="Select Role" />
                   </SelectTrigger>
@@ -465,7 +504,10 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label htmlFor="residentialStatus">Residential Status</Label>
-                <Select value={editingRow?.residentialStatus || ""} onValueChange={(value) => setEditingRow({ ...editingRow, residentialStatus: value })}>
+                <Select value={editingRow?.residentialStatus || ""} onValueChange={(value) => {
+                    setEditingRow({ ...editingRow, residentialStatus: value });
+                    setHasUnsavedChanges(true);
+                  }}>
                   <SelectTrigger id="residentialStatus">
                     <SelectValue placeholder="Select Role" />
                   </SelectTrigger>
@@ -478,15 +520,27 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label htmlFor="instrument">Instrument</Label>
-                <Input id="Instrument" placeholder="Instrument" value={editingRow?.instrument || ""} onChange={(e) => setEditingRow({ ...editingRow, instrument: e.target.value })} />  
+                <Input id="Instrument" placeholder="Instrument" value={editingRow?.instrument || ""} onChange={(e) => {
+                  setEditingRow({ ...editingRow, instrument: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
+                />  
               </div>
               <div>
                 <Label htmlFor="class">Class</Label>
-                <Input id="class" placeholder="Class" value={editingRow?.class || ""} onChange={(e) => setEditingRow({ ...editingRow, class: e.target.value })} />  
+                <Input id="class" placeholder="Class" value={editingRow?.class || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, class: e.target.value });
+                  setHasUnsavedChanges(true);
+                }} />  
               </div>
               <div>
                 <Label htmlFor="shares">No of Shares</Label>
-                <Input id="shares" type="number" placeholder="No of Shares" value={editingRow?.shares || ""} onChange={(e) => setEditingRow({ ...editingRow, shares: e.target.value })} />  
+                <Input id="shares" type="number" placeholder="No of Shares" value={editingRow?.shares || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, shares: e.target.value });
+                  setHasUnsavedChanges(true);
+                }} />  
               </div>
               <div>
                 <Label htmlFor="capitalStructure">Shareholding (%)</Label>
@@ -498,12 +552,16 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
                   let value = e.target.value.replace(/[^0-9.]/g, ""); 
                   value = value ? `${value}` : ""; 
                   setEditingRow({ ...editingRow, capitalStructure: value });
+                  setHasUnsavedChanges(true);
                   }}
                 />
               </div>
               <div>
                 <Label htmlFor="boardMember">Board Member</Label>
-                <Select value={editingRow?.boardMember || ""} onValueChange={(value) => setEditingRow({ ...editingRow, boardMember: value })}>
+                <Select value={editingRow?.boardMember || ""} onValueChange={(value) => {
+                  setEditingRow({ ...editingRow, boardMember: value });
+                  setHasUnsavedChanges(true);
+                  }}>
                   <SelectTrigger id="boardMember">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -516,7 +574,10 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label htmlFor="leadInvestor">Lead Investor</Label>
-                <Select value={editingRow?.leadInvestor || ""} onValueChange={(value) => setEditingRow({ ...editingRow, leadInvestor: value })}>
+                <Select value={editingRow?.leadInvestor || ""} onValueChange={(value) => {
+                  setEditingRow({ ...editingRow, leadInvestor: value });
+                  setHasUnsavedChanges(true);
+                  }}>
                   <SelectTrigger id="leadInvestor">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -529,7 +590,11 @@ const CapTable: React.FC<CapTableProps> = ({ startupId }) => {
               </div>
               <div>
                 <Label htmlFor="clauses">Important Clauses</Label>
-                <Textarea id="clauses" value={editingRow?.clauses || ""} onChange={(e) => setEditingRow({ ...editingRow, clauses: e.target.value })} />  
+                <Textarea id="clauses" value={editingRow?.clauses || ""} 
+                onChange={(e) => {
+                  setEditingRow({ ...editingRow, clauses: e.target.value });
+                  setHasUnsavedChanges(true);
+                  }} />  
               </div>  
             </div>
             <div className="flex justify-end space-x-2 mt-4">

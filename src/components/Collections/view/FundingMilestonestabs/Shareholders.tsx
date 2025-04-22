@@ -413,10 +413,16 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
                   <Label>Phone<span className="text-red-500">*</span></Label>
                   <Input
                     id="phone"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="Phone"
                     value={data["phone"] || ""}
-                    onChange={(e) => handleChange("phone", e.target.value)}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '');
+                      const limitedValue = rawValue.slice(0, 10);
+                      handleChange("phone", limitedValue);
+                    }}
                   />
                   {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
