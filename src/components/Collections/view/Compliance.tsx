@@ -5,7 +5,7 @@ import IncomeTaxCompliance from "./Compliancetabs/IncomeTax";
 import RocCompliance from "./Compliancetabs/ROCcompliance";
 import GstCompliance from "./Compliancetabs/GSTcompliance";
 import GstrCompliance from "./Compliancetabs/GSTR1";
-import Audits from "./Compliancetabs/Audit";
+import ESICDetails from "./Compliancetabs/esic";
 
 interface ComplianceProps {
   startupId: string;
@@ -25,8 +25,8 @@ const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId, setIsDirt
         return <GstCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "GSTR-1 & GSTR-3B":
         return <GstrCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
-      case "Audits":
-        return <Audits startupId={startupId} />;
+      case "esic":
+        return <ESICDetails startupId={startupId} setIsDirty={setIsDirty}/>;
       default:
         return null;
     }
@@ -39,8 +39,6 @@ const Compliance: React.FC<ComplianceProps> = ({ activeTab, startupId, setIsDirt
         {/* Render the content for the active tab */}
         {renderTabContent()}
       </div>
-
-      
     </div>
   );
 };
