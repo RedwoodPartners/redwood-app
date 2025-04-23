@@ -25,7 +25,7 @@ import IncomeTaxCompliance from "@/components/Collections/view/Compliancetabs/In
 import RocCompliance from "@/components/Collections/view/Compliancetabs/ROCcompliance";
 import GstCompliance from "@/components/Collections/view/Compliancetabs/GSTcompliance";
 import GstrCompliance from "@/components/Collections/view/Compliancetabs/GSTR1";
-import Audits from "@/components/Collections/view/Compliancetabs/Audit";
+import ESICDetails from "@/components/Collections/view/Compliancetabs/esic";
 
 import DocumentChecklist from "@/components/Collections/view/Documentstabs/DocumentsChecklist";
 import Patents from "@/components/Collections/view/Documentstabs/Patents";
@@ -132,8 +132,8 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         return <GstCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
       case "gstrcompliance":
         return <GstrCompliance startupId={startupId} setIsDirty={setIsDirty}/>;
-      case "audits":
-        return <Audits startupId={startupId} />;
+        case "esic":
+          return <ESICDetails startupId={startupId} setIsDirty={setIsDirty}/>;
 
 
       case "documents":
@@ -349,6 +349,14 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                         className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                       >
                         GSTR Compliance
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => handleTabChange("esic")}
+                        className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
+                      >
+                        ESIC & EPF
                       </button>
                     </li>
                     

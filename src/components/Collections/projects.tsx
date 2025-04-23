@@ -179,6 +179,7 @@ const ProjectsPage: React.FC = () => {
     setIsAddingNewProject(true);
     setShowModal(true);
     setHasUnsavedChanges(false);
+    setErrorMessage(null);
   };
  
   const handleConfirmChanges = async () => {

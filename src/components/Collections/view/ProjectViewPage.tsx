@@ -49,6 +49,7 @@ import IncomeTaxCompliance from "@/components/Collections/view/Compliancetabs/In
 import RocCompliance from "@/components/Collections/view/Compliancetabs/ROCcompliance";
 import GstCompliance from "@/components/Collections/view/Compliancetabs/GSTcompliance";
 import GstrCompliance from "@/components/Collections/view/Compliancetabs/GSTR1";
+import ESICDetails from "@/components/Collections/view/Compliancetabs/esic";
 
 import Documents from "@/components/Collections/view/Documents";
 import DocumentChecklist from "@/components/Collections/view/Documentstabs/DocumentsChecklist";
@@ -197,6 +198,8 @@ const ProjectViewPage = ({ id }: { id: string }) => {
         return <GstCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
       case "gstrcompliance":
         return <GstrCompliance startupId={project?.startupId} setIsDirty={setIsDirty}/>;
+      case "esic":
+        return <ESICDetails startupId={project?.startupId} setIsDirty={setIsDirty}/>;
 
       case "documents":
         return <Documents startupId={project?.startupId} activeTab={activeTab} setIsDirty={setIsDirty}/>;
@@ -382,6 +385,14 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                                 className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
                               >
                                 GSTR Compliance
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() => handleTabChange("esic")}
+                                className="block w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100"
+                              >
+                                ESIC & EPF
                               </button>
                             </li>
                             
