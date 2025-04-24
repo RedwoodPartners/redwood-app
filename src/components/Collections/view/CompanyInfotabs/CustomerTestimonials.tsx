@@ -211,6 +211,21 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
 }) => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showCustomQuestions, setShowCustomQuestions] = useState(false);
+  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+
+  useEffect(() => {
+    // Check if required fields are filled
+    const requiredFields = [
+      "customerName",
+      "designation",
+      "phone",
+      "email",
+    ];
+    const allFieldsFilled = requiredFields.every(
+      (field) => testimonial[field]
+    );
+    setIsSaveButtonDisabled(!allFieldsFilled);
+  }, [testimonial]);
 
   const handleQuery5Change = (index: number, value: string) => {
     const newQuery5 = [...(testimonial.query5 || ['', ''])];
@@ -250,7 +265,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
     <div className="space-y-4 w-full">
       <div className="grid grid-cols-4 gap-4 w-full">
         <div className="space-y-2">
-          <Label htmlFor="customerName">Customer Name</Label>
+          <Label htmlFor="customerName">Customer Name<span className="text-red-500">*</span></Label>
           <Input
             id="customerName"
             placeholder="Enter customer name"
@@ -259,7 +274,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="designation">Designation</Label>
+          <Label htmlFor="designation">Designation<span className="text-red-500">*</span></Label>
           <Input
             id="designation"
             placeholder="Enter designation"
@@ -268,7 +283,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">Phone<span className="text-red-500">*</span></Label>
           <Input
             type="text"
             id="phone"
@@ -285,7 +300,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
           {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email<span className="text-red-500">*</span></Label>
           <Input
             id="email"
             placeholder="Enter email address"
@@ -385,7 +400,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             Delete
           </Button>
         )}
-        <Button onClick={onSave} disabled={isSubmitting}>
+        <Button onClick={onSave} disabled={isSubmitting || isSaveButtonDisabled}>
         {isSubmitting ? "Saving..." : "Save"}
           </Button>
       </div>

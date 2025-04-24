@@ -58,6 +58,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   const { toast } = useToast();
   const storage = useMemo(() => new Storage(client), []);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -142,6 +143,16 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
       console.error("Error creating new table:", error);
     }
   };
+
+  useEffect(() => {
+    if (editingRow) {
+      const { trancheType, amount, status, date } = editingRow;
+      const requiredFieldsFilled = !!trancheType && !!amount && !!status && !!date;
+      setIsSaveButtonDisabled(!requiredFieldsFilled);
+    } else {
+      setIsSaveButtonDisabled(true);
+    }
+  }, [editingRow]);
 
   const handleSaveInvestment = async (row: any) => {
     if (isSubmitting || !activeTableId) return;
@@ -368,7 +379,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
           }}>
             <div className="grid grid-cols-4 gap-4">
             <div>
-              <Label htmlFor="trancheType">Tranche Type</Label>
+              <Label htmlFor="trancheType">Tranche Type<span className="text-red-500">*</span></Label>
               <Select
                 value={editingRow?.trancheType || ""}
                 onValueChange={(value) => {
@@ -389,7 +400,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
               </Select>
             </div>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">Amount<span className="text-red-500">*</span></Label>
                 <Input id="amount" type="number" placeholder="Enter Anount" value={editingRow?.amount || ""} 
                 onChange={(e) => {
                   setEditingRow({ ...editingRow, amount: e.target.value });
@@ -397,7 +408,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
                 }} />  
               </div>
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Status<span className="text-red-500">*</span></Label>
                 <Select
                   value={editingRow?.status || ""}
                   onValueChange={(value) => {
@@ -415,7 +426,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
                 </Select>
               </div>
               <div>
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Date<span className="text-red-500">*</span></Label>
                 <Input id="date" type="month" value={editingRow?.date || ""} 
                 onChange={(e) => {
                   setEditingRow({ ...editingRow, date: e.target.value });
@@ -445,7 +456,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
                   Delete
                 </Button>
               )}
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isSaveButtonDisabled}>
                 {isSubmitting ? "Saving..." : "Save"}
                 </Button>
             </div>

@@ -62,7 +62,8 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const { toast } = useToast();
   const storage = useMemo(() => new Storage(client), []);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+
   const fetchAllTables = useCallback(async () => {
     try {
       const tablesResponse = await databases.listDocuments(
@@ -164,16 +165,24 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
       return total;
     }, 0);
   };
+  useEffect(() => {
+    // Check if required fields are filled
+    if (editingRow) {
+      const { shareholderName, type, role, shares, capitalStructure } =
+        editingRow;
+      const requiredFieldsFilled =
+        !!shareholderName && !!type && !!role && !!shares && !!capitalStructure;
+      setIsSaveButtonDisabled(!requiredFieldsFilled);
+    } else {
+      setIsSaveButtonDisabled(true);
+    }
+  }, [editingRow]);
 
   const handleSaveInvestment = async (row: any) => {
     if (isSubmitting || !activeTableId) return;
     setIsSubmitting(true);
     
     try {
-      if (!row.shareholderName?.trim()) {
-        setError("Shareholder Name is required.");
-        return;
-      }
 
       const table = tables.find(t => t.tableId === activeTableId);
       if (!table) return;
@@ -456,7 +465,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
           }}>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <Label htmlFor="shareholderName">Shareholder Name</Label>
+                <Label htmlFor="shareholderName">Shareholder Name<span className="text-red-500">*</span></Label>
                 <Input id="shareholderName" placeholder="Shareholder Name" value={editingRow?.shareholderName || ""} 
                 onChange={(e) => {
                   setEditingRow({
@@ -469,7 +478,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 
               </div>
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">Type<span className="text-red-500">*</span></Label>
                 <Select value={editingRow?.type || ""} 
                   onValueChange={(value) => {
                     setEditingRow({ ...editingRow, type: value });
@@ -486,7 +495,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 </Select>
               </div>  
               <div>
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">Role<span className="text-red-500">*</span></Label>
                 <Select value={editingRow?.role || ""} 
                 onValueChange={(value) => {
                   setEditingRow({ ...editingRow, role: value });
@@ -535,7 +544,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 }} />  
               </div>
               <div>
-                <Label htmlFor="shares">No of Shares</Label>
+                <Label htmlFor="shares">No of Shares<span className="text-red-500">*</span></Label>
                 <Input id="shares" type="number" placeholder="No of Shares" value={editingRow?.shares || ""} 
                 onChange={(e) => {
                   setEditingRow({ ...editingRow, shares: e.target.value });
@@ -543,7 +552,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 }} />  
               </div>
               <div>
-                <Label htmlFor="capitalStructure">Shareholding (%)</Label>
+                <Label htmlFor="capitalStructure">Shareholding (%)<span className="text-red-500">*</span></Label>
                 <Input
                   id="capitalStructure"
                   placeholder="Capital Structure (%)"
@@ -603,7 +612,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                   Delete
                 </Button>
               )}
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isSaveButtonDisabled}>
                 {isSubmitting ? "Saving..." : "Save"}
                 </Button>
             </div>
