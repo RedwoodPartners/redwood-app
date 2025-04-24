@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SHAREHOLDERS_ID } from "../FundingMilestonestabs/Shareholders";
+import { ChevronRightIcon } from "lucide-react";
 const ROC_ID = "6739c2c40032254ca4b6";
 export const FORMS_ID = "67b45189001e40764c83";
 
@@ -41,7 +42,14 @@ interface RocComplianceProps {
   setIsDirty: (isDirty: boolean) => void;
 }
 
-const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
+interface AssociatedCompany {
+  regnameofcomapany: string;
+  cin: string;
+  natureofcomapny: string;
+  role: string;
+}
+
+const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,18 +63,43 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
   const [queryOptions, setQueryOptions] = useState<string[]>([]);
   const [natureOfCompany, setNatureOfCompany] = useState<string>("");
   const [formsData, setFormsData] = useState<any[]>([]);
-  
   const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
   const [shareholders, setShareholders] = useState<any[]>([]);
   const [editingShareholder, setEditingShareholder] = useState<any>(null);
   const [isShareholderDialogOpen, setIsShareholderDialogOpen] = useState(false);
+  const [associatedCompanies, setAssociatedCompanies] = useState<
+    AssociatedCompany[]
+  >([]);
+  const [newAssociatedCompany, setNewAssociatedCompany] = useState<
+    AssociatedCompany
+  >({
+    regnameofcomapany: "",
+    cin: "",
+    natureofcomapny: "",
+    role: "",
+  });
+  const [isAddingNewCompany, setIsAddingNewCompany] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [selectedAssociatedCompany, setSelectedAssociatedCompany] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
+
 
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, ROC_ID, [
-          Query.equal("startupId", startupId),
-        ]);
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          ROC_ID,
+          [Query.equal("startupId", startupId)]
+        );
         const filteredDocuments = response.documents.map((doc) => {
           const { $id, query, yesNo, date, description } = doc;
           return { $id, query, yesNo, date, description };
@@ -86,14 +119,17 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
 
     const fetchShareholders = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, SHAREHOLDERS_ID,
-          [Query.equal("startupId", startupId),]
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          SHAREHOLDERS_ID,
+          [Query.equal("startupId", startupId)]
         );
         const filtered = response.documents.map((doc) => ({
           $id: doc.$id,
           shareholderName: doc.shareholderName,
           directorId: doc.directorId,
-          associatedCompany: doc.associatedCompany || "", // Optional, adjust as needed
+          associatedCompany: doc.associatedCompany,
+          companyDetails: doc.companyDetails || [], 
         }));
         setShareholders(filtered);
       } catch (error) {
@@ -108,14 +144,18 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
   useEffect(() => {
     const fetchQueryOptions = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, FORMS_ID, [
-          Query.equal("natureOfCompany", natureOfCompany), // Filter by natureOfCompany
-          Query.equal("types", "roc"),
-        ]);
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          FORMS_ID,
+          [
+            Query.equal("natureOfCompany", natureOfCompany), // Filter by natureOfCompany
+            Query.equal("types", "roc"),
+          ]
+        );
         const documents = response.documents;
         const options = documents.map((doc) => doc.query);
         setQueryOptions(options);
-                setFormsData(documents);
+        setFormsData(documents);
       } catch (error) {
         console.error("Error fetching query options:", error);
       }
@@ -123,15 +163,23 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     fetchQueryOptions();
   }, [natureOfCompany]);
 
-    // Function to get description based on yesNo value
-    const getDescriptionForYesNo = (yesNoValue: string, queryValue: string): string => {
-        const formData = formsData.find((doc) => doc.query === queryValue);
-        if (formData && formData.yesNo && Array.isArray(formData.yesNo) && formData.yesNo.length > 0) {
-            const index = yesNoValue === 'Yes' ? 0 : 1;
-            return formData.yesNo[index] || '';
-        }
-        return '';
-    };
+  // Function to get description based on yesNo value
+  const getDescriptionForYesNo = (
+    yesNoValue: string,
+    queryValue: string
+  ): string => {
+    const formData = formsData.find((doc) => doc.query === queryValue);
+    if (
+      formData &&
+      formData.yesNo &&
+      Array.isArray(formData.yesNo) &&
+      formData.yesNo.length > 0
+    ) {
+      const index = yesNoValue === "Yes" ? 0 : 1;
+      return formData.yesNo[index] || "";
+    }
+    return "";
+  };
 
   //when editing
   const handleSaveCompliance = async () => {
@@ -146,13 +194,19 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           allowedFields.includes(key)
         )
       );
-      await databases.updateDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id, updateData);
+      await databases.updateDocument(
+        STAGING_DATABASE_ID,
+        ROC_ID,
+        editingCompliance.$id,
+        updateData
+      );
       // Update local state with saved data
       const updatedCompliances = complianceData.map((c) =>
         c.$id === editingCompliance.$id ? { ...c, ...updateData } : c
       );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     } finally {
@@ -163,10 +217,17 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
   const handleDeleteCompliance = async () => {
     if (!editingCompliance) return;
     try {
-      await databases.deleteDocument(STAGING_DATABASE_ID, ROC_ID, editingCompliance.$id);
-      const updatedCompliances = complianceData.filter((c) => c.$id !== editingCompliance.$id);
+      await databases.deleteDocument(
+        STAGING_DATABASE_ID,
+        ROC_ID,
+        editingCompliance.$id
+      );
+      const updatedCompliances = complianceData.filter(
+        (c) => c.$id !== editingCompliance.$id
+      );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting compliance:", error);
     }
@@ -198,7 +259,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
 
       for (const query of missing) {
         const defaultYesNo = "";
-        const defaultDate = ""; 
+        const defaultDate = "";
         const defaultDescription = "";
 
         await databases.createDocument(
@@ -218,9 +279,11 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
       // After generating documents, refresh the compliance data
       const fetchComplianceData = async () => {
         try {
-          const response = await databases.listDocuments(STAGING_DATABASE_ID, ROC_ID, [
-            Query.equal("startupId", startupId),
-          ]);
+          const response = await databases.listDocuments(
+            STAGING_DATABASE_ID,
+            ROC_ID,
+            [Query.equal("startupId", startupId)]
+          );
           const filteredDocuments = response.documents.map((doc) => {
             const { $id, query, yesNo, date, description } = doc;
             return { $id, query, yesNo, date, description };
@@ -244,57 +307,138 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     queryOptions.length > 0 &&
     queryOptions.every((query) =>
       complianceData.some((doc) => doc.query === query)
-  );
+    );
+
   // Shareholder functions
   const handleShareholderDoubleClick = (shareholder: any) => {
     setEditingShareholder(shareholder);
     setIsShareholderDialogOpen(true);
+    setHasUnsavedChanges(true);
+    // Initialize associated companies when dialog opens
+    if (shareholder.companyDetails && Array.isArray(shareholder.companyDetails)) {
+      setAssociatedCompanies(
+        shareholder.companyDetails.map((detail: string) => {
+          const [regnameofcomapany, cin, natureofcomapny, role] =
+            detail.split("-");
+          return { regnameofcomapany, cin, natureofcomapny, role };
+        })
+      );
+      setSelectedAssociatedCompany(
+        shareholder.associatedCompany !== undefined && shareholder.associatedCompany !== null
+          ? shareholder.associatedCompany
+          : ""
+      );
+    } else {
+      setAssociatedCompanies([]);
+    }
   };
 
   const handleSaveShareholder = async () => {
     if (!editingShareholder) return;
-
+    setHasUnsavedChanges(false);
     try {
-        await databases.updateDocument(
-            STAGING_DATABASE_ID,
-            SHAREHOLDERS_ID,
-            editingShareholder.$id, // Make sure $id exists and is not undefined
-            {
-                associatedCompany: editingShareholder.associatedCompany,
-            }
-        );
-        const updatedShareholders = shareholders.map((shareholder) =>
-            shareholder.$id === editingShareholder.$id
-                ? { ...shareholder, associatedCompany: editingShareholder.associatedCompany }
-                : shareholder
-        );
-        setShareholders(updatedShareholders);
-        setIsShareholderDialogOpen(false);
-        setEditingShareholder(null);
+      // Convert associatedCompanies to the string array format
+      const companyDetails = associatedCompanies.map(
+        (company) =>
+          `${company.regnameofcomapany}-${company.cin}-${company.natureofcomapny}-${company.role}`
+      );
+
+      await databases.updateDocument(
+        STAGING_DATABASE_ID,
+        SHAREHOLDERS_ID,
+        editingShareholder.$id,
+        {
+          companyDetails: companyDetails,
+          associatedCompany: selectedAssociatedCompany,
+        }
+      );
+
+      // Update local state with saved data
+      const updatedShareholders = shareholders.map((shareholder) =>
+        shareholder.$id === editingShareholder.$id
+          ? { ...shareholder, 
+            companyDetails: companyDetails,
+            associatedCompany: selectedAssociatedCompany,
+           }
+          : shareholder
+      );
+      setShareholders(updatedShareholders);
+      setIsShareholderDialogOpen(false);
+      setEditingShareholder(null);
     } catch (error) {
-        console.error("Error saving shareholder data:", error);
+      console.error("Error saving shareholder data:", error);
     }
   };
 
 
+  const handleCancelNewAssociatedCompany = () => {
+    setIsAddingNewCompany(false);
+    setNewAssociatedCompany({
+      regnameofcomapany: "",
+      cin: "",
+      natureofcomapny: "",
+      role: "",
+    });
+  };
+
+  const handleRemoveAssociatedCompany = (index: number) => {
+    const newCompanies = [...associatedCompanies];
+    newCompanies.splice(index, 1);
+    setAssociatedCompanies(newCompanies);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    index: number,
+    field: string
+  ) => {
+    const { value } = e.target;
+    const updatedCompanies = [...associatedCompanies];
+    updatedCompanies[index] = {
+      ...updatedCompanies[index],
+      [field]: value,
+    };
+    setAssociatedCompanies(updatedCompanies);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleNewInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    field: string
+  ) => {
+    setHasUnsavedChanges(true);
+    const { value } = e.target;
+    setNewAssociatedCompany({
+      ...newAssociatedCompany,
+      [field]: value,
+    });
+  };
+  const toggleRow = (id: string) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
   const handleAssociatedCompanyChange = (value: string) => {
-    if (editingShareholder) {
-      setEditingShareholder({
-        ...editingShareholder,
-        associatedCompany: value,
-      });
-    }
+    setSelectedAssociatedCompany(value);
   };
-
-  
-
+  const closeDialog = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsShareholderDialogOpen(false);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsShareholderDialogOpen(false);
+    }
+  }, [hasUnsavedChanges, setIsShareholderDialogOpen]);
 
   return (
     <div>
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2 p-2">
-        <h3 className="text-lg font-medium">ROC Compliance</h3>
-        {!allDocumentsCreated && (
+          <h3 className="text-lg font-medium">ROC Compliance</h3>
+          {!allDocumentsCreated && (
             <Button
               onClick={handleGenerateDocuments}
               disabled={isSubmitting}
@@ -318,7 +462,10 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
           </TableHeader>
           <TableBody>
             {complianceData.map((row) => (
-              <TableRow key={row.$id} onDoubleClick={() => setEditingCompliance(row)}>
+              <TableRow
+                key={row.$id}
+                onDoubleClick={() => setEditingCompliance(row)}
+              >
                 <TableCell>{row.query}</TableCell>
                 <TableCell>{row.yesNo}</TableCell>
                 <TableCell>{row.date}</TableCell>
@@ -337,29 +484,94 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
               <TableHead>Shareholder Name</TableHead>
               <TableHead>DIN (Director Identification Number).</TableHead>
               <TableHead>Any Associated Company</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {shareholders.map((shareholder, idx) => (
-              <TableRow key={idx} onDoubleClick={() => handleShareholderDoubleClick(shareholder)}>
-                <TableCell>{shareholder.shareholderName}</TableCell>
-                <TableCell>{shareholder.directorId}</TableCell>
-                <TableCell>{shareholder.associatedCompany}</TableCell>
-              </TableRow>
+              <React.Fragment key={idx}>
+                <TableRow
+                  onDoubleClick={() => handleShareholderDoubleClick(shareholder)}
+                >
+                  <TableCell>{shareholder.shareholderName}</TableCell>
+                  <TableCell>{shareholder.directorId}</TableCell>
+                  <TableCell>{shareholder.associatedCompany}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleRow(shareholder.$id)}
+                    >
+                      <ChevronRightIcon
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          expandedRow === shareholder.$id ? "rotate-90" : ""
+                        }`}
+                      />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {expandedRow === shareholder.$id && (
+                  <TableRow>
+                    <TableCell colSpan={3}>
+                      <div className="border border-gray-300 rounded-xl p-2">
+                    <Table>
+                        <TableHeader className="bg-gray-100">
+                          <TableRow>
+                            <TableHead>Company Name</TableHead>
+                            <TableHead>CIN/LLPIN</TableHead>
+                            <TableHead>Nature of Company</TableHead>
+                            <TableHead>Role of Individual</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {shareholder.companyDetails &&
+                            shareholder.companyDetails.length > 0 ? (
+                            shareholder.companyDetails.map(
+                              (detail: string, index: number) => {
+                                const [
+                                  regnameofcomapany,
+                                  cin,
+                                  natureofcomapny,
+                                  role,
+                                ] = detail.split("-");
+                                return (
+                                  <TableRow key={index}>
+                                    <TableCell>{regnameofcomapany}</TableCell>
+                                    <TableCell>{cin}</TableCell>
+                                    <TableCell>{natureofcomapny}</TableCell>
+                                    <TableCell>{role}</TableCell>
+                                  </TableRow>
+                                );
+                              }
+                            )
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={4}>
+                                No associated company details available.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
-        </Table>
-
+      </Table>
       </div>
       {editingCompliance && (
-        <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
+        <Dialog
+          open={!!editingCompliance}
+          onOpenChange={() => setEditingCompliance(null)}
+        >
           <DialogContent className="w-full max-w-4xl">
             <DialogHeader>
               <DialogTitle>Edit Compliance</DialogTitle>
               {editingCompliance.query && (
-                <DialogDescription>
-                  {editingCompliance.query}
-                </DialogDescription>
+                <DialogDescription>{editingCompliance.query}</DialogDescription>
               )}
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4">
@@ -388,7 +600,12 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
                   id="edit-date"
                   type="date"
                   value={editingCompliance.date}
-                  onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCompliance({
+                      ...editingCompliance,
+                      date: e.target.value,
+                    })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -399,7 +616,12 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
                 <Textarea
                   id="edit-description"
                   value={editingCompliance.description}
-                  onChange={(e) => setEditingCompliance({ ...editingCompliance, description: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCompliance({
+                      ...editingCompliance,
+                      description: e.target.value,
+                    })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -419,32 +641,163 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
         </Dialog>
       )}
       {/* Shareholder Edit Dialog */}
-      <Dialog open={isShareholderDialogOpen} onOpenChange={() => setIsShareholderDialogOpen(false)}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog
+        open={isShareholderDialogOpen}
+        onOpenChange={closeDialog}
+      >
+        <DialogContent className="w-full max-w-4xl">
           <DialogHeader>
             <DialogTitle>Edit Shareholder</DialogTitle>
-            <DialogDescription>
-            </DialogDescription>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
-            <div>
-              <Label htmlFor="associatedCompany" >
-                Associated Company
-              </Label>
-              <Select
-                value={editingShareholder?.associatedCompany || ""}
-                onValueChange={handleAssociatedCompanyChange}
-              >
-                <SelectTrigger id="associatedCompany">
-                  <SelectValue placeholder="Select Yes/No" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="w-1/4">
+          <Label>Any Associated Companies</Label>
+          <Select
+            value={selectedAssociatedCompany || ""}
+            onValueChange={handleAssociatedCompanyChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Yes">Yes</SelectItem>
+              <SelectItem value="No">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+          <div className="border border-gray-300 rounded-xl p-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Company Name</TableHead>
+                  <TableHead>CIN/LLPIN</TableHead>
+                  <TableHead>Nature of Company</TableHead>
+                  <TableHead>Role of Individual</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {associatedCompanies.map((company, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Company Name"
+                        value={company.regnameofcomapany}
+                        onChange={(e) =>
+                          handleInputChange(e, index, "regnameofcomapany")
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="CIN"
+                        value={company.cin}
+                        onChange={(e) => handleInputChange(e, index, "cin")}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Nature of Company"
+                        value={company.natureofcomapny}
+                        onChange={(e) =>
+                          handleInputChange(e, index, "natureofcomapny")
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Role"
+                        value={company.role}
+                        onChange={(e) => handleInputChange(e, index, "role")}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => handleRemoveAssociatedCompany(index)}
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {isAddingNewCompany && (
+                  <TableRow>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Company Name"
+                        value={newAssociatedCompany.regnameofcomapany}
+                        onChange={(e) =>
+                          handleNewInputChange(e, "regnameofcomapany")
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="CIN"
+                        value={newAssociatedCompany.cin}
+                        onChange={(e) => handleNewInputChange(e, "cin")}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Nature of Company"
+                        value={newAssociatedCompany.natureofcomapny}
+                        onChange={(e) =>
+                          handleNewInputChange(e, "natureofcomapny")
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        placeholder="Role"
+                        value={newAssociatedCompany.role}
+                        onChange={(e) => handleNewInputChange(e, "role")}
+                      />
+                    </TableCell>
+                    <TableCell>
+        
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleCancelNewAssociatedCompany}
+                      >
+                        Cancel
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+            <Button
+              type="button"
+              variant={"outline"}
+              onClick={() => {
+                setAssociatedCompanies([...associatedCompanies, newAssociatedCompany]);
+                setNewAssociatedCompany({
+                  regnameofcomapany: "",
+                  cin: "",
+                  natureofcomapny: "",
+                  role: "",
+                });
+                setIsAddingNewCompany(false);
+              }}
+            >
+              Add
+            </Button>
+          </div>
           <DialogFooter>
-            <Button onClick={handleSaveShareholder}>
+            <Button type="button" onClick={handleSaveShareholder}>
               Save
             </Button>
           </DialogFooter>
@@ -453,5 +806,4 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId }) => {
     </div>
   );
 };
-
 export default RocCompliance;

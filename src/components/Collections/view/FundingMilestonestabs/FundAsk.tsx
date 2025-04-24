@@ -68,8 +68,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
   const [isEditingProposed, setIsEditingProposed] = useState(false);
   const [isEditingValidated, setIsEditingValidated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+
   useEffect(() => {
     if (hasUnsavedChanges) {
       setIsDirty(true);
@@ -77,6 +78,11 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       setIsDirty(false);
     }
   }, [hasUnsavedChanges, setIsDirty]);
+
+  useEffect(() => {
+    const { description, amount } = editingFund || { description: '', amount: '' };
+    setIsSaveButtonDisabled(!description || !amount);
+  }, [editingFund]);
 
   useEffect(() => {
     const fetchFunds = async () => {
@@ -267,7 +273,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label htmlFor="description">Utilization Description</Label>
+              <Label htmlFor="description">Utilization Description<span className="text-red-500">*</span></Label>
               <Textarea
                 id="description"
                 value={editingFund?.description || ""}
@@ -282,7 +288,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
               />
             </div>
             <div>
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Amount<span className="text-red-500">*</span></Label>
               <Input
                 type="text"
                 id="amount"
@@ -301,7 +307,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
             {editingFund?.$id && (
               <Button onClick={handleDeleteItem} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             )}
-            <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem} disabled={isSubmitting}>
+            <Button type="submit" onClick={editingFund?.$id ? handleUpdateItem : handleAddItem} disabled={isSubmitting || isSaveButtonDisabled}>
               {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
