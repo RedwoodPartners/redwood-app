@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ButtonWithIcon from "@/lib/addButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const GSTR_ID = "673b1988001c3d93380e";
 
@@ -37,6 +38,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [filingType, setFilingType] = useState("Monthly"); // Default to monthly
+  const [quarter, setQuarter] = useState("");
   const [newCompliance, setNewCompliance] = useState({
     date: "",
     gstr1: "",
@@ -44,6 +47,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -60,11 +64,11 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
-          const { $id, date, gstr1, gst3b } = doc;
+          const { $id, date, gstr1, gst3b, filingType, quarter } = doc;
           const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
           const gst3bValue = parseFloat(gst3b.replace(/,/g, ''));
           const difference = (gstr1Value - gst3bValue).toFixed(2);
-          return { $id, date, gstr1, gst3b, difference };
+          return { $id, date, gstr1, gst3b, difference, filingType, quarter };
         });
         setComplianceData(filteredDocuments);
       } catch (error) {
@@ -73,6 +77,15 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
     };
     fetchComplianceData();
   }, [startupId]);
+  useEffect(() => {
+    // Check if all required fields are filled
+    const requiredFieldsFilled =
+      filingType &&
+      (filingType === "Monthly" ? newCompliance.date : quarter) &&
+      newCompliance.gstr1 &&
+      newCompliance.gst3b;
+    setIsSaveButtonDisabled(!requiredFieldsFilled);
+  }, [filingType, quarter, newCompliance]);
 
   const formatNumber = (value: string) => {
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -81,20 +94,22 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
   const handleSaveCompliance = async () => {
     if (!editingCompliance) return;
     try {
-      const { date, gstr1, gst3b } = editingCompliance;
+      const { date, gstr1, gst3b, filingType, quarter } = editingCompliance;
       const gstr1Value = parseFloat(gstr1.replace(/,/g, ''));
       const gst3bValue = parseFloat(gst3b.replace(/,/g, ''));
       const difference = (gstr1Value - gst3bValue).toFixed(2);
 
-      const updateData = { 
-        date, 
-        gstr1: formatNumber(gstr1), 
-        gst3b: formatNumber(gst3b), 
-        difference: formatNumber(difference) 
+      const updateData = {
+        date,
+        gstr1: formatNumber(gstr1),
+        gst3b: formatNumber(gst3b),
+        difference: formatNumber(difference),
+        filingType,
+        quarter: filingType === "Quarterly" ? quarter : ""
       };
       await databases.updateDocument(STAGING_DATABASE_ID, GSTR_ID, editingCompliance.$id, updateData);
-      const updatedCompliances = complianceData.map(c => 
-        c.$id === editingCompliance.$id ? {...c, ...updateData} : c
+      const updatedCompliances = complianceData.map(c =>
+        c.$id === editingCompliance.$id ? { ...c, ...updateData } : c
       );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
@@ -130,12 +145,14 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
         STAGING_DATABASE_ID,
         GSTR_ID,
         "unique()",
-        { 
-          date, 
-          gstr1: formatNumber(gstr1), 
-          gst3b: formatNumber(gst3b), 
-          difference: formatNumber(difference), 
-          startupId 
+        {
+          date,
+          gstr1: formatNumber(gstr1),
+          gst3b: formatNumber(gst3b),
+          difference: formatNumber(difference),
+          startupId,
+          filingType,
+          quarter: filingType === "Quarterly" ? quarter : ""
         }
       );
       setComplianceData([...complianceData, response]);
@@ -168,22 +185,25 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
       if (confirmClose) {
         setIsDialogOpen(false);
         setHasUnsavedChanges(false);
-          setNewCompliance({  
-              date: "",
-              gstr1: "",
-              gst3b: "",
-          });
+        setNewCompliance({
+          date: "",
+          gstr1: "",
+          gst3b: "",
+        });
+        setFilingType("Monthly");
+        setQuarter("");
       }
     } else {
       setIsDialogOpen(false);
-        setNewCompliance({  
-            date: "",
-            gstr1: "",
-            gst3b: "",
-        });
+      setNewCompliance({
+        date: "",
+        gstr1: "",
+        gst3b: "",
+      });
+      setFilingType("Monthly");
+      setQuarter("");
     }
   };
-
 
   return (
     <div>
@@ -196,6 +216,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
           <TableCaption>GSTR Compliance Information</TableCaption>
           <TableHeader>
             <TableRow>
+              <TableHead>Filing Type</TableHead>
+              <TableHead>Quarter</TableHead>
               <TableHead>Month</TableHead>
               <TableHead>GST R1</TableHead>
               <TableHead>GST 3B</TableHead>
@@ -205,6 +227,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
           <TableBody>
             {complianceData.map((row) => (
               <TableRow key={row.$id} onDoubleClick={() => setEditingCompliance(row)}>
+                <TableCell>{row.filingType}</TableCell>
+                <TableCell>{row.quarter}</TableCell>
                 <TableCell>{row.date}</TableCell>
                 <TableCell>{row.gstr1}</TableCell>
                 <TableCell>{row.gst3b}</TableCell>
@@ -221,22 +245,62 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
             <DialogDescription aria-describedby={undefined}>
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-3 gap-4 py-4">
+          <div className="grid grid-cols-4 gap-4 py-4">
             <div>
-              <Label htmlFor="date" className="text-right">Month</Label>
-              <Input
-                id="date"
-                type="date"
-                value={newCompliance.date}
-                onChange={(e) => {
-                  setNewCompliance({ ...newCompliance, date: e.target.value });
-                  setHasUnsavedChanges(true);
-                  }}
-                className="col-span-3"
-              />
+              <Label htmlFor="filingType">Filing Type<span className="text-red-500">*</span></Label>
+              <Select value={filingType} onValueChange={(value) => {
+                setFilingType(value);
+                setQuarter("");
+                setHasUnsavedChanges(true);
+              }}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Filing Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                  <SelectItem value="Quarterly">Quarterly</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {filingType === "Quarterly" && (
+              <div>
+                <Label htmlFor="quarter">Quarter<span className="text-red-500">*</span></Label>
+                <Select value={quarter} onValueChange={(value) => {
+                  setQuarter(value);
+                  setHasUnsavedChanges(true);
+                }}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Quarter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="April - June">April - June</SelectItem>
+                    <SelectItem value="July - September">July - September</SelectItem>
+                    <SelectItem value="October - December">October - December</SelectItem>
+                    <SelectItem value="January - March">January - March</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {filingType === "Monthly" && (
+              <div>
+                <Label htmlFor="date" className="text-right">Month<span className="text-red-500">*</span></Label>
+                <Input
+                  id="date"
+                  type="month"
+                  max={new Date().toISOString().slice(0, 7)} 
+                  value={newCompliance.date}
+                  onChange={(e) => {
+                    setNewCompliance({ ...newCompliance, date: e.target.value });
+                    setHasUnsavedChanges(true);
+                  }}
+                  className="col-span-3"
+                />
+              </div>
+            )}
             <div>
-              <Label htmlFor="gstr1" className="text-right">GST R1</Label>
+              <Label htmlFor="gstr1" className="text-right">GST R1<span className="text-red-500">*</span></Label>
               <Input
                 id="gstr1"
                 value={newCompliance.gstr1}
@@ -245,7 +309,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
               />
             </div>
             <div>
-              <Label htmlFor="gst3b" className="text-right">GST 3B</Label>
+              <Label htmlFor="gst3b" className="text-right">GST 3B<span className="text-red-500">*</span></Label>
               <Input
                 id="gst3b"
                 value={newCompliance.gst3b}
@@ -255,8 +319,8 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save"}
+            <Button type="submit" onClick={handleAddComplianceData} disabled={isSubmitting || isSaveButtonDisabled}>
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -269,20 +333,59 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
               <DialogDescription aria-describedby={undefined}>
               </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-3 gap-4 py-4">
+            <div className="grid grid-cols-4 gap-4 py-4">
               <div>
-                <Label htmlFor="edit-date" className="text-right">Month</Label>
-                <Input
-                  id="edit-date"
-                  type="date"
-                  value={editingCompliance.date}
-                  onChange={(e) => {
-                    setEditingCompliance({ ...editingCompliance, date: e.target.value });
-                    setHasUnsavedChanges(true);
-                  }}
-                  className="col-span-3"
-                />
+                <Label htmlFor="filingType">Filing Type</Label>
+                <Select value={editingCompliance.filingType} onValueChange={(value) => {
+                  setEditingCompliance({ ...editingCompliance, filingType: value, quarter: "" });
+                  setHasUnsavedChanges(true);
+                }}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Filing Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {editingCompliance.filingType === "Quarterly" && (
+                <div>
+                  <Label htmlFor="quarter">Quarter</Label>
+                  <Select value={editingCompliance.quarter} onValueChange={(value) => {
+                    setEditingCompliance({ ...editingCompliance, quarter: value });
+                    setHasUnsavedChanges(true);
+                  }}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="April - June">April - June</SelectItem>
+                      <SelectItem value="July - September">July - September</SelectItem>
+                      <SelectItem value="October - December">October - December</SelectItem>
+                      <SelectItem value="January - March">January - March</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {editingCompliance.filingType === "Monthly" && (
+                <div>
+                  <Label htmlFor="edit-date" className="text-right">Month</Label>
+                  <Input
+                    id="edit-date"
+                    type="month"
+                    max={new Date().toISOString().slice(0, 7)} 
+                    value={editingCompliance.date}
+                    onChange={(e) => {
+                      setEditingCompliance({ ...editingCompliance, date: e.target.value });
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="col-span-3"
+                  />
+                </div>
+              )}
               <div>
                 <Label htmlFor="edit-gstr1" className="text-right">GST R1</Label>
                 <Input

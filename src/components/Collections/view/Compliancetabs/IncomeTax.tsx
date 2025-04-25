@@ -257,12 +257,12 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
         <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
           <DialogContent className="w-full max-w-5xl">
             <DialogHeader>
-              <DialogTitle>Edit Compliance</DialogTitle>
               {editingCompliance.query && (
-                <DialogDescription>
+                <DialogTitle>
                   {editingCompliance.query}
-                </DialogDescription>
+                </DialogTitle>
               )}
+              <DialogDescription></DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
@@ -280,7 +280,11 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
               </div>
               <div>
                 <Label htmlFor="edit-date" className="text-right">Date</Label>
-                <Input id="edit-date" type="date" value={editingCompliance.date} onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })} className="col-span-3" />
+                <Input 
+                id="edit-date" 
+                type="date"
+                max={new Date().toISOString().split("T")[0]}  
+                value={editingCompliance.date} onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })} className="col-span-3" />
               </div>
               <div>
                 <Label htmlFor="edit-description" className="text-right">Description</Label>

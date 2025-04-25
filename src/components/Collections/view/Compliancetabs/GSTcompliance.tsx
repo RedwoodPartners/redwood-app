@@ -285,12 +285,12 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
         >
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
-              <DialogTitle>Edit Compliance</DialogTitle>
               {editingCompliance.query && (
-                <DialogDescription>
+                <DialogTitle>
                   {editingCompliance.query}
-                </DialogDescription>
+                </DialogTitle>
               )}
+              <DialogDescription></DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4 py-4">
               <div>
@@ -317,6 +317,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
                 <Input
                   id="edit-date"
                   type="date"
+                  max={new Date().toISOString().split("T")[0]} 
                   value={editingCompliance.date}
                   onChange={(e) =>
                     setEditingCompliance({

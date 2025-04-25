@@ -427,7 +427,10 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
               </div>
               <div>
                 <Label htmlFor="date">Date<span className="text-red-500">*</span></Label>
-                <Input id="date" type="month" value={editingRow?.date || ""} 
+                <Input id="date" 
+                type="month" 
+                value={editingRow?.date || ""}
+                max={new Date().toISOString().slice(0, 7)}  
                 onChange={(e) => {
                   setEditingRow({ ...editingRow, date: e.target.value });
                   setHasUnsavedChanges(true);
@@ -488,6 +491,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
           <Input
             id="tableDated"
             type="month"
+            max={new Date().toISOString().slice(0, 7)} 
             value={activeTable.formData.tableDated}
             onChange={(e) => handleInputChange("tableDated", e.target.value)}
           />
