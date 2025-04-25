@@ -476,7 +476,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
         </Table>
       </div>
       <div className="mt-4 p-2 bg-white shadow-md rounded-lg border border-gray-300">
-        <Label>Shareholders & Directorship Details</Label>
+        <Label>Associated Companies</Label>
         <Table>
           <TableCaption></TableCaption>
           <TableHeader>
@@ -569,10 +569,10 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
         >
           <DialogContent className="w-full max-w-4xl">
             <DialogHeader>
-              <DialogTitle>Edit Compliance</DialogTitle>
               {editingCompliance.query && (
-                <DialogDescription>{editingCompliance.query}</DialogDescription>
+                <DialogTitle>{editingCompliance.query}</DialogTitle>
               )}
+              <DialogDescription></DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-4 gap-4">
               <div>
@@ -600,6 +600,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
                   id="edit-date"
                   type="date"
                   value={editingCompliance.date}
+                  max={new Date().toISOString().split("T")[0]} 
                   onChange={(e) =>
                     setEditingCompliance({
                       ...editingCompliance,
@@ -665,8 +666,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
             </SelectContent>
           </Select>
         </div>
-
-          <div className="border border-gray-300 rounded-xl p-2">
+          <div className="border border-gray-300 rounded-xl p-2"
+          style={{display: selectedAssociatedCompany === "No" ? "none" : "block"}}
+          >
             <Table>
               <TableHeader>
                 <TableRow>

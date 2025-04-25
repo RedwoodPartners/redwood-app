@@ -583,10 +583,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
-            <DialogTitle>Edit Document</DialogTitle>
             {editingDoc?.docName && (
-             <DialogDescription>{editingDoc.docName}</DialogDescription>
+             <DialogTitle>{editingDoc.docName}</DialogTitle>
              )}
+             <DialogDescription></DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 mt-4">
             <div>

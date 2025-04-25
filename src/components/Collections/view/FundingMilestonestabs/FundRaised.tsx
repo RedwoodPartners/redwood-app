@@ -436,6 +436,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                 <Label>Investment Date<span className="text-red-500">*</span></Label>
                 <Input
                   type="date"
+                  max={new Date().toISOString().split("T")[0]}
                   value={selectedInvestment?.date || ""}
                   onChange={(e) => {
                     setSelectedInvestment({
