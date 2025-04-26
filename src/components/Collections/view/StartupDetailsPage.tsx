@@ -74,11 +74,50 @@ interface StartupData {
 const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("companyInfo");
 
   const [isDirty, setIsDirty] = useState(false);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+
+  const [storedTab, setStoredTab] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<string>(() => {
+      if (typeof localStorage !== 'undefined') {
+        const storedTab = localStorage.getItem(`activeTab_${startupId}`);
+        return storedTab || "companyInfo";
+      } else {
+        return "companyInfo";
+      }
+    });
+  
+    // Use useEffect to manage storedTab based on changes to id and activeTab
+    useEffect(() => {
+      const localStorageKey = `activeTab_${startupId}`;
+  
+      // Function to update localStorage and storedTab state
+      const updateStoredTab = (tab: string) => {
+        localStorage.setItem(localStorageKey, tab);
+        setStoredTab(tab);
+      };
+  
+      // Initial setup: Load from localStorage if available
+      if (typeof localStorage !== 'undefined') {
+        const initialTab = localStorage.getItem(localStorageKey);
+        setStoredTab(initialTab);
+      }
+  
+      // Update storedTab when activeTab changes and the id is the same
+      if (activeTab && typeof localStorage !== 'undefined') {
+        if (localStorage.getItem(localStorageKey) !== activeTab) {
+          updateStoredTab(activeTab);
+        }
+      }
+  
+      // Clear storedTab when the id changes
+      return () => {
+        localStorage.removeItem(localStorageKey);
+        setStoredTab(null);
+      };
+    }, [startupId, activeTab]);
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
