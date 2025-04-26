@@ -121,13 +121,21 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
           fetchData();
     }, [startupId]);
 
+    const formatNumber = (value: string) => {
+        const number = parseFloat(value);
+        if (isNaN(number)) return "";
+        return number.toLocaleString("en-IN");
+      };
+
     const handleInputChange = (
         index: number,
         field: keyof Contribution,
         value: string
     ) => {
+        const formattedValue = value.replace(/[^0-9]/g, "");
+
         const updated = [...contributions];
-        updated[index][field] = value;
+        updated[index][field] = formattedValue;
 
         if (field !== "totalContribution" && isEditingESIC) {
             const emp = parseFloat(updated[index].employerContribution) || 0;
@@ -394,8 +402,8 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                         <TableCell>
                             {isEditingESIC ? (
                             <Input
-                                type="number"
-                                value={contribution.employerContribution}
+                                type="text"
+                                value={formatNumber(contribution.employerContribution)}
                                 onChange={(e) =>
                                     handleInputChange(
                                         idx,
@@ -405,14 +413,14 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                                 }
                             />
                             ) : (
-                                contribution.employerContribution
+                                formatNumber(contribution.employerContribution)
                             )}
                         </TableCell>
                         <TableCell>
                             {isEditingESIC ? (
                             <Input
-                                type="number"
-                                value={contribution.ipContribution}
+                                type="text"
+                                value={formatNumber(contribution.ipContribution)}
                                 onChange={(e) =>
                                     handleInputChange(
                                         idx,
@@ -422,15 +430,15 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                                 }
                             />
                             ) : (
-                                contribution.ipContribution
+                                formatNumber(contribution.ipContribution)
                             )}
                         </TableCell>
                         <TableCell>
                             {isEditingESIC ? (
                                 <Input
-                                    type="number"
+                                    type="text"
                                     disabled
-                                    value={contribution.totalContribution}
+                                    value={formatNumber(contribution.totalContribution)}
                                     onChange={(e) =>
                                         handleInputChange(
                                             idx,
@@ -440,16 +448,16 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                                     }
                                 />
                             ) : (
-                                contribution.totalContribution
+                                formatNumber(contribution.totalContribution)
                             )}
                         </TableCell>
                     </TableRow>
                     ))}
                     <TableRow>
                         <TableCell>Total</TableCell>
-                        <TableCell>{employerContributionTotal}</TableCell>
-                        <TableCell>{ipContributionTotal}</TableCell>
-                        <TableCell>{totalContributionTotal}</TableCell>
+                        <TableCell>{formatNumber(employerContributionTotal.toString())}</TableCell>
+                        <TableCell>{formatNumber(ipContributionTotal.toString())}</TableCell>
+                        <TableCell>{formatNumber(totalContributionTotal.toString())}</TableCell>
                     </TableRow>
                     </TableBody>
                 </Table>
@@ -531,35 +539,35 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                     <TableCell>
                     {isEditingEPF ? (
                     <Input
-                        type="number"
-                        value={contribution.epfContribution}
+                        type="text"
+                        value={formatNumber(contribution.epfContribution)}
                         onChange={(e) =>
                             handleInputChange(idx, "epfContribution", e.target.value )
                         }
                     />
                     ) : (
-                        contribution.epfContribution
+                        formatNumber(contribution.epfContribution)
                     )}
                     </TableCell>
                     <TableCell>
                         {isEditingEPF ? (
                             <Input
-                                type="number"
-                                value={contribution.contributionRemitted}
+                                type="text"
+                                value={formatNumber(contribution.contributionRemitted)}
                                 onChange={(e) =>
                                     handleInputChange( idx, "contributionRemitted",  e.target.value)
                                 }
                             />
                         ) : (
-                            contribution.contributionRemitted
+                            formatNumber(contribution.contributionRemitted)
                         )}
                     </TableCell>
                     <TableCell>
                         {isEditingEPF ? (
                             <Input
-                                type="number"
+                                type="text"
                                 disabled
-                                value={contribution.totalRemitted}
+                                value={formatNumber(contribution.totalRemitted)}
                                 onChange={(e) =>
                                     handleInputChange(
                                         idx,
@@ -569,16 +577,16 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                                 }
                             />
                         ) : (
-                            contribution.totalRemitted
+                            formatNumber(contribution.totalRemitted)
                         )}
                     </TableCell>
                 </TableRow>
                 ))}
                 <TableRow>
                     <TableCell>Total</TableCell>
-                    <TableCell>{epfContributionTotal}</TableCell>
-                    <TableCell>{contributionRemittedTotal}</TableCell>
-                    <TableCell>{totalRemittedTotal}</TableCell>
+                    <TableCell>{formatNumber(epfContributionTotal.toString())}</TableCell>
+                    <TableCell>{formatNumber(contributionRemittedTotal.toString())}</TableCell>
+                    <TableCell>{formatNumber(totalRemittedTotal.toString())}</TableCell>
                 </TableRow>
                 </TableBody>
             </Table>

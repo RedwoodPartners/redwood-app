@@ -676,7 +676,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                       </span>
                     </div>
                   </a>
-                  <span className="w-28 h-2 text-xs text-gray-500">{activeTable.fileName}</span>
+                  <span className="w-16 h-2 text-xs text-gray-500">{activeTable.fileName}</span>
                   <Popover>
                         <PopoverTrigger>
                           <InfoIcon size={16} className="text-gray-500 cursor-pointer" />
@@ -708,12 +708,12 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
               )}
             </div>
           </div>
-          <div>
+          <div className="-ml-16">
             <Label htmlFor="note">Note about Round</Label>
-            <Input
+            <Textarea
               id="note"
               placeholder="Enter.."
-              className="resize-none"
+              className="resize-none w-60"
               value={activeTable.formData.note}
               onChange={(e) => handleInputChange("note", e.target.value)}
             />
@@ -752,7 +752,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 <TableCell>{row.instrument}</TableCell>
                 <TableCell>{row.class}</TableCell>
                 <TableCell className="text-right">{row.shares}</TableCell>
-                <TableCell className="text-right">{row.capitalStructure}</TableCell>
+                <TableCell className="text-right">{row.capitalStructure}%</TableCell>
                 <TableCell>{row.boardMember}</TableCell>
                 <TableCell>{row.leadInvestor}</TableCell>
                 <TableCell>{row.clauses}</TableCell>
@@ -817,7 +817,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
       </div>
       )}
       <Label className="p-2 text-gray-800 text-sm">Note About Cap Table</Label>
-      <ol className="list-decimal list-inside space-y-3 bg-gray-50 p-6 rounded-xl shadow-sm text-gray-800 text-sm">	
+      <ol className="list-decimal list-inside space-y-3 bg-white p-6 rounded-xl shadow-sm text-gray-800 text-base">	
           <li className="text-green-500">Add Table by clicking Add Round - Same For Next Rounds</li>								
 					<li>You can include round details as a text note</li>					
           <li>Ensure the cap table reflects the right number of shares as reflected in the latest SHA of a particular round</li>       										

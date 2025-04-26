@@ -79,13 +79,52 @@ type StartupDetails = {
 const ProjectViewPage = ({ id }: { id: string }) => {
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [startupData, setStartupData] = useState<StartupDetails | null>(null);
-  const [activeTab, setActiveTab] = useState("companyInfo");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
   const [isDirty, setIsDirty] = useState(false);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+
+  const [storedTab, setStoredTab] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof localStorage !== 'undefined') {
+      const storedTab = localStorage.getItem(`activeTab_${id}`);
+      return storedTab || "companyInfo";
+    } else {
+      return "companyInfo";
+    }
+  });
+
+  // Use useEffect to manage storedTab based on changes to id and activeTab
+  useEffect(() => {
+    const localStorageKey = `activeTab_${id}`;
+
+    // Function to update localStorage and storedTab state
+    const updateStoredTab = (tab: string) => {
+      localStorage.setItem(localStorageKey, tab);
+      setStoredTab(tab);
+    };
+
+    // Initial setup: Load from localStorage if available
+    if (typeof localStorage !== 'undefined') {
+      const initialTab = localStorage.getItem(localStorageKey);
+      setStoredTab(initialTab);
+    }
+
+    // Update storedTab when activeTab changes and the id is the same
+    if (activeTab && typeof localStorage !== 'undefined') {
+      if (localStorage.getItem(localStorageKey) !== activeTab) {
+        updateStoredTab(activeTab);
+      }
+    }
+
+    // Clear storedTab when the id changes
+    return () => {
+      localStorage.removeItem(localStorageKey);
+      setStoredTab(null);
+    };
+  }, [id, activeTab]);
+  
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -145,8 +184,6 @@ const ProjectViewPage = ({ id }: { id: string }) => {
     setShowAlertDialog(false);
     setPendingTab(null);
   };
-
-
   
   if (loading) {
     return (
@@ -436,7 +473,6 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                   </NavigationMenu>
                   {/* Render the active tab content */}
               <div className="mt-2 p-2">{renderTabContent()}</div>
-       
       </div>
     </>
   );
