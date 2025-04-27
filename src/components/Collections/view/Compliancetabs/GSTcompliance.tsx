@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -41,7 +41,7 @@ interface GstComplianceProps {
   setIsDirty: (isDirty: boolean) => void;
 }
 
-const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
+const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,7 +51,8 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   const [natureOfCompany, setNatureOfCompany] = useState<string>("all");
   const [formsData, setFormsData] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
@@ -90,6 +91,14 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
     };
     fetchQueryOptions();
   }, [natureOfCompany]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   // Function to get description based on yesNo value
   const getDescriptionForYesNo = (
@@ -131,6 +140,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     } finally {
@@ -151,6 +161,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       );
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting compliance:", error);
     }
@@ -167,6 +178,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
         yesNo: value,
         description: description,
       });
+      setHasUnsavedChanges(true);
     }
   };
 
@@ -233,8 +245,22 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
   const allDocumentsCreated =
     queryOptions.length > 0 &&
     queryOptions.every((query) =>
-      complianceData.some((doc) => doc.query === query)
-    );
+    complianceData.some((doc) => doc.query === query)
+  );
+
+  const closeDialog = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setEditingCompliance(null);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setEditingCompliance(null);
+    }
+  }, [hasUnsavedChanges, setEditingCompliance]);
 
   return (
     <div>
@@ -281,7 +307,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
       {editingCompliance && (
         <Dialog
           open={!!editingCompliance}
-          onOpenChange={() => setEditingCompliance(null)}
+          onOpenChange={closeDialog}
         >
           <DialogContent className="w-full max-w-5xl p-6">
             <DialogHeader>
@@ -319,12 +345,13 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
                   type="date"
                   max={new Date().toISOString().split("T")[0]} 
                   value={editingCompliance.date}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditingCompliance({
                       ...editingCompliance,
                       date: e.target.value,
-                    })
-                  }
+                    });
+                    setHasUnsavedChanges(true);
+                  }}
                   className="col-span-3"
                 />
               </div>
@@ -335,12 +362,13 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId }) => {
                 <Textarea
                   id="edit-description"
                   value={editingCompliance.description}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditingCompliance({
                       ...editingCompliance,
                       description: e.target.value,
-                    })
-                  }
+                    });
+                    setHasUnsavedChanges(true);
+                  }}
                   className="col-span-3"
                 />
               </div>

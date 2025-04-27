@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
@@ -31,7 +31,7 @@ interface Document {
 }
 
 
-const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
+const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty }) => {
   const [docData, setDocData] = useState<any[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,7 +57,15 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
   const [newDocFile, setNewDocFile] = useState<File | null>(null); 
   const [editingDocFile, setEditingDocFile] = useState<File | null>(null);
   const [isCreatingDocuments, setIsCreatingDocuments] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -163,6 +171,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     } finally {
       setIsSubmitting(false);
+      setHasUnsavedChanges(false);
     }
   };
 
@@ -196,6 +205,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
       });
     } finally {
       setIsSavingEdit(false);
+      setHasUnsavedChanges(false);
     }
   };
 
@@ -329,6 +339,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
 
       // Reset state
       setNewComment("");
+      setIsCommentDialogOpen(false);
       toast({
         title: "Comment Added",
         description: "Your comment has been added successfully.",
@@ -394,7 +405,19 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
     createdDocNames.includes(docName)
   );
 
-  
+  const closeDialog = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsEditDialogOpen(false);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsEditDialogOpen(false);
+    }
+  }, [hasUnsavedChanges, setIsEditDialogOpen]);
   
 
   return (
@@ -499,13 +522,21 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
                       <DialogTrigger asChild>
                         <Tooltip>
                           <TooltipTrigger>
-                          <MessageCircle
-                          size={20}
-                          className="text-gray-500 cursor-pointer"
-                          onClick={() => {
-                            setSelectedDoc(row);
-                            setIsCommentDialogOpen(true);
-                          }} />
+                          <div className="relative">
+                            <MessageCircle
+                            size={20}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              setSelectedDoc(row);
+                              setIsCommentDialogOpen(true);
+                            }} />
+                            {row.comments && row.comments.length > 0 && !row.verified && (
+                              <span
+                                className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3 border-2 border-white"
+                                title="Has comments"
+                              />
+                            )}
+                          </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Comments</p>
@@ -580,7 +611,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
           </TableBody>
         </Table>
       </div>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="w-full max-w-5xl p-6">
           <DialogHeader>
             {editingDoc?.docName && (
@@ -593,7 +624,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <Label>Status</Label>
               <Select
                 value={editingDoc?.status || ""}
-                onValueChange={(value) => setEditingDoc({ ...editingDoc, status: value })}
+                onValueChange={(value) => {
+                  setEditingDoc({ ...editingDoc, status: value });
+                  setHasUnsavedChanges(true);
+                }}
               >
                 <SelectTrigger className="w-full p-2 text-sm border rounded">
                   <SelectValue placeholder="Select Status" />
@@ -608,7 +642,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <Label>Financial Year</Label>
               <Select
                 value={editingDoc?.financialYear}
-                onValueChange={(value) => setEditingDoc({ ...editingDoc, financialYear: value })}
+                onValueChange={(value) => {
+                  setEditingDoc({ ...editingDoc, financialYear: value });
+                  setHasUnsavedChanges(true);
+                }}
               >
                 <SelectTrigger className="w-full p-2 text-sm border rounded">
                   <SelectValue placeholder="Select Financial Year" />
@@ -628,7 +665,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId }) => {
               <Textarea
                 placeholder="Description"
                 value={editingDoc?.description}
-                onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
+                onChange={(e) => {
+                  setEditingDoc({ ...editingDoc, description: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
               />
             </div>
           </div>
