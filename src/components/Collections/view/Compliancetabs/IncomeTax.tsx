@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -41,7 +41,7 @@ interface IncomeTaxComplianceProps {
   setIsDirty: (isDirty: boolean) => void;
 }
 
-const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) => {
+const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId, setIsDirty }) => {
   const [complianceData, setComplianceData] = useState<any[]>([]);
   const [editingCompliance, setEditingCompliance] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -50,6 +50,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
   const [formsData, setFormsData] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
 
   useEffect(() => {
     const fetchComplianceData = async () => {
@@ -94,6 +96,14 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     fetchQueryOptions();
   }, [natureOfCompany]);
 
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsDirty(true);
+    } else {
+      setIsDirty(false);
+    }
+  }, [hasUnsavedChanges, setIsDirty]);
+
   const getDescriptionForYesNo = (yesNoValue: string, queryValue: string): string => {
     const formData = formsData.find((doc) => doc.query === queryValue);
     if (formData && formData.yesNo && Array.isArray(formData.yesNo) && formData.yesNo.length > 0) {
@@ -118,6 +128,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       const updatedCompliances = complianceData.map(c => c.$id === editingCompliance.$id ? { ...c, ...updateData } : c);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving compliance data:", error);
     } finally {
@@ -132,6 +143,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       const updatedCompliances = complianceData.filter(c => c.$id !== editingCompliance.$id);
       setComplianceData(updatedCompliances);
       setEditingCompliance(null);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error deleting compliance:", error);
     }
@@ -145,6 +157,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
         yesNo: value,
         description: description,
       });
+      setHasUnsavedChanges(true);
     }
   };
 
@@ -212,7 +225,21 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
     queryOptions.length > 0 &&
     queryOptions.every((query) =>
       complianceData.some((doc) => doc.query === query)
-    );
+  );
+
+  const closeDialog = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setEditingCompliance(null);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setEditingCompliance(null);
+    }
+  }, [hasUnsavedChanges, setEditingCompliance]);
 
 
   return (
@@ -254,7 +281,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
       </div>
 
       {editingCompliance && (
-        <Dialog open={!!editingCompliance} onOpenChange={() => setEditingCompliance(null)}>
+        <Dialog open={!!editingCompliance} onOpenChange={closeDialog}>
           <DialogContent className="w-full max-w-5xl">
             <DialogHeader>
               {editingCompliance.query && (
@@ -284,11 +311,21 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId }) 
                 id="edit-date" 
                 type="date"
                 max={new Date().toISOString().split("T")[0]}  
-                value={editingCompliance.date} onChange={(e) => setEditingCompliance({ ...editingCompliance, date: e.target.value })} className="col-span-3" />
+                value={editingCompliance.date} 
+                onChange={(e) => {
+                  setEditingCompliance({ ...editingCompliance, date: e.target.value })
+                  setHasUnsavedChanges(true);
+                }} 
+                  className="col-span-3" />
               </div>
               <div>
                 <Label htmlFor="edit-description" className="text-right">Description</Label>
-                <Textarea id="edit-description" value={editingCompliance.description} onChange={(e) => setEditingCompliance({ ...editingCompliance, description: e.target.value })} className="col-span-3" />
+                <Textarea id="edit-description" value={editingCompliance.description} 
+                onChange={(e) => {
+                  setEditingCompliance({ ...editingCompliance, description: e.target.value });
+                  setHasUnsavedChanges(true);
+                }} 
+                  className="col-span-3" />
               </div>
             </div>
             <DialogFooter>

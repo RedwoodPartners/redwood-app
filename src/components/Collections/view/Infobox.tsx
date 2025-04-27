@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 
 type Project = {
   startDate: string;
+  receivedDate: string;
   projectEndDate: string;
   projectTemplate: string;
   services: string;
@@ -55,6 +56,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           setReceivedDate(project.receivedDate || null);
           setProjectData({
             startDate: project.startDate || "",
+            receivedDate: project.receivedDate || "",
             projectEndDate: project.projectEndDate || "",
             projectTemplate: project.projectTemplate || "",
             appliedFor: project.appliedFor || "",
@@ -186,6 +188,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
               type="date"
               value={updatedStartDate}
               min={receivedDate || undefined}
+              max={new Date().toISOString().split('T')[0]}
               onChange={(e) => {
                 const newDate = e.target.value;
                 if (isStartDateValid(newDate)) {
@@ -222,6 +225,11 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
         ) : (
           <span className="text-black sm:text-base">
             {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
+          </span>
+        )}
+        {projectData.receivedDate && (
+          <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+            {formatDate(projectData.receivedDate)}
           </span>
         )}
         {projectData.services && (
