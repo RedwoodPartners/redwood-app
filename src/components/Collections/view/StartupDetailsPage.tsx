@@ -88,6 +88,11 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
         return "companyInfo";
       }
     });
+    const [companyInfoKey, setCompanyInfoKey] = useState(0);
+    const [fundingMilestonesKey, setFundingMilestonesKey] = useState(0);
+    const [complianceKey, setComplianceKey] = useState(0);
+    const [documentsKey, setDocumentsKey] = useState(0);
+
   
     // Use useEffect to manage storedTab based on changes to id and activeTab
     useEffect(() => {
@@ -194,8 +199,28 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
       setPendingTab(newTab);
     } else {
       setActiveTab(newTab);
+  
+      // Reset the menu item to close the dropdown
+      if (
+        ["companyInfo", "regulatoryInfo", "contact", "aboutBusiness", "customerTestimonials"].includes(newTab)
+      ) {
+        setCompanyInfoKey((k) => k + 1);
+      } else if (
+        ["fundraisedsofar", "shareholders", "captable", "fundask", "milestones"].includes(newTab)
+      ) {
+        setFundingMilestonesKey((k) => k + 1);
+      } else if (
+        ["compliance", "incometax", "roccompliance", "gstcompliance", "gstrcompliance", "esic"].includes(newTab)
+      ) {
+        setComplianceKey((k) => k + 1);
+      } else if (
+        ["documents", "documentchecklist", "patents", "incubation"].includes(newTab)
+      ) {
+        setDocumentsKey((k) => k + 1);
+      }
     }
   };
+  
 
   const confirmTabChange = () => {
     setIsDirty(false);
@@ -254,7 +279,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
           {/* Tabs for Navigation */}
           <NavigationMenu className="-ml-2">
             <NavigationMenuList className="flex flex-wrap space-x-2 mt-2">
-              <NavigationMenuItem>
+              <NavigationMenuItem key={`companyInfo-${companyInfoKey}`}>
                 <NavigationMenuTrigger className="font-bold bg-transparent">
                   Company Information
                 </NavigationMenuTrigger>
@@ -303,7 +328,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem>
+              <NavigationMenuItem key={`fundingMilestones-${fundingMilestonesKey}`}>
                 <NavigationMenuTrigger className="font-bold bg-transparent">
                   Funding and Milestones
                 </NavigationMenuTrigger>
@@ -352,7 +377,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem>
+              <NavigationMenuItem key={`compliance-${complianceKey}`}>
                 <NavigationMenuTrigger className="font-bold bg-transparent">
                   Compliance
                 </NavigationMenuTrigger>
@@ -402,7 +427,7 @@ const StartupDetailsPage: React.FC<StartupDetailsPageProps> = ({ startupId }) =>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem>
+              <NavigationMenuItem key={`documents-${documentsKey}`}>
                 <NavigationMenuTrigger  className="font-bold bg-transparent">
                   Documents
                 </NavigationMenuTrigger>

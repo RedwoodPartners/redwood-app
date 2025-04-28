@@ -6,7 +6,7 @@ import { InfoIcon, PlusCircle, Trash2, UploadCloud } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Storage, ID } from "appwrite";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT } from "@/appwrite/config";
+import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, PROJECTS_ID } from "@/appwrite/config";
 import { databases, client } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import ButtonWithIcon from "@/lib/addButton";
 
 const FUND_RAISED_ID = "6731e2fb000d9580025f";
-const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
+export const FUND_DOCUMENTS_ID = "6768e93900004c965d26";
 
 interface FundRaisedSoFarProps {
   startupId: string;
@@ -53,7 +53,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
   const [otherMode, setOtherMode] = useState<string>("");
   const storage = useMemo(() => new Storage(client), []);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
+  const [receivedDate, setReceivedDate] = useState<string | null>(null);
   const fetchInvestments = useCallback(async () => {
     try {
       const response = await databases.listDocuments(STAGING_DATABASE_ID, FUND_RAISED_ID, [
@@ -70,9 +70,34 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
     }
   }, [startupId, toast]);
 
+  const fetchReceivedDate = useCallback(async () => {
+    try {
+      const response = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        PROJECTS_ID,
+        [Query.equal("startupId", startupId)]
+      );
+      
+      if (response.documents.length > 0) {
+        setReceivedDate(response.documents[0].receivedDate);
+      } else {
+        // Handle no project found silently
+        setReceivedDate("");
+        console.warn("No project found for this startup ID:", startupId);
+      }
+    } catch (error) {
+      console.error("Error fetching project:", error);
+    }
+  }, [startupId]);
+  
+
   useEffect(() => {
-    fetchInvestments();
-  }, [fetchInvestments]);
+  const fetchData = async () => {
+    await fetchReceivedDate();
+    await fetchInvestments(); 
+  };
+  fetchData();
+}, [fetchReceivedDate, fetchInvestments]);
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -436,7 +461,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                 <Label>Investment Date<span className="text-red-500">*</span></Label>
                 <Input
                   type="date"
-                  max={new Date().toISOString().split("T")[0]}
+                  max={receivedDate || new Date().toISOString().split('T')[0]}
                   value={selectedInvestment?.date || ""}
                   onChange={(e) => {
                     setSelectedInvestment({

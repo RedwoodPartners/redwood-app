@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,9 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
+import { client, databases } from "@/lib/utils";
+import { Storage } from "appwrite";
 import {
   Select,
   SelectContent,
@@ -32,7 +33,10 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import ButtonWithIcon from "@/lib/addButton";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, Trash2, UploadCloud } from "lucide-react";
+import { FUND_DOCUMENTS_ID } from "./FundRaised";
+import { FaEye } from "react-icons/fa";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const SHAREHOLDERS_ID = "6735cb6f001a18acd88f";
 
@@ -61,12 +65,13 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingShareholder, setEditingShareholder] = useState<any>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+  const storage = useMemo(() => new Storage(client), []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [educationRows, setEducationRows] = useState<EducationRow[]>([]);
   const [workExperienceRows, setWorkExperienceRows] = useState<WorkExperienceRow[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -307,6 +312,66 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
       setWorkExperienceRows([]);
     }
   }, [hasUnsavedChanges, setIsDialogOpen, setEditingShareholder, setErrors, setData, setEducationRows, setWorkExperienceRows, setHasUnsavedChanges]);
+  
+  const handleCommunityCertificateUpload = async (file: File, shareholderId: string) => {
+    if (!file || !shareholderId) {
+      console.warn("No file or no shareholder ID provided for upload");
+      return;
+    }
+    setUploading(true);
+    try {
+      // 1. Upload file to storage
+      const uploaded = await storage.createFile(
+        FUND_DOCUMENTS_ID,
+        "unique()",
+        file
+      );
+      // 2. Update shareholder document with fileId and fileName
+      await databases.updateDocument(
+        STAGING_DATABASE_ID,
+        SHAREHOLDERS_ID,
+        shareholderId,
+        {
+          communityCertificateFileId: uploaded.$id,
+          communityCertificateFileName: file.name,
+        }
+      );
+      // 3. Refresh data
+      fetchData();
+    } catch (error) {
+      console.error("File upload failed:", error);
+      alert("File upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (shareholderId: string, fileId: string) => {
+    if (!shareholderId || !fileId) return;
+    setUploading(true);
+    try {
+      // 1. Delete file from storage
+      await storage.deleteFile(FUND_DOCUMENTS_ID, fileId);
+  
+      // 2. Remove file reference from shareholder document
+      await databases.updateDocument(
+        STAGING_DATABASE_ID,
+        SHAREHOLDERS_ID,
+        shareholderId,
+        {
+          communityCertificateFileId: null,
+          communityCertificateFileName: null,
+        }
+      );
+  
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      alert("Failed to delete file. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };  
   
 
   return (
@@ -588,7 +653,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
           </DialogContent>
         </Dialog>
       </div>
-      <div className="mb-6 p-3 bg-white shadow-md rounded-lg border border-gray-300">
+      <div className="mb-6 p-3 bg-white rounded-lg border border-gray-300">
         <Table>
           <TableCaption>A list of all shareholders for this startup</TableCaption>
           <TableHeader>
@@ -729,6 +794,81 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
             ))}
           </TableBody>
         </Table>
+      </div>
+      <Label>Community Certificate</Label>
+      <div className="border border-gray-300 rounded-xl bg-white p-4 w-1/2"> 
+      <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Shareholder Name</TableHead>
+              <TableHead>Upload Document</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {allShareholders.map((row, idx) => (
+              <TableRow key={row.$id || idx}>
+                <TableCell>{row.shareholderName || "N/A"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-2">
+                    {row.communityCertificateFileId ? (
+                      <>
+                        <a
+                          href={`${API_ENDPOINT}/storage/buckets/${FUND_DOCUMENTS_ID}/files/${row.communityCertificateFileId}/view?project=${PROJECT_ID}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          <div className="relative group">
+                            <FaEye size={20} className="inline" />
+                            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:block bg-gray-700 text-white text-xs rounded-md py-1 px-2">
+                              View & Download
+                            </span>
+                          </div>
+                        </a>
+                        <span className="text-xs text-gray-500">{row.communityCertificateFileName}</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Trash2 size={16} className="text-gray-500 cursor-pointer hover:text-red-600" />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteFile(row.$id, row.communityCertificateFileId)}
+                              className="flex items-center"
+                              disabled={uploading}
+                            >
+                              <Trash2 size={16} className="mr-2" />
+                              Delete File
+                            </Button>
+                          </PopoverContent>
+                        </Popover>
+                      </>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf, .doc, .docx, .jpg, .jpeg, .png"
+                          disabled={uploading}
+                          onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              await handleCommunityCertificateUpload(e.target.files[0], row.$id);
+                            }
+                          }}
+                        />
+                        <UploadCloud size={20} className="cursor-pointer" />
+                      </label>
+                    )}
+                  </div>
+                  {errors.communityCertificate && (
+                    <p className="text-red-500 text-sm mt-1">{errors.communityCertificate}</p>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
       </div>
     </div>
   );
