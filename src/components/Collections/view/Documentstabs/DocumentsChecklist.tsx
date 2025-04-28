@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useContext } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
-import { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, STARTUP_ID } from "@/appwrite/config";
+import appwriteService, { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, STARTUP_ID } from "@/appwrite/config";
 import { databases, client } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import ButtonWithIcon from "@/lib/addButton";
 
 const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -58,6 +57,20 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   const [editingDocFile, setEditingDocFile] = useState<File | null>(null);
   const [isCreatingDocuments, setIsCreatingDocuments] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string } | null>(null);
+  
+  useEffect(() => {
+    // Fetch current user on mount
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await appwriteService.getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        setCurrentUser(null);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -295,17 +308,26 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   // Function to toggle verification status
   const handleToggleVerify = async (documentId: string, isVerified: boolean) => {
     try {
-      // Update the document in the database
-      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, {
+      const updatedFields: any = {
         verified: !isVerified,
-      });
-
+      };
+  
+      // If verifying, set verifiedBy to current user's name, else clear it
+      if (!isVerified && currentUser?.name) {
+        updatedFields.verifiedBy = currentUser.name;
+      } else if (isVerified) {
+        updatedFields.verifiedBy = null;
+      }
+  
+      // Update the document in the database
+      await databases.updateDocument(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, documentId, updatedFields);
+  
       // Update local state
       const updatedDocData = docData.map((doc) =>
-        doc.$id === documentId ? { ...doc, verified: !isVerified } : doc
+        doc.$id === documentId ? { ...doc, ...updatedFields } : doc
       );
       setDocData(updatedDocData);
-
+  
       toast({
         title: "Verification Updated",
         description: `Document has been ${!isVerified ? "verified" : "unverified"}.`,
@@ -319,6 +341,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
       });
     }
   };
+  
 
   // Function to handle adding a comment
   const handleAddComment = async () => {
@@ -578,32 +601,38 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
                     </Dialog>
                   </div>
                    {/* Verify Icon */}
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => handleToggleVerify(row.$id, row.verified)}
-                  >
-                    <div className="mt-1">
-                    {row.verified ? (
-                      <Tooltip>
-                        <TooltipTrigger>
-                        <CheckCircle size={20} className="text-green-500 cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Verified</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger>
-                        <Circle size={20} className="text-gray-500 cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Unverified</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                   <div
+                      className="cursor-pointer flex items-center space-x-2 w-28"
+                      onClick={() => handleToggleVerify(row.$id, row.verified)}
+                    >
+                      <div className="mt-1">
+                        {row.verified ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <CheckCircle size={20} className="text-green-500 cursor-pointer" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Verified</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Circle size={20} className="text-gray-500 cursor-pointer" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Unverified</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      {/* Show verifier name if verified */}
+                      {row.verified && row.verifiedBy && (
+                        <div className="text-xs text-gray-600">
+                          Verified by {row.verifiedBy}
+                        </div>
+                      )}
                     </div>
-                  </div>
                   </div>
                 </TableCell>
               </TableRow>
