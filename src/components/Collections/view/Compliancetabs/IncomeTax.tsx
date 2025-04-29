@@ -309,8 +309,8 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId, se
                 <Label htmlFor="edit-date" className="text-right">Date</Label>
                 <Input 
                 id="edit-date" 
-                type="date"
-                max={new Date().toISOString().split("T")[0]}  
+                type="month"
+                max={new Date().toISOString().slice(0, 7)}
                 value={editingCompliance.date} 
                 onChange={(e) => {
                   setEditingCompliance({ ...editingCompliance, date: e.target.value })

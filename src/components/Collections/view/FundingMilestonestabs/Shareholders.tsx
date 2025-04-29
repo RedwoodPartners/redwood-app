@@ -801,7 +801,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
           <TableHeader>
             <TableRow>
               <TableHead>Shareholder Name</TableHead>
-              <TableHead>Upload Document</TableHead>
+              <TableHead>Upload Document(Pdf only)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -849,7 +849,7 @@ const ShareholderPage: React.FC<ShareholdersProps> = ({ startupId, setIsDirty })
                         <input
                           type="file"
                           className="hidden"
-                          accept=".pdf, .doc, .docx, .jpg, .jpeg, .png"
+                          accept=".pdf"
                           disabled={uploading}
                           onChange={async (e) => {
                             if (e.target.files && e.target.files[0]) {
