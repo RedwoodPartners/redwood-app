@@ -547,7 +547,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
                           ) : (
                             <TableRow>
                               <TableCell colSpan={4}>
-                                No associated company details available.
+                                The director is not associated with any other company/LLP
                               </TableCell>
                             </TableRow>
                           )}
@@ -598,9 +598,9 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
                 </Label>
                 <Input
                   id="edit-date"
-                  type="date"
+                  type="month"
                   value={editingCompliance.date}
-                  max={new Date().toISOString().split("T")[0]} 
+                  max={new Date().toISOString().slice(0, 7)}
                   onChange={(e) =>
                     setEditingCompliance({
                       ...editingCompliance,
