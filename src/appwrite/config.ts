@@ -54,6 +54,9 @@ export class AppwriteService {
 
   async login({ email, password }: LoginUserAccount) {
     try {
+      sessionStorage.removeItem("projectsInstructionsAlertCount");
+      sessionStorage.removeItem("dashboardWelcomeAlertCount");
+      sessionStorage.removeItem("projectsScreenInstructionsAlertCount");
       await account.getSession('current');
       await account.deleteSession('current');
     } catch (e) {
@@ -98,8 +101,9 @@ export class AppwriteService {
     try {
       // Clear the projects instructions alert count from sessionStorage
       sessionStorage.removeItem("projectsInstructionsAlertCount");
+      sessionStorage.removeItem("projectsScreenInstructionsAlertCount");
       sessionStorage.removeItem("dashboardWelcomeAlertCount");
-      
+
       return await account.deleteSession("current");
     } catch (error: any) {
       console.error("Logout error:", error.message);

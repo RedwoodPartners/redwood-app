@@ -121,7 +121,7 @@ const Login = () => {
             className="w-full mb-4 rounded-lg bg-black py-3 text-sm text-white hover:bg-gray-800"
             disabled={loginLoading}
           >
-            {loginLoading ? "Loding..." : "Log In"}
+            {loginLoading ? "Loading..." : "Log In"}
           </Button>
           <div className="flex items-center justify-center mb-4">
             <span className="text-sm text-gray-500">OR</span>
