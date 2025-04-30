@@ -20,9 +20,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const login = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoginLoading(true);
     try {
       const session = await appwriteService.login(formData);
       if (session) {
@@ -31,6 +33,8 @@ const Login = () => {
       }
     } catch (error: any) {
       setError(error.message);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -115,8 +119,9 @@ const Login = () => {
           <Button
             type="submit"
             className="w-full mb-4 rounded-lg bg-black py-3 text-sm text-white hover:bg-gray-800"
+            disabled={loginLoading}
           >
-            Log In
+            {loginLoading ? "Loding..." : "Log In"}
           </Button>
           <div className="flex items-center justify-center mb-4">
             <span className="text-sm text-gray-500">OR</span>

@@ -52,13 +52,17 @@ export class AppwriteService {
     }
   }
 
-  async login( { email, password }: LoginUserAccount) {
+  async login({ email, password }: LoginUserAccount) {
     try {
-         return await account.createEmailPasswordSession(email, password)
-    } catch (error:any) {
-      throw error
+      await account.getSession('current');
+      await account.deleteSession('current');
+    } catch (e) {
+      // If session doesn't exist, we can ignore
     }
- }
+    // create a new session
+    return await account.createEmailPasswordSession(email, password);
+  }
+  
 
   async isLoggedIn(): Promise<boolean> {
     try {
@@ -92,6 +96,10 @@ export class AppwriteService {
 
   async logout() {
     try {
+      // Clear the projects instructions alert count from sessionStorage
+      sessionStorage.removeItem("projectsInstructionsAlertCount");
+      sessionStorage.removeItem("dashboardWelcomeAlertCount");
+      
       return await account.deleteSession("current");
     } catch (error: any) {
       console.error("Logout error:", error.message);
