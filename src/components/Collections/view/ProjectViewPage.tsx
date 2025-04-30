@@ -99,6 +99,20 @@ const ProjectViewPage = ({ id }: { id: string }) => {
   const [complianceKey, setComplianceKey] = useState(0);
   const [documentsKey, setDocumentsKey] = useState(0);
 
+  const [showProjectAlert, setShowProjectAlert] = useState(false);
+    
+  useEffect(() => {
+    const alertCount = parseInt(sessionStorage.getItem("projectsScreenInstructionsAlertCount") || "0", 10);
+  
+    if (alertCount < 1) {
+      const timer = setTimeout(() => {
+        setShowProjectAlert(true);
+        sessionStorage.setItem("projectsScreenInstructionsAlertCount", String(alertCount + 1));
+      }, 1000);
+  
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Use useEffect to manage storedTab based on changes to id and activeTab
   useEffect(() => {
@@ -497,6 +511,35 @@ const ProjectViewPage = ({ id }: { id: string }) => {
                   </NavigationMenu>
                   {/* Render the active tab content */}
               <div className="mt-2 p-2">{renderTabContent()}</div>
+              <AlertDialog open={showProjectAlert} onOpenChange={setShowProjectAlert}>
+                      <AlertDialogContent className="w-full max-w-2xl p-6 max-h-[70vh] overflow-y-auto">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{project.name}</AlertDialogTitle>
+                          <AlertDialogDescription asChild>
+                          <ol className="list-decimal list-inside space-y-2 text-black">
+                            <li>
+                              Project details are in Info box below startup name, Progress can be updated by <b className="text-blue-500">update</b> button.
+                            </li>
+                            <li>
+                              Each Sections has SubSections of Company Information, Funding and Milestones, Compliance and Documents.
+                            </li>
+                            <li>
+                              Click on the <b className="text-blue-500">Company Information</b> tab to view and edit company details. same follows for other tabs.
+                            </li>
+                            
+                          </ol>
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setShowProjectAlert(false)}>
+                            Got it
+                          </AlertDialogCancel>
+                          {/*<AlertDialogAction onClick={() => setShowInstructionsAlert(false)}>
+                            Close
+                          </AlertDialogAction>*/}
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
       </div>
     </>
   );

@@ -579,13 +579,13 @@ const ProjectsPage: React.FC = () => {
           <>
           <span onClick={handleAddNewProject} className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-green-500 space-x-1">
               <PlusCircle size={15}  className="cursor-pointer"/>
-              <span className="text-xs">Add</span>
+              <span className="text-sm">Add</span>
           </span>
           </>
           <>
             <span onClick={handleDeleteSelectedProjects} className="flex items-center border border-gray-200 rounded-full cursor-pointer p-1 hover:border-red-500 space-x-1">
               <Trash size={15}/>
-              <span className="text-xs">Remove</span>
+              <span className="text-sm">Remove</span>
             </span>
           </>
           <div>
@@ -945,17 +945,20 @@ const ProjectsPage: React.FC = () => {
       <AlertDialog open={showInstructionsAlert} onOpenChange={setShowInstructionsAlert}>
         <AlertDialogContent className="w-full max-w-2xl p-6 max-h-[70vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle>Welcome to Projects</AlertDialogTitle>
+            <AlertDialogTitle>Instructions to Add Projects</AlertDialogTitle>
             <AlertDialogDescription asChild>
             <ol className="list-decimal list-inside space-y-2 text-black">
               <li>
                 To add a new Project, click <b>+Add</b>. It shows a dialog form to fill.
               </li>
-              <li>
-                Fill the mandatory <b className="text-red-500">*</b> fields to check for duplication of Startup.
+              <li className="text-red-500">
+                Startup Name, Founder Name, and Phone Number are mandatory fields for adding new project or checking project status.
               </li>
               <li>
-                If duplication check passes, proceed to <b>Create New Startup</b> and add project record details, to add a new project for the created startup.
+                click on check for duplication to check if the startup already exists in the database.
+              </li>
+              <li>
+                If duplication check passes, proceed to <b>Create New Startup</b> and add project record details, for creating a new project for the created startup.
               </li>
               <li>
                 If the Startup already exists, click on <b>Continue with existing startup</b> to add another project for the same Startup.
