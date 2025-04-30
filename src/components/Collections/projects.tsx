@@ -41,6 +41,8 @@ import { Checkbox } from "../ui/checkbox";
 import { nanoid } from "nanoid";
 import LoadingSpinner from "../ui/loading";
 import { Query } from "appwrite";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 
 type Project = {
   id: string;
@@ -96,8 +98,23 @@ const ProjectsPage: React.FC = () => {
   const [isDuplicationButtonVisible, setIsDuplicationButtonVisible] = useState(true);
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-
+  const [showInstructionsAlert, setShowInstructionsAlert] = useState(false);
+  
+  useEffect(() => {
+    // Get the count from sessionStorage (or default to 0)
+    const alertCount = parseInt(sessionStorage.getItem("projectsInstructionsAlertCount") || "0", 10);
+  
+    if (alertCount < 1) {
+      const timer = setTimeout(() => {
+        setShowInstructionsAlert(true);
+        sessionStorage.setItem("projectsInstructionsAlertCount", String(alertCount + 1));
+      }, 1000);
+  
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  
+  
   // Fetch projects on component mount
   useEffect(() => {
     const fetchProjects = async () => {
@@ -571,6 +588,10 @@ const ProjectsPage: React.FC = () => {
               <span className="text-xs">Remove</span>
             </span>
           </>
+          <div>
+            <Button variant={"ghost"} onClick={() => setShowInstructionsAlert(true)}>
+            <InfoCircledIcon />Instructions</Button>
+          </div>
         </div>
       </div>
       {/* Loading Indicator */}
@@ -921,7 +942,43 @@ const ProjectsPage: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
-
+      <AlertDialog open={showInstructionsAlert} onOpenChange={setShowInstructionsAlert}>
+        <AlertDialogContent className="w-full max-w-2xl p-6 max-h-[70vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Welcome to Projects</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+            <ol className="list-decimal list-inside space-y-2 text-black">
+              <li>
+                To add a new Project, click <b>+Add</b>. It shows a dialog form to fill.
+              </li>
+              <li>
+                Fill the mandatory <b className="text-red-500">*</b> fields to check for duplication of Startup.
+              </li>
+              <li>
+                If duplication check passes, proceed to <b>Create New Startup</b> and add project record details, to add a new project for the created startup.
+              </li>
+              <li>
+                If the Startup already exists, click on <b>Continue with existing startup</b> to add another project for the same Startup.
+              </li>
+              <li>
+                After creating a Project, screen automatically Redirects to the Project Screen!
+              </li>
+              <li className="text-red-500">
+                Buttons will be disabled If <b className="text-red-500">*</b> fields not filled.
+              </li>
+            </ol>
+          </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowInstructionsAlert(false)}>
+              Got it
+            </AlertDialogCancel>
+            {/*<AlertDialogAction onClick={() => setShowInstructionsAlert(false)}>
+              Close
+            </AlertDialogAction>*/}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
