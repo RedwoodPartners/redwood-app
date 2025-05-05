@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
 import { databases, useIsStartupRoute } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { FaEye } from "react-icons/fa";
 
 type RegulatoryData = {
   dpiitNumber: string;
@@ -27,6 +28,9 @@ type ErrorData = {
 
 export const REGULATORY_COLLECTION_ID = "6731872d0023e52aebc3";
 export const REGULATORY_HISTORY_COLLECTION_ID = "67cb2f3b002e2a70248d";
+
+const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
+const BUCKET_ID = "66eb0cfc000e821db4d9";
 
 interface RegulatoryInformationProps {
   startupId: string;
@@ -62,6 +66,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   
   const { toast } = useToast();
   const isStartupRoute = useIsStartupRoute();
+  const [coiFileId, setCoiFileId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,6 +119,31 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     if (startupId) {
       fetchData();
     }
+  }, [startupId]);
+
+  // Fetch Certificate of Incorporation fileId
+  useEffect(() => {
+    const fetchCOI = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Certificate of Incorporation"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          const doc = response.documents[0];
+          setCoiFileId(doc.fileId || null);
+        } else {
+          setCoiFileId(null);
+        }
+      } catch (error) {
+        setCoiFileId(null);
+      }
+    };
+    if (startupId) fetchCOI();
   }, [startupId]);
   
 
@@ -379,6 +409,21 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             <div key={label} className="flex flex-col">
               <div className="flex items-center mb-1">
                 <Label className="font-semibold text-gray-700">{label}</Label>
+                {["cinNumber", "panNumber", "tanNumber"].includes(field) && (
+                  coiFileId ? (
+                    <a
+                      href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1"
+                      title="View Certificate of Incorporation"
+                    >
+                      <FaEye className="ml-2 text-blue-500 hover:text-blue-700" size={20} />
+                    </a>
+                  ) : (
+                    <FaEye className="ml-2 text-gray-400" size={20} title="Certificate of Incorporation not uploaded" />
+                  )
+                )}
                 <div className="relative ml-2">
                   <span className={`absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 ${
                     focusedField === field ? 'block' : 'hidden'
