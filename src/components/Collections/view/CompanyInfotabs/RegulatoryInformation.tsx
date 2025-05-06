@@ -67,6 +67,11 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const { toast } = useToast();
   const isStartupRoute = useIsStartupRoute();
   const [coiFileId, setCoiFileId] = useState<string | null>(null);
+  const [dpiitFileId, setDpiitFileId] = useState<string | null>(null);
+  const [gstFileId, setGstFileId] = useState<string | null>(null);
+  const [udyamFileId, setUdyamFileId] = useState<string | null>(null);
+  const [profTaxFileId, setProfTaxFileId] = useState<string | null>(null);
+  const [shopsActFileId, setShopsActFileId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,6 +150,127 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     };
     if (startupId) fetchCOI();
   }, [startupId]);
+
+  // Fetch DPIIT fileId
+  useEffect(() => {
+    const fetchDPIIT = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Startup India (DPIIT) Certificate"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          setDpiitFileId(response.documents[0].fileId || null);
+        } else {
+          setDpiitFileId(null);
+        }
+      } catch {
+        setDpiitFileId(null);
+      }
+    };
+    if (startupId) fetchDPIIT();
+  }, [startupId]);
+
+  // GST Certificate
+  useEffect(() => {
+    const fetchGST = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Copy of GST Registration Certificate & PAN Card"),
+          ]
+        );
+        setGstFileId(response.documents[0]?.fileId || null);
+      } catch {
+        setGstFileId(null);
+      }
+    };
+    if (startupId) fetchGST();
+  }, [startupId]);
+
+  // Udyam Certificate
+  useEffect(() => {
+    const fetchUdyam = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Udyam Registration Certificate"),
+          ]
+        );
+        setUdyamFileId(response.documents[0]?.fileId || null);
+      } catch {
+        setUdyamFileId(null);
+      }
+    };
+    if (startupId) fetchUdyam();
+  }, [startupId]);
+
+  // Professional Tax
+  useEffect(() => {
+    const fetchProfTax = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Details of Professional Tax registration if the company is registered"),
+          ]
+        );
+        setProfTaxFileId(response.documents[0]?.fileId || null);
+      } catch {
+        setProfTaxFileId(null);
+      }
+    };
+    if (startupId) fetchProfTax();
+  }, [startupId]);
+
+  // Shops Act
+  useEffect(() => {
+    const fetchShopsAct = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Details of the Shops and Establishment Act, 1948 registration if the company is registered."),
+          ]
+        );
+        setShopsActFileId(response.documents[0]?.fileId || null);
+      } catch {
+        setShopsActFileId(null);
+      }
+    };
+    if (startupId) fetchShopsAct();
+  }, [startupId]);
+
+  const fileIdMap = {
+    dpiitNumber: dpiitFileId,
+    gstNumber: gstFileId,
+    udyamRegNumber: udyamFileId,
+    profRegNumber: profTaxFileId,
+    shopsActRegNumber: shopsActFileId,
+  };
+
+  const titleMap = {
+    dpiitNumber: "View DPIIT Certificate",
+    gstNumber: "View GST & PAN Certificate",
+    udyamRegNumber: "View Udyam Registration",
+    profRegNumber: "View Professional Tax Registration",
+    shopsActRegNumber: "View Shops Act Registration",
+  };
+  type FileIdField = keyof typeof fileIdMap;
   
 
   const validateInput = (value: string, format: string): boolean => {
@@ -423,6 +549,25 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
                   ) : (
                     <FaEye className="ml-2 text-gray-400" size={20} title="Certificate of Incorporation not uploaded" />
                   )
+                )}
+                {(["dpiitNumber", "gstNumber", "udyamRegNumber", "profRegNumber", "shopsActRegNumber"] as FileIdField[]).includes(field as FileIdField) && (
+                  (() => {
+                    const fileId = fileIdMap[field as FileIdField];
+                    const title = titleMap[field as FileIdField];
+                    return fileId ? (
+                      <a
+                        href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${PROJECT_ID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1"
+                        title={title}
+                      >
+                        <FaEye className="ml-2 text-blue-500 hover:text-blue-700" size={20} />
+                      </a>
+                    ) : (
+                      <FaEye className="ml-2 text-gray-400" size={20} title={`${title} not uploaded`} />
+                    );
+                  })()
                 )}
                 <div className="relative ml-2">
                   <span className={`absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 ${
