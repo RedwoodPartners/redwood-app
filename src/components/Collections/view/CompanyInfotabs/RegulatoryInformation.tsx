@@ -73,6 +73,9 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   const [profTaxFileId, setProfTaxFileId] = useState<string | null>(null);
   const [shopsActFileId, setShopsActFileId] = useState<string | null>(null);
 
+  const [llpFileId, setLlpFileId] = useState<string | null>(null);
+
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -255,12 +258,33 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     if (startupId) fetchShopsAct();
   }, [startupId]);
 
+  useEffect(() => {
+    const fetchLLP = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "LLP Incorporation Certificate"),
+          ]
+        );
+        setLlpFileId(response.documents[0]?.fileId || null);
+      } catch {
+        setLlpFileId(null);
+      }
+    };
+    if (startupId) fetchLLP();
+  }, [startupId]);
+  
+
   const fileIdMap = {
     dpiitNumber: dpiitFileId,
     gstNumber: gstFileId,
     udyamRegNumber: udyamFileId,
     profRegNumber: profTaxFileId,
     shopsActRegNumber: shopsActFileId,
+    cinNumber: llpFileId || coiFileId,
   };
 
   const titleMap = {
@@ -269,6 +293,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
     udyamRegNumber: "View Udyam Registration",
     profRegNumber: "View Professional Tax Registration",
     shopsActRegNumber: "View Shops Act Registration",
+    cinNumber: llpFileId ? "View LLP Incorporation Certificate" : "View Certificate of Incorporation",
   };
   type FileIdField = keyof typeof fileIdMap;
   
@@ -535,7 +560,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
             <div key={label} className="flex flex-col">
               <div className="flex items-center mb-1">
                 <Label className="font-semibold text-gray-700">{label}</Label>
-                {["cinNumber", "panNumber", "tanNumber"].includes(field) && (
+                {["panNumber", "tanNumber"].includes(field) && (
                   coiFileId ? (
                     <a
                       href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`}
@@ -550,7 +575,8 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
                     <FaEye className="ml-2 text-gray-400" size={20} title="Certificate of Incorporation not uploaded" />
                   )
                 )}
-                {(["dpiitNumber", "gstNumber", "udyamRegNumber", "profRegNumber", "shopsActRegNumber"] as FileIdField[]).includes(field as FileIdField) && (
+                
+                {(["cinNumber", "dpiitNumber", "gstNumber", "udyamRegNumber", "profRegNumber", "shopsActRegNumber"] as FileIdField[]).includes(field as FileIdField) && (
                   (() => {
                     const fileId = fileIdMap[field as FileIdField];
                     const title = titleMap[field as FileIdField];

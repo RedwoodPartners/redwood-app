@@ -82,6 +82,8 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [selectedAssociatedCompany, setSelectedAssociatedCompany] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showAssociatedCompaniesTable, setShowAssociatedCompaniesTable] = useState(false);
+
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -444,7 +446,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
               disabled={isSubmitting}
               variant={"outline"}
             >
-              {isSubmitting ? "Generating..." : "Generate Documents"}
+              {isSubmitting ? "Generating..." : "Generate Queries"}
             </Button>
           )}
         </div>
@@ -655,10 +657,13 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
           <Label>Any Associated Companies</Label>
           <Select
             value={selectedAssociatedCompany || ""}
-            onValueChange={handleAssociatedCompanyChange}
+            onValueChange={(value) => {
+              setSelectedAssociatedCompany(value);
+              setShowAssociatedCompaniesTable(value === "Yes");
+            }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select" />
+              <SelectValue placeholder="Select" defaultValue={"No"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Yes">Yes</SelectItem>
@@ -666,6 +671,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
             </SelectContent>
           </Select>
         </div>
+        {showAssociatedCompaniesTable && (
           <div className="border border-gray-300 rounded-xl p-2"
           style={{display: selectedAssociatedCompany === "No" ? "none" : "block"}}
           >
@@ -798,6 +804,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
               Add
             </Button>
           </div>
+        )}
           <DialogFooter>
             <Button type="button" onClick={handleSaveShareholder}>
               Save
