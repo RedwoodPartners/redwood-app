@@ -146,8 +146,8 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
 
   useEffect(() => {
     if (editingRow) {
-      const { trancheType, amount, status, date } = editingRow;
-      const requiredFieldsFilled = !!trancheType && !!amount && !!status && !!date;
+      const { trancheType, amount, status } = editingRow;
+      const requiredFieldsFilled = !!trancheType && !!amount && !!status;
       setIsSaveButtonDisabled(!requiredFieldsFilled);
     } else {
       setIsSaveButtonDisabled(true);
@@ -425,17 +425,21 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="date">Date<span className="text-red-500">*</span></Label>
-                <Input id="date" 
-                type="month" 
-                value={editingRow?.date || ""}
-                max={new Date().toISOString().slice(0, 7)}  
-                onChange={(e) => {
-                  setEditingRow({ ...editingRow, date: e.target.value });
-                  setHasUnsavedChanges(true);
-                  }} />  
-              </div>
+              {editingRow?.status === "Released" && (
+                <div>
+                  <Label htmlFor="date">Date<span className="text-red-500">*</span></Label>
+                  <Input
+                    id="date"
+                    type="month"
+                    value={editingRow?.date || ""}
+                    max={new Date().toISOString().slice(0, 7)}
+                    onChange={(e) => {
+                      setEditingRow({ ...editingRow, date: e.target.value });
+                      setHasUnsavedChanges(true);
+                    }}
+                  />
+                </div>
+              )}
               <div>
                 <Label htmlFor="milestones">Milestones</Label>
                 <Textarea id="milestones" value={editingRow?.milestones || ""} 

@@ -332,7 +332,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
             <TableRow>
               <TableHead>Mode of Investment</TableHead>
               <TableHead>Investment Date</TableHead>
-              <TableHead>Investment Amount (INR)</TableHead>
+              <TableHead className="w-28">Investment Amount (INR)</TableHead>
               <TableHead className="w-96">Description</TableHead>
               <TableHead className="w-40">Document</TableHead>
             </TableRow>
@@ -342,7 +342,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
               <TableRow key={investment.$id} onDoubleClick={() => openDialog(investment, true)}>
                 <TableCell>{investment.mode}</TableCell>
                 <TableCell>{formatDate(investment.date)}</TableCell>
-                <TableCell className="text-left">{investment.amount}</TableCell>
+                <TableCell className="text-right">{investment.amount}</TableCell>
                 <TableCell>{investment.description}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
@@ -394,8 +394,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
               </TableRow>
             ))}
             <TableRow className="font-bold">
-              <TableCell colSpan={2}>Total Investment Amount</TableCell>
-              <TableCell className="text-left">
+              <TableCell colSpan={2} className="text-right">Total Investment Amount</TableCell>
+              <TableCell className="text-right">
                 {calculateTotalInvestment(investments).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0  })}
               </TableCell>
             </TableRow>

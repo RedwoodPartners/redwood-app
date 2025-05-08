@@ -43,6 +43,8 @@ import LoadingSpinner from "../ui/loading";
 import { Query } from "appwrite";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { SHAREHOLDERS_ID } from "./view/FundingMilestonestabs/Shareholders";
+import Link from "next/link";
 
 type Project = {
   id: string;
@@ -516,6 +518,7 @@ const ProjectsPage: React.FC = () => {
   
   const createOrUpdateStartup = async () => {
     try {
+      // Create the Startup document
       const response = await databases.createDocument(
         STAGING_DATABASE_ID,
         STARTUP_ID,
@@ -527,7 +530,19 @@ const ProjectsPage: React.FC = () => {
           year: formattedDate,
         }
       );
-
+  
+      // Create the Shareholder document using founderName and phoneNumber
+      await databases.createDocument(
+        STAGING_DATABASE_ID,
+        SHAREHOLDERS_ID,
+        "unique()",
+        {
+          shareholderName: editedProject!.founderName,
+          phone: editedProject!.phoneNumber,
+          startupId: response.$id,
+        }
+      );
+  
       setEditedProject({
         ...editedProject!,
         startupId: response.$id,
@@ -536,6 +551,7 @@ const ProjectsPage: React.FC = () => {
       console.error("Error creating or updating startup:", error);
     }
   };
+  
 
   const handleCreateNewStartup = async () => {
     setIsCreatingNewRecord(true);
@@ -570,6 +586,11 @@ const ProjectsPage: React.FC = () => {
       setIsAddingNewProject(false);
     }
   };
+
+  const previousProjects = projects.filter(
+    (project) => project.startupId === currentStartup?.id
+  );
+  
 
   return (
     <div className="p-2">
@@ -695,11 +716,29 @@ const ProjectsPage: React.FC = () => {
                 )}
                 {projectCountError && (
                   <div className="text-gray-800 text-base mt-2">
-                    <Label className="flex text-lg">Previous Projects for {currentStartup?.name}</Label>
-                    {projectCountError.split(', ').map((status, index) => (
-                      <Label className="flex text-sm mt-2" key={index}>{status}</Label>
-                    ))}
-                  </div>
+                  <Label className="flex text-lg">
+                    Previous Projects for {currentStartup?.name}
+                  </Label>
+                  {previousProjects.length === 0 ? (
+                    <Label className="flex text-sm mt-2">No previous projects found.</Label>
+                  ) : (
+                    previousProjects.map((project, index) => (
+                      <div key={project.id} className="flex items-center gap-2 mt-2">
+                        <Label className="flex text-sm">
+                          Project {index + 1} Status: {project.startupStatus || "Unknown"}
+                        </Label>
+                        <Link
+                          href={`/projects/${project.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-xs"
+                        >
+                          View Project
+                        </Link>
+                      </div>
+                    ))
+                  )}
+                </div>
                 )}
               </div>
             )}
