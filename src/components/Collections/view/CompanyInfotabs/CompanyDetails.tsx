@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ReactSelect from "react-select";
 import Link from "next/link";
 import { Query } from "appwrite";
+import CreatableSelect from "react-select/creatable";
+
 
 
 interface StartupData {
@@ -37,7 +39,14 @@ interface CompanyDetailsProps {
   startupId: string | undefined;
   setIsDirty: (isDirty: boolean) => void;
 }
+type DomainOption = {
+  label: string;
+  value: string;
+  __isNew__?: boolean;
+};
+
 export const HISTORY_COLLECTON_ID = "67c82d7b000b564ff2e4";
+const DOMAIN_COLLECTION_ID = "681e348e0037680abed9";
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
@@ -50,6 +59,8 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
   const isStartupRoute = useIsStartupRoute();
 
   const [receivedDate, setReceivedDate] = useState<string | null>(null);
+  const [domainOptions, setDomainOptions] = useState<{ label: string; value: string }[]>([]);
+  const [isDomainLoading, setIsDomainLoading] = useState(false);
 
 
   useEffect(() => {
@@ -99,6 +110,28 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
 
     fetchStartupDetails();
   }, [startupId]);
+
+  useEffect(() => {
+    const fetchDomains = async () => {
+      setIsDomainLoading(true);
+      try {
+        const res = await databases.listDocuments(STAGING_DATABASE_ID, DOMAIN_COLLECTION_ID);
+        setDomainOptions(
+          res.documents.map((doc: any) => ({
+            label: doc.name, // or whatever field holds the domain name
+            value: doc.name,
+          }))
+        );
+      } catch (err) {
+        setDomainOptions([]);
+      } finally {
+        setIsDomainLoading(false);
+      }
+    };
+    fetchDomains();
+  }, []);
+
+
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -196,75 +229,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
       "One Person Company",
       "Entity Not Incorporated",
     ],
-    domain: [
-      "Select",
-      "IOT",
-      "Space Tech",
-      "Sustainability",
-      "Aggregator; Jewellery",
-      "Tech(IT products/services)",
-      "HealthTech",
-      "Agriculture",
-      "Proptech",
-      "Drones",
-      "Supply Chain",
-      "Green Tech",
-      "Edtech;Textile",
-      "Pharma",
-      "Biotech",
-      "Finetech",
-      "Agriculture;AgriTech",
-      "Aggregator;Tech(IT products/services);Sports Tech",
-      "Tribal Products",
-      "Entertaiment&Media",
-      "Clean Energy Technology",
-      "Logistics",
-      "Electronic Manufacturing Service",
-      "EdTech",
-      "Music",
-      "HealthCare",
-      "Service Provider",
-      "FMCG",
-      "Animal Husbandry Tech",
-      "EV",
-      "Manufacturing",
-      "Agriculture;Electronic",
-      "Manufacturing Service",
-      "Aggregator",
-      "Marketing Tech",
-      "Water Managment",
-      "Clothing",
-      "Service Provider;Cleantech",
-      "Healthcare;Naturopathy",
-      "Renewable Energy",
-      "Animal Training",
-      "Textiles",
-      "Automation",
-      "Housing;smart home automation",
-      "Biotech;Healthcare",
-      "Electric and electronic service",
-      "Marine tech",
-      "FMCG;ESG",
-      "Housing;Infrastructure;Real Estate",
-      "Agritech",
-      "Agritech;Animal husbandry tech;Biotech",
-      "Water Management;Water Management",
-      "Sanitary Napkin",
-      "Artisanal Cheese;Artisanal Cheese",
-      "Sanitary Napkin;Sanitary Napkin",
-      "Tech (IT products/services);Drones",
-      "Robotics",
-      "Tech (AI)",
-      "FoodTech",
-      "renovation of restrooms",
-      "Agritech;drones",
-      "Agriculture;Tribal Products",
-      "Electronic Manufacturing Service;IOT Automation",
-      "ESG",
-      "Tech (IT products/services);AI",
-      "Waste Management",
-      "Printing service",
-    ],
     incubated: [
       "Yes",
       "No",
@@ -336,46 +300,89 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
           ))}
         </SelectContent>
       </Select>
-    );
+  );
 
-  // Render dropdown with search functionality for domain
-  const renderDomainDropdown = () => {
-    const filteredDomains =
-      dropdownOptions.domain?.filter((option) =>
-        option.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
-
-    return (
-      <Select
-        disabled={!isEditing}
-        onValueChange={(value) => handleChange("domain", value)}
-        value={updatedData?.domain || ""}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select Domain" />
-        </SelectTrigger>
-        <SelectContent className="">
-          <div className="p-2">
-            <Input
-              type="text"
-              placeholder="Search domain..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border rounded-md py-1 px-2"
-            />
-          </div>
-          {filteredDomains.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-          {filteredDomains.length === 0 && (
-            <div className="p-2 text-sm text-gray-500">No results found</div>
-          )}
-        </SelectContent>
-      </Select>
-    );
+  const handleDomainChange = (selected: any) => {
+    handleChange("domain", selected?.value || "");
   };
+
+  const handleCreateDomain = async (inputValue: string) => {
+    setIsDomainLoading(true);
+    try {
+      await databases.createDocument(
+        STAGING_DATABASE_ID,
+        DOMAIN_COLLECTION_ID,
+        "unique()",
+        { name: inputValue }
+      );
+      setDomainOptions(prev => [...prev, { label: inputValue, value: inputValue }]);
+      handleChange("domain", inputValue);
+    } catch (err) {
+    } finally {
+      setIsDomainLoading(false);
+    }
+  };
+
+
+  const renderDomainDropdown = () => (
+    <CreatableSelect
+      isDisabled={!isEditing || isDomainLoading}
+      isClearable
+      isLoading={isDomainLoading}
+      options={domainOptions}
+      value={domainOptions.find(opt => opt.value === updatedData?.domain) || null}
+      onChange={handleDomainChange}
+      onCreateOption={handleCreateDomain}
+      placeholder="Select or enter domain"
+      formatCreateLabel={inputValue => `Add "${inputValue}"`}
+      styles={{
+        control: (provided, state) => ({
+          ...provided,
+          backgroundColor: state.isDisabled ? "white" : provided.backgroundColor,
+          cursor: state.isDisabled ? "not-allowed" : "default",
+          fontFamily: 'inherit',
+          fontSize: '0.875rem', 
+          color: '#000',
+        }),
+        input: (provided) => ({
+          ...provided,
+          fontFamily: 'inherit',
+          fontSize: '0.875rem',
+          color: '#000',
+          opacity: 1,
+        }),
+        placeholder: (provided) => ({
+          ...provided,
+          fontFamily: 'inherit',
+          fontSize: '0.875rem',
+          color: '#000',
+          opacity: 1,
+        }),
+        singleValue: (provided) => ({
+          ...provided,
+          fontFamily: 'inherit',
+          fontSize: '0.875rem',
+          color: '#000',
+          opacity: 1,
+        }),
+        menu: (provided) => ({
+          ...provided,
+          fontFamily: 'inherit',
+          fontSize: '0.875rem',
+        }),
+        option: (provided, state) => ({
+          ...provided,
+          fontFamily: 'inherit',
+          fontSize: '0.875rem',
+          cursor: (state.data as DomainOption).__isNew__ ? 'pointer' : 'default',
+          color: '#000',
+          opacity: 1,
+        }),
+      }}
+    />
+  );
+
+
 
   const validateCharacterInput = (value: string) => {
     return value.replace(/[^a-zA-Z\s]/g, '');

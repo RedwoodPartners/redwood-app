@@ -446,7 +446,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   return (
     <div>
       <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2 p-2">
+        <div className="flex items-center space-x-2 mb-2">
         <h3 className="text-lg font-medium">Document Checklist</h3>
         {!allDocsCreated && (
           <Button

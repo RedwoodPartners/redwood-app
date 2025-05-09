@@ -247,7 +247,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
           DOC_CHECKLIST_ID,
           [
             Query.equal("startupId", startupId),
-            Query.equal("docName", "Details of the Shops and Establishment Act, 1948 registration if the company is registered."),
+            Query.equal("docName", "Registration Details under Shops and Establishment Act, 1948 & Professional Tax if applicable"),
           ]
         );
         setShopsActFileId(response.documents[0]?.fileId || null);
