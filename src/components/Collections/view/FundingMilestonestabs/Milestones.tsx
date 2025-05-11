@@ -60,6 +60,8 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
 
+  const [fundRaisedUnit, setFundRaisedUnit] = useState("Lakh"); // default to Lakh
+
   useEffect(() => {
     if (hasUnsavedChanges) {
       setIsDirty(true);
@@ -220,46 +222,69 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   };
 
   const handleInputChange = (field: string, value: string) => {
-  if (!activeTableId) return;
+    if (!activeTableId) return;
 
-  // Update local state immediately for responsive UI
-  setTables(prev => prev.map(t => 
-    t.tableId === activeTableId ? { 
-      ...t, 
-      formData: { ...t.formData, [field]: value } 
-    } : t
-  ));
+    let processedValue = value;
 
-  // Create debounced save function
-  const debouncedSave = debounce(async (currentValue: string) => {
-    try {
-      setIsSaving(true);
-      const table = tables.find(t => t.tableId === activeTableId);
-      if (!table) return;
+    // Only process for fundRaised field
+    if (field === "fundRaised") {
+      const numericValue = parseFloat(value) || 0;
+      if (fundRaisedUnit === "Lakh") {
+        processedValue = (numericValue * 100000).toString();
+      } else if (fundRaisedUnit === "Crore") {
+        processedValue = (numericValue * 10000000).toString();
+      }
+    }
 
-      const tableDoc = await databases.listDocuments(
-        STAGING_DATABASE_ID,
-        TRANCHES_TABLE_COLLECTION_ID,
-        [Query.equal("tableId", activeTableId)]
-      );
+    // Update local state immediately for responsive UI
+    setTables(prev => prev.map(t =>
+      t.tableId === activeTableId ?
+        { ...t, formData: { ...t.formData, [field]: value } } // keep UI value as user entered
+        : t
+    ));
 
-      if (tableDoc.documents[0]) {
-        await databases.updateDocument(
+    // Debounced save to DB with processed value
+    const debouncedSave = debounce(async (currentValue: string) => {
+      try {
+        setIsSaving(true);
+        const table = tables.find(t => t.tableId === activeTableId);
+        if (!table) return;
+
+        const tableDoc = await databases.listDocuments(
           STAGING_DATABASE_ID,
           TRANCHES_TABLE_COLLECTION_ID,
-          tableDoc.documents[0].$id,
-          { ...table.formData, [field]: currentValue }
+          [Query.equal("tableId", activeTableId)]
         );
-      }
-    } catch (error) {
-      console.error("Error saving form:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  }, 500); // 500ms delay
 
-  debouncedSave(value);
+        if (tableDoc.documents[0]) {
+          await databases.updateDocument(
+            STAGING_DATABASE_ID,
+            TRANCHES_TABLE_COLLECTION_ID,
+            tableDoc.documents[0].$id,
+            { ...table.formData, [field]: processedValue } // save processed value
+          );
+        }
+      } catch (error) {
+        console.error("Error saving form:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 500);
+
+    debouncedSave(value);
   };
+
+  const handleUnitChange = (unit: string) => {
+    setFundRaisedUnit(unit);
+
+    // Optionally, re-save the fundRaised value with the new unit
+    const activeTable = tables.find(t => t.tableId === activeTableId);
+    if (activeTable) {
+      handleInputChange("fundRaised", activeTable.formData.fundRaised);
+    }
+  };
+
+
   const activeTable = tables.find(t => t.tableId === activeTableId);
   const calculateTotalAmount = (data: any[]) => {
     if (!data || data.length === 0) return 0;
@@ -482,13 +507,16 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
         <div className="grid grid-cols-4 gap-4 p-2 mb-4">
         <div>
           <Label htmlFor="fundRaised">Fund Raised Amount</Label>
-          <Input
-            id="fundRaised"
-            type="number"
-            placeholder="Amount"
-            value={activeTable.formData.fundRaised}
-            onChange={(e) => handleInputChange("fundRaised", e.target.value)}
-          />
+          <div className="flex items-center">
+            <Input
+              id="fundRaised"
+              type="number"
+              placeholder="Amount"
+              value={activeTable.formData.fundRaised}
+              onChange={(e) => handleInputChange("fundRaised", e.target.value)}
+            />
+          </div>
+
           </div>
           <div>
           <Label htmlFor="tableDated">Table Dated</Label>
