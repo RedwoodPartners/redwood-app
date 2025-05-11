@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Save, Edit } from "lucide-react";
 import { Models } from "appwrite";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import ButtonWithIcon from "@/lib/addButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const PROPOSED_FUND_ASK_ID = "67358bc4000af32965f2";
 export const VALIDATED_FUND_ASK_ID = "67694e77002cc9cd69c4";
@@ -40,14 +41,13 @@ const mapDocumentToFundItem = (doc: Models.Document): FundItem => ({
 
 const calculateTotal = (funds: FundItem[]): number => {
   return funds.reduce((total, fund) => {
-    const cleanAmount = (fund.amount || '').replace(/[^0-9.]/g, ''); // Default to an empty string if amount is null/undefined
+    const cleanAmount = (fund.amount || '').replace(/[^0-9.]/g, '');
     return total + (parseFloat(cleanAmount) || 0);
   }, 0);
 };
 
-
-const formatINR = (value: string): string => {
-  const number = parseFloat(value.replace(/[^0-9.]/g, ''));
+const formatINR = (value: string | number): string => {
+  const number = typeof value === "string" ? parseFloat(value.replace(/[^0-9.]/g, '')) : value;
   if (isNaN(number)) return '';
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -55,6 +55,14 @@ const formatINR = (value: string): string => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(number);
+};
+
+// Helper to convert user input to INR
+const getAmountInINR = (amount: string, unit: string) => {
+  const num = parseFloat(amount) || 0;
+  if (unit === "Lakh") return Math.round(num * 1e5);
+  if (unit === "Crore") return Math.round(num * 1e7);
+  return Math.round(num);
 };
 
 const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
@@ -65,6 +73,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
   const [editingFund, setEditingFund] = useState<FundItem | null>(null);
   const [proposedFundAsk, setProposedFundAsk] = useState("");
   const [validatedFundAsk, setValidatedFundAsk] = useState("");
+  const [proposedFundAskUnit, setProposedFundAskUnit] = useState("");
+  const [validatedFundAskUnit, setValidatedFundAskUnit] = useState("");
   const [isEditingProposed, setIsEditingProposed] = useState(false);
   const [isEditingValidated, setIsEditingValidated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,15 +108,40 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
         const fundingResponse = await databases.listDocuments(STAGING_DATABASE_ID, FUNDING_ID, [Query.equal("startupId", startupId)]);
         if (fundingResponse.documents.length > 0) {
           const fundingDoc = fundingResponse.documents[0];
-          setProposedFundAsk(fundingDoc.proposedFund || "");
-          setValidatedFundAsk(fundingDoc.validatedFund || "");
+          // Try to guess the unit from the value (if you want to persist the unit, store it in DB)
+          if (fundingDoc.proposedFund) {
+            const val = parseInt(fundingDoc.proposedFund, 10);
+            if (val % 1e7 === 0) {
+              setProposedFundAskUnit("Crore");
+              setProposedFundAsk((val / 1e7).toString());
+            } else {
+              setProposedFundAskUnit("Lakh");
+              setProposedFundAsk((val / 1e5).toString());
+            }
+          } else {
+            setProposedFundAskUnit("Lakh");
+            setProposedFundAsk("");
+          }
+          if (fundingDoc.validatedFund) {
+            const val = parseInt(fundingDoc.validatedFund, 10);
+            if (val % 1e7 === 0) {
+              setValidatedFundAskUnit("Crore");
+              setValidatedFundAsk((val / 1e7).toString());
+            } else {
+              setValidatedFundAskUnit("Lakh");
+              setValidatedFundAsk((val / 1e5).toString());
+            }
+          } else {
+            setValidatedFundAskUnit("Lakh");
+            setValidatedFundAsk("");
+          }
         } else {
-          console.log("Funding document not found");
+          setProposedFundAskUnit("Lakh");
           setProposedFundAsk("");
+          setValidatedFundAskUnit("Lakh");
           setValidatedFundAsk("");
         }
       } catch (error) {
-        console.error("Error fetching funds:", error);
         setProposedFunds([]);
         setValidatedFunds([]);
         setProposedFundAsk("");
@@ -133,8 +168,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       setIsDialogOpen(false);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error("Error adding fund:", error);
-    }finally{
+      // handle error
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -156,7 +191,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       setIsDialogOpen(false);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error("Error updating fund:", error);
+      // handle error
     }
   };
 
@@ -176,7 +211,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       setIsDialogOpen(false);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error("Error deleting fund:", error);
+      // handle error
     }
   };
 
@@ -186,20 +221,21 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
     setIsDialogOpen(true);
   };
 
+  // Save the INR value to DB
   const handleSave = async (type: "proposed" | "validated") => {
     try {
       const data = {
-        proposedFund: proposedFundAsk,
-        validatedFund: validatedFundAsk,
+        proposedFund: getAmountInINR(proposedFundAsk, proposedFundAskUnit).toString(),
+        validatedFund: getAmountInINR(validatedFundAsk, validatedFundAskUnit).toString(),
         startupId: startupId,
       };
-  
+
       try {
         await databases.updateDocument(STAGING_DATABASE_ID, FUNDING_ID, startupId, data);
       } catch (error) {
         await databases.createDocument(STAGING_DATABASE_ID, FUNDING_ID, startupId, data);
       }
-  
+
       if (type === "proposed") {
         setIsEditingProposed(false);
       } else {
@@ -207,7 +243,7 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
       }
       setIsDirty(false);
     } catch (error) {
-      console.error(`Error saving ${type} fund ask:`, error);
+      // handle error
     }
   };
 
@@ -242,6 +278,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
           }}
           fundAsk={proposedFundAsk}
           setFundAsk={setProposedFundAsk}
+          fundAskUnit={proposedFundAskUnit}
+          setFundAskUnit={setProposedFundAskUnit}
           isEditing={isEditingProposed}
           setIsEditing={setIsEditingProposed}
           onSave={() => handleSave("proposed")}
@@ -258,6 +296,8 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
           }}
           fundAsk={validatedFundAsk}
           setFundAsk={setValidatedFundAsk}
+          fundAskUnit={validatedFundAskUnit}
+          setFundAskUnit={setValidatedFundAskUnit}
           isEditing={isEditingValidated}
           setIsEditing={setIsEditingValidated}
           onSave={() => handleSave("validated")}
@@ -293,10 +333,9 @@ const FundAsk: React.FC<FundAskProps> = ({ startupId, setIsDirty }) => {
                 type="text"
                 id="amount"
                 placeholder="Enter amount in INR"
-                value={editingFund?.amount || ""}
+                value={formatINR(editingFund?.amount || "")}
                 onChange={(e) => {
-                  const formattedValue = formatINR(e.target.value);
-                  setEditingFund({ ...editingFund!, amount: formattedValue });
+                  setEditingFund({ ...editingFund!, amount: e.target.value.replace(/[^0-9.]/g, '') });
                   setHasUnsavedChanges(true);
                 }}
                 className="col-span-3"
@@ -324,6 +363,8 @@ interface FundTableProps {
   onOpenDialog: () => void;
   fundAsk: string;
   setFundAsk: (value: string) => void;
+  fundAskUnit: string;
+  setFundAskUnit: (value: string) => void;
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
   setIsDirty: (isDirty: boolean) => void;
@@ -337,18 +378,21 @@ const FundTable: React.FC<FundTableProps> = ({
   onOpenDialog,
   fundAsk,
   setFundAsk,
+  fundAskUnit,
+  setFundAskUnit,
   isEditing,
   setIsEditing,
   setIsDirty,
   onSave,
 }) => {
   const total = calculateTotal(funds);
-  //Validate total amount
-  const validateTotal = (total: number, fundAsk: string): boolean => {
-    const cleanFundAsk = parseFloat(fundAsk.replace(/[^0-9.]/g, '')) || 0;
+
+  // Validate total amount
+  const validateTotal = (total: number, fundAsk: string, fundAskUnit: string): boolean => {
+    const cleanFundAsk = getAmountInINR(fundAsk, fundAskUnit);
     return total === cleanFundAsk;
   };
-  const isValid = validateTotal(total, fundAsk);
+  const isValid = validateTotal(total, fundAsk, fundAskUnit);
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
@@ -362,52 +406,70 @@ const FundTable: React.FC<FundTableProps> = ({
     <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
       <div className="flex justify-between items-center mb-4">
         <h4 className="text-lg font-semibold">{title}</h4>
-        {/*validation check*/}
         <div>
-          {!isValid && <p className="text-red-500">Total Amount does not match the Fund Ask amount!..</p>}
+          {!isValid && <p className="text-red-500">Total Amount does not match the Fund Ask amount!</p>}
         </div>
         <div onClick={onOpenDialog}>
           <ButtonWithIcon label="Add" />
         </div>
       </div>
       <div className="flex items-center mb-4">
-        <span className="mr-2 text-xs">{title}:</span>
+        <span className="mr-2 text-sm font-semibold">{title}:</span>
         <div className="flex items-center">
-          <Input
-            type="text"
-            className="w-52"
-            value={fundAsk}
-            onChange={(e) => {
-              setFundAsk(formatINR(e.target.value));
-              setIsDirty(true);
-            }}
-            disabled={!isEditing}
-          />
+          <div className="flex items-center border rounded-md overflow-hidden w-[180px]">
+            <Input
+              type="number"
+              className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+              value={fundAsk}
+              onChange={(e) => {
+                setFundAsk(e.target.value);
+                setIsDirty(true);
+              }}
+              disabled={!isEditing}
+              placeholder="Enter amount"
+            />
+            <Select
+              value={fundAskUnit}
+              onValueChange={(value) => {
+                setFundAskUnit(value);
+                setIsDirty(true);
+              }}
+              disabled={!isEditing}
+            >
+              <SelectTrigger className="w-[100px] rounded-none border-l">
+                <SelectValue placeholder="Unit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Lakh">Lakhs</SelectItem>
+                <SelectItem value="Crore">Crores</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {isEditing ? (
             <>
-            <Tooltip>
-            <TooltipTrigger asChild>
-              <Save 
-                size={20} 
-                className="ml-2 cursor-pointer text-green-500" 
-                onClick={onSave}
-              />
-            </TooltipTrigger>
-            <TooltipContent>Save</TooltipContent>
-            </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Save
+                    size={20}
+                    className="ml-2 cursor-pointer text-green-500"
+                    onClick={onSave}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Save</TooltipContent>
+              </Tooltip>
             </>
           ) : (
             <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-              <Edit 
-                size={20} 
-                className="ml-2 cursor-pointer" 
-                onClick={() => setIsEditing(true)}
-              />
-              </TooltipTrigger>
-              <TooltipContent>Add Amount</TooltipContent>
-            </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Edit
+                    size={20}
+                    className="ml-2 cursor-pointer"
+                    onClick={() => setIsEditing(true)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Add Amount</TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>
@@ -424,7 +486,7 @@ const FundTable: React.FC<FundTableProps> = ({
           {funds.map((item) => (
             <TableRow key={item.$id} onDoubleClick={() => onRowDoubleTap(item)}>
               <TableCell>{item.description}</TableCell>
-              <TableCell>{item.amount}</TableCell>
+              <TableCell>{formatINR(item.amount)}</TableCell>
             </TableRow>
           ))}
           <TableRow className="font-bold">
