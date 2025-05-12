@@ -7,12 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { databases, useIsStartupRoute } from "@/lib/utils";
-import { PROJECTS_ID, STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { API_ENDPOINT, BUCKET_ID, PROJECT_ID, PROJECTS_ID, STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
 import Link from "next/link";
 import { Query } from "appwrite";
 import CreatableSelect from "react-select/creatable";
+import { FaEye } from "react-icons/fa";
+import { DOC_CHECKLIST_ID } from "../Documentstabs/DocumentsChecklist";
 
 
 
@@ -61,7 +63,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
   const [receivedDate, setReceivedDate] = useState<string | null>(null);
   const [domainOptions, setDomainOptions] = useState<{ label: string; value: string }[]>([]);
   const [isDomainLoading, setIsDomainLoading] = useState(false);
-
+  const [coiFileId, setCoiFileId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
@@ -118,7 +120,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
         const res = await databases.listDocuments(STAGING_DATABASE_ID, DOMAIN_COLLECTION_ID);
         setDomainOptions(
           res.documents.map((doc: any) => ({
-            label: doc.name, // or whatever field holds the domain name
+            label: doc.name,
             value: doc.name,
           }))
         );
@@ -131,6 +133,30 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
     fetchDomains();
   }, []);
 
+  useEffect(() => {
+    const fetchCOI = async () => {
+      if (!startupId) return;
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Certificate of Incorporation"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          const doc = response.documents[0];
+          setCoiFileId(doc.fileId || null);
+        } else {
+          setCoiFileId(null);
+        }
+      } catch (error) {
+        setCoiFileId(null);
+      }
+    };
+    if (startupId) fetchCOI();
+  }, [startupId]);
 
 
   const handleEditClick = () => {
@@ -466,9 +492,26 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
             {row.map((key) => (
               <div key={key} className="space-y-4">
                 <div className="flex flex-col space-y-1.5">
+                  <div className="flex items-center">
                   <Label className="font-semibold text-gray-700">
                     {fieldLabels[key] || key}
                   </Label>
+                  {["registeredCompanyName", "dateOfIncorporation"].includes(key) && (
+                    coiFileId ? (
+                      <a
+                        href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1"
+                        title="View Certificate of Incorporation"
+                      >
+                        <FaEye className="ml-2 text-blue-500 hover:text-blue-700" size={20} />
+                      </a>
+                    ) : (
+                      <FaEye className="ml-2 text-gray-400" size={20} title="Certificate of Incorporation not uploaded" />
+                    )
+                  )}
+                  </div>
                   {key === "businessModel" ? (
                     <BusinessModelSelect
                       value={updatedData?.businessModel || []}
