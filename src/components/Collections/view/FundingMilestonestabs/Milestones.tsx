@@ -60,8 +60,8 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
 
-  const [fundRaisedUnit, setFundRaisedUnit] = useState("Lakh"); // default to Lakh
-
+  const [fundRaisedUnit, setFundRaisedUnit] = useState("");
+  const [fundRaised, setFundRaised] = useState("");
   useEffect(() => {
     if (hasUnsavedChanges) {
       setIsDirty(true);
@@ -222,69 +222,46 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   };
 
   const handleInputChange = (field: string, value: string) => {
-    if (!activeTableId) return;
+  if (!activeTableId) return;
 
-    let processedValue = value;
+  // Update local state immediately for responsive UI
+  setTables(prev => prev.map(t => 
+    t.tableId === activeTableId ? { 
+      ...t, 
+      formData: { ...t.formData, [field]: value } 
+    } : t
+  ));
 
-    // Only process for fundRaised field
-    if (field === "fundRaised") {
-      const numericValue = parseFloat(value) || 0;
-      if (fundRaisedUnit === "Lakh") {
-        processedValue = (numericValue * 100000).toString();
-      } else if (fundRaisedUnit === "Crore") {
-        processedValue = (numericValue * 10000000).toString();
-      }
-    }
+  // Create debounced save function
+  const debouncedSave = debounce(async (currentValue: string) => {
+    try {
+      setIsSaving(true);
+      const table = tables.find(t => t.tableId === activeTableId);
+      if (!table) return;
 
-    // Update local state immediately for responsive UI
-    setTables(prev => prev.map(t =>
-      t.tableId === activeTableId ?
-        { ...t, formData: { ...t.formData, [field]: value } } // keep UI value as user entered
-        : t
-    ));
+      const tableDoc = await databases.listDocuments(
+        STAGING_DATABASE_ID,
+        TRANCHES_TABLE_COLLECTION_ID,
+        [Query.equal("tableId", activeTableId)]
+      );
 
-    // Debounced save to DB with processed value
-    const debouncedSave = debounce(async (currentValue: string) => {
-      try {
-        setIsSaving(true);
-        const table = tables.find(t => t.tableId === activeTableId);
-        if (!table) return;
-
-        const tableDoc = await databases.listDocuments(
+      if (tableDoc.documents[0]) {
+        await databases.updateDocument(
           STAGING_DATABASE_ID,
           TRANCHES_TABLE_COLLECTION_ID,
-          [Query.equal("tableId", activeTableId)]
+          tableDoc.documents[0].$id,
+          { ...table.formData, [field]: currentValue }
         );
-
-        if (tableDoc.documents[0]) {
-          await databases.updateDocument(
-            STAGING_DATABASE_ID,
-            TRANCHES_TABLE_COLLECTION_ID,
-            tableDoc.documents[0].$id,
-            { ...table.formData, [field]: processedValue } // save processed value
-          );
-        }
-      } catch (error) {
-        console.error("Error saving form:", error);
-      } finally {
-        setIsSaving(false);
       }
-    }, 500);
-
-    debouncedSave(value);
-  };
-
-  const handleUnitChange = (unit: string) => {
-    setFundRaisedUnit(unit);
-
-    // Optionally, re-save the fundRaised value with the new unit
-    const activeTable = tables.find(t => t.tableId === activeTableId);
-    if (activeTable) {
-      handleInputChange("fundRaised", activeTable.formData.fundRaised);
+    } catch (error) {
+      console.error("Error saving form:", error);
+    } finally {
+      setIsSaving(false);
     }
+  }, 500); // 500ms delay
+
+  debouncedSave(value);
   };
-
-
   const activeTable = tables.find(t => t.tableId === activeTableId);
   const calculateTotalAmount = (data: any[]) => {
     if (!data || data.length === 0) return 0;
@@ -364,6 +341,12 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
       setError(null);
       setEditingRow(null);
     }
+  };
+
+  const convertToBaseUnit = (amount: string, unit: string) => {
+    const num = parseFloat(amount);
+    if (isNaN(num)) return 0;
+    return unit === "Lakh" ? num * 100000 : num * 10000000;
   };
   
   
@@ -508,16 +491,28 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
         <div>
           <Label htmlFor="fundRaised">Fund Raised Amount</Label>
           <div className="flex items-center">
-            <Input
-              id="fundRaised"
-              type="number"
-              placeholder="Amount"
-              value={activeTable.formData.fundRaised}
-              onChange={(e) => handleInputChange("fundRaised", e.target.value)}
-            />
-          </div>
-
-          </div>
+          <Input
+            id="fundRaised"
+            type="number"
+            placeholder="Amount"
+            value={fundRaised}
+            onChange={(e) => setFundRaised(e.target.value)}
+            className="rounded-none border-r-0"
+          />
+          <Select
+            value={fundRaisedUnit}
+            onValueChange={setFundRaisedUnit}
+          >
+            <SelectTrigger className="rounded-none border-l-0">
+              <SelectValue placeholder="Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Lakh">Lakh</SelectItem>
+              <SelectItem value="Crore">Crore</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        </div>
           <div>
           <Label htmlFor="tableDated">Table Dated</Label>
           <Input
