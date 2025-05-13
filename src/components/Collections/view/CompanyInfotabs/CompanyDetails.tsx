@@ -64,6 +64,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
   const [domainOptions, setDomainOptions] = useState<{ label: string; value: string }[]>([]);
   const [isDomainLoading, setIsDomainLoading] = useState(false);
   const [coiFileId, setCoiFileId] = useState<string | null>(null);
+  const [runLlpFileId, setRunLlpFileId] = useState<string | null>(null);
+  const [llpIncorpCertFileId, setLlpIncorpCertFileId] = useState<string | null>(null);
+  const [partnershipDeedFileId, setPartnershipDeedFileId] = useState<string | null>(null);
+  const [udayamFileId, setUdyamFileId] = useState<string | null>(null);
+  const [auditedFinancialsFileId, setAuditedFinancialsFileId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
@@ -114,6 +119,82 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
   }, [startupId]);
 
   useEffect(() => {
+    if (!startupId) return;
+
+    // Fetch Filed copy of RUN LLP
+    const fetchRunLlpFile = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Filed copy of RUN LLP (Form for Reserving a name for LLP)"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          setRunLlpFileId(response.documents[0].fileId || null);
+        } else {
+          setRunLlpFileId(null);
+        }
+      } catch {
+        setRunLlpFileId(null);
+      }
+    };
+
+    // Fetch LLP Incorporation Certificate
+    const fetchLlpIncorpCertFile = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "LLP Incorporation Certificate"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          setLlpIncorpCertFileId(response.documents[0].fileId || null);
+        } else {
+          setLlpIncorpCertFileId(null);
+        }
+      } catch {
+        setLlpIncorpCertFileId(null);
+      }
+    };
+
+    fetchRunLlpFile();
+    fetchLlpIncorpCertFile();
+  }, [startupId]);
+
+  useEffect(() => {
+    if (!startupId) return;
+    const fetchAuditedFinancialsFile = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Audited Financials for last 3 completed financial years."),
+          ]
+        );
+        if (response.documents.length > 0) {
+          setAuditedFinancialsFileId(response.documents[0].fileId || null);
+        } else {
+          setAuditedFinancialsFileId(null);
+        }
+      } catch {
+        setAuditedFinancialsFileId(null);
+      }
+    };
+
+    fetchAuditedFinancialsFile();
+  }, [startupId]);
+
+
+
+  useEffect(() => {
     const fetchDomains = async () => {
       setIsDomainLoading(true);
       try {
@@ -156,6 +237,59 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
       }
     };
     if (startupId) fetchCOI();
+  }, [startupId]);
+
+  useEffect(() => {
+    if (!startupId) return;
+
+    const fetchPartnershipDeedFile = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "Copy of the Partnership Deed"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          // If using one state:
+          setPartnershipDeedFileId(response.documents[0].fileId || null)
+        } else {
+          setPartnershipDeedFileId(null);
+        }
+      } catch {
+        setPartnershipDeedFileId(null);
+      }
+    };
+
+    fetchPartnershipDeedFile();
+  }, [startupId]);
+
+  useEffect(() => {
+    if (!startupId) return;
+
+    const fetchUdyamFile = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          DOC_CHECKLIST_ID,
+          [
+            Query.equal("startupId", startupId),
+            Query.equal("docName", "UDYAM Registration Certificate"),
+          ]
+        );
+        if (response.documents.length > 0) {
+          setUdyamFileId(response.documents[0].fileId || null)
+        } else {
+          setUdyamFileId(null);
+        }
+      } catch {
+        setUdyamFileId(null);
+      }
+    };
+
+    fetchUdyamFile();
   }, [startupId]);
 
 
@@ -496,21 +630,70 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
                   <Label className="font-semibold text-gray-700">
                     {fieldLabels[key] || key}
                   </Label>
-                  {["registeredCompanyName", "dateOfIncorporation"].includes(key) && (
-                    coiFileId ? (
+                  {["registeredCompanyName", "dateOfIncorporation", "revenue"].includes(key) && (() => {
+                    let fileUrl = null;
+                    let title = "";
+
+                    if (key === "registeredCompanyName") {
+                      if (runLlpFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${runLlpFileId}/view?project=${PROJECT_ID}`;
+                        title = "View Filed copy of RUN LLP";
+                      } else if (coiFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`;
+                        title = "View Certificate of Incorporation";
+                      } else if (partnershipDeedFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${partnershipDeedFileId}/view?project=${PROJECT_ID}`;
+                        title = "View Copy of the Partnership Deed";
+                      } else if (udayamFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${udayamFileId}/view?project=${PROJECT_ID}`;
+                        title = "View UDYAM Registration Certificate";
+                      } else {
+                        title = "Certificate of Incorporation or RUN LLP not uploaded";
+                      }
+                    }
+
+                    if (key === "dateOfIncorporation") {
+                      if (llpIncorpCertFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${llpIncorpCertFileId}/view?project=${PROJECT_ID}`;
+                        title = "View LLP Incorporation Certificate";
+                      } else if (coiFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`;
+                        title = "View Certificate of Incorporation";
+                      } else if (partnershipDeedFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${partnershipDeedFileId}/view?project=${PROJECT_ID}`; 
+                        title = "View Copy of the Partnership Deed";
+                      } else if (udayamFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${udayamFileId}/view?project=${PROJECT_ID}`;
+                        title = "View UDYAM Registration Certificate";
+                      } else {
+                        title = "LLP Incorporation Certificate or COI not uploaded";
+                      }
+                    }
+
+                    if (key === "revenue") {
+                      if (auditedFinancialsFileId) {
+                        fileUrl = `${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${auditedFinancialsFileId}/view?project=${PROJECT_ID}`;
+                        title = "View Audited Financials";
+                      } else {
+                        title = "Audited Financials not uploaded";
+                      }
+                    }
+
+                    return fileUrl ? (
                       <a
-                        href={`${API_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${coiFileId}/view?project=${PROJECT_ID}`}
+                        href={fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="ml-1"
-                        title="View Certificate of Incorporation"
+                        title={title}
                       >
                         <FaEye className="ml-2 text-blue-500 hover:text-blue-700" size={20} />
                       </a>
                     ) : (
-                      <FaEye className="ml-2 text-gray-400" size={20} title="Certificate of Incorporation not uploaded" />
-                    )
-                  )}
+                      <FaEye className="ml-2 text-gray-400" size={20} title={title} />
+                    );
+                  })()}
+
                   </div>
                   {key === "businessModel" ? (
                     <BusinessModelSelect
