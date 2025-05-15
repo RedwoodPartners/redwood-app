@@ -217,8 +217,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
           <TableHeader>
             <TableRow>
               <TableHead>Filing Type</TableHead>
-              <TableHead>Quarter</TableHead>
-              <TableHead>Month</TableHead>
+              <TableHead>Quarter/Month</TableHead>
               <TableHead>GST R1</TableHead>
               <TableHead>GST 3B</TableHead>
               <TableHead>Difference</TableHead>
@@ -228,8 +227,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
             {complianceData.map((row) => (
               <TableRow key={row.$id} onDoubleClick={() => setEditingCompliance(row)}>
                 <TableCell>{row.filingType}</TableCell>
-                <TableCell>{row.quarter}</TableCell>
-                <TableCell>{row.date}</TableCell>
+                <TableCell>{row.quarter ? row.quarter : row.date}</TableCell> {/* Show quarter if present, else date */}
                 <TableCell>{row.gstr1}</TableCell>
                 <TableCell>{row.gst3b}</TableCell>
                 <TableCell>{row.difference}</TableCell>

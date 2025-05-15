@@ -465,7 +465,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
               disabled={isSubmitting}
               variant={"outline"}
             >
-              {isSubmitting ? "Generating..." : "Generate Documents"}
+              {isSubmitting ? "Generating..." : "Generate Queries"}
             </Button>
           )}
       </div>
@@ -474,10 +474,10 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
         <div>
           <Label>GST Number</Label>
           <Input 
-            type="text" // Use text to support alphanumeric GST numbers
+            type="text"
+            placeholder="00-AAAAA-0000-A-0-AA"
             value={gstNumber}
             onChange={handleGstNumberChange}
-            placeholder="Enter GST Number"
           />
         </div>
 

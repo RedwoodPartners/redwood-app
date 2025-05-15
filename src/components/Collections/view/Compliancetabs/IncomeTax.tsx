@@ -252,7 +252,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId, se
               disabled={isSubmitting}
               variant={"outline"}
             >
-              {isSubmitting ? "Generating..." : "Generate Documents"}
+              {isSubmitting ? "Generating..." : "Generate Queries"}
             </Button>
           )}
       </div>
