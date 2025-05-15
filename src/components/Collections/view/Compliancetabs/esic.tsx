@@ -370,10 +370,17 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                 <Input 
                     type="number"
                     id="employerCode"
+                    placeholder="00000000000000000"
                     value={employerCode}
-                    onChange={(e) => setEmployerCode(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 17) {
+                            setEmployerCode(value);
+                        }
+                    }}
                     disabled={!isEditingMetadata}
                 />
+
                 </div>
                 <div>
                 <Label>Note</Label>
@@ -505,10 +512,18 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
                 <div>
                 <Label>Establishment ID</Label>
                 <Input 
-                    type="number"
+                    type="text"
                     id="establishmentId"
                     value={establishmentId}
-                    onChange={(e) => setEstablishmentId(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value.toUpperCase();
+                        const regex = /^[A-Z]{0,2}\/?[A-Z]{0,3}\/?\d{0,7}\/?\d{0,3}$/;
+
+                        if (regex.test(value) || value === '') {
+                            setEstablishmentId(value);
+                        }
+                    }}
+                    placeholder="AA/AAA/0000000/000"
                     disabled={!isEditingMetadata2}
                 />
                 </div>
