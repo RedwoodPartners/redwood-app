@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Download, InfoIcon, Trash2, UploadCloud } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FUNDING_ID } from "./FundAsk";
 
 export const TRANCHES_MILESTONES_ID = "6734996a00203a2aefbb";
 export const TRANCHES_TABLE_COLLECTION_ID = "67fe8a1f003e0a9eacb3";
@@ -60,8 +61,15 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
 
-  const [fundRaisedUnit, setFundRaisedUnit] = useState("");
+  const [fundRaisedUnit, setFundRaisedUnit] = useState("Lakh");
   const [fundRaised, setFundRaised] = useState("");
+  const [fundRaisedInput, setFundRaisedInput] = useState("");
+  const [isEditingFundRaised, setIsEditingFundRaised] = useState(false);
+  const [tempFundRaisedInput, setTempFundRaisedInput] = useState(fundRaisedInput);
+  const [tempFundRaisedUnit, setTempFundRaisedUnit] = useState(fundRaisedUnit);
+  const [validatedFund, setValidatedFund] = useState("");
+  const [amountMatchError, setAmountMatchError] = useState(false);
+
   useEffect(() => {
     if (hasUnsavedChanges) {
       setIsDirty(true);
@@ -220,11 +228,16 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
       timeoutId = setTimeout(() => fn(...args), delay);
     };
   };
+  
+  // --- FUND RAISED CONVERSION ---
+  const convertToBaseUnit = (amount: string, unit: string) => {
+    const num = parseFloat(amount);
+    if (isNaN(num)) return 0;
+    return unit === "Lakh" ? num * 100000 : num * 10000000;
+  };
 
   const handleInputChange = (field: string, value: string) => {
   if (!activeTableId) return;
-
-  // Update local state immediately for responsive UI
   setTables(prev => prev.map(t => 
     t.tableId === activeTableId ? { 
       ...t, 
@@ -343,12 +356,45 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
     }
   };
 
-  const convertToBaseUnit = (amount: string, unit: string) => {
-    const num = parseFloat(amount);
-    if (isNaN(num)) return 0;
-    return unit === "Lakh" ? num * 100000 : num * 10000000;
-  };
+  function formatToLakh(amount: number | string | null | undefined) {
+    const num = Number(amount);
+    if (isNaN(num) || num === 0) return "0";
+    if (num < 100000) return num.toLocaleString("en-IN");
+    return `${(num / 100000).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  useEffect(() => {
+    const fetchValidatedFund = async () => {
+      try {
+        const response = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          FUNDING_ID,
+          [Query.equal("startupId", startupId)]
+        );
+        if (response.documents.length > 0) {
+          setValidatedFund(response.documents[0].validatedFund || "");
+        }
+      } catch (error) {
+        console.error("Error fetching validatedFund:", error);
+      }
+    };
+
+    fetchValidatedFund();
+  }, [startupId]);
   
+  useEffect(() => {
+    // Convert both to numbers for comparison
+    const validated = Number(validatedFund);
+    const raised = Number(activeTable?.formData?.fundRaised || fundRaised);
+
+    if (validated && raised && validated !== raised) {
+      setAmountMatchError(true);
+    } else {
+      setAmountMatchError(false);
+    }
+  }, [validatedFund, activeTable?.formData?.fundRaised, fundRaised]);
+
+
   
   return (
     <div>
@@ -490,29 +536,84 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
         <div className="grid grid-cols-4 gap-4 p-2 mb-4">
         <div>
           <Label htmlFor="fundRaised">Fund Raised Amount</Label>
-          <div className="flex items-center">
-          <Input
-            id="fundRaised"
-            type="number"
-            placeholder="Amount"
-            value={fundRaised}
-            onChange={(e) => setFundRaised(e.target.value)}
-            className="rounded-none border-r-0"
-          />
-          <Select
-            value={fundRaisedUnit}
-            onValueChange={setFundRaisedUnit}
-          >
-            <SelectTrigger className="rounded-none border-l-0">
-              <SelectValue placeholder="Unit" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Lakh">Lakh</SelectItem>
-              <SelectItem value="Crore">Crore</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-1 items-center gap-2">
+            <div className="flex items-center">
+            {!isEditingFundRaised ? (
+              <>
+                <span>
+                  {activeTable?.formData.fundRaised
+                    ? `${formatToLakh(activeTable.formData.fundRaised)} Lakh`
+                    : <span className="text-gray-400">No amount</span>
+                  }
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingFundRaised(true);
+                    setTempFundRaisedInput(fundRaisedInput);
+                    setTempFundRaisedUnit(fundRaisedUnit);
+                  }}
+                >
+                  Edit
+                </Button>
+              </>
+            ) : (
+              <>
+                <Input
+                  id="fundRaised"
+                  type="number"
+                  placeholder="Enter Amount"
+                  value={tempFundRaisedInput}
+                  onChange={e => setTempFundRaisedInput(e.target.value)}
+                  min="0"
+                  className="w-16"
+                />
+                <Select
+                  value={tempFundRaisedUnit}
+                  onValueChange={value => setTempFundRaisedUnit(value)}
+                >
+                  <SelectTrigger id="fundRaisedUnit">
+                    <SelectValue placeholder="Select unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Lakh">Lakhs</SelectItem>
+                    <SelectItem value="Crore">Crores</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    setFundRaisedInput(tempFundRaisedInput);
+                    setFundRaisedUnit(tempFundRaisedUnit);
+                    setIsEditingFundRaised(false);
+                    const baseValue = convertToBaseUnit(tempFundRaisedInput, tempFundRaisedUnit);
+                    await handleInputChange("fundRaised", String(baseValue));
+                  }}
+                  disabled={!tempFundRaisedInput}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditingFundRaised(false)}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+            </div>
+            <div>
+              {amountMatchError && (
+                <p className="text-red-500 text-sm">
+                  Fund Raised amount does not match the validated amount.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-        </div>
+
           <div>
           <Label htmlFor="tableDated">Table Dated</Label>
           <Input

@@ -465,7 +465,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
               disabled={isSubmitting}
               variant={"outline"}
             >
-              {isSubmitting ? "Generating..." : "Generate Queries"}
+              {isSubmitting ? "Generating..." : "Generate Documents"}
             </Button>
           )}
       </div>
