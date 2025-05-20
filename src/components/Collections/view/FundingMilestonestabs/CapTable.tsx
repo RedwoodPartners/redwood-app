@@ -48,6 +48,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const [editingRow, setEditingRow] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSaved, setShowSaved] = useState(false);
 
   const[isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -305,9 +306,19 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
           tableDoc.documents[0].$id,
           { ...table.formData, [field]: currentValue }
         );
+         toast({
+          title: "Saved",
+          description: "Your changes have been saved.",
+          duration: 2000,
+        });
       }
     } catch (error) {
       console.error("Error saving form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
