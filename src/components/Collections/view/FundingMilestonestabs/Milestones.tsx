@@ -265,9 +265,19 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
           tableDoc.documents[0].$id,
           { ...table.formData, [field]: currentValue }
         );
+        toast({
+          title: "Saved",
+          description: "Your changes have been saved.",
+          duration: 2000,
+        });
       }
     } catch (error) {
       console.error("Error saving form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }

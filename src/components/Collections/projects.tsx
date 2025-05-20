@@ -825,7 +825,7 @@ const ProjectsPage: React.FC = () => {
                     <Button
                       onClick={handleCreateOrUpdateStartup}
                       disabled={!isFormValid || isCheckingDuplication || isDuplicateCheckPassed}
-                      variant={"outline"}
+                      
                     >
                       {isCheckingDuplication ? "Checking for duplication!" : "Check for duplication!"}
                     </Button>
