@@ -465,20 +465,36 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
                   <TableCell colSpan={5}>
                     <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50">
                       <div>
-                        <strong>What services/products are you using from the company?</strong>
-                        <p>{testimonial.query1}</p>
+                        {testimonial.query1 && (
+                          <div>
+                            <strong>What services/products are you using from the company?</strong>
+                            <div>{testimonial.query1}</div>
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <strong>Your View on Service Utilization-will the service/product be beneficial for your company/personal use</strong>
-                        <p>{testimonial.query2}</p>
+                        {testimonial.query2 && (
+                          <div>
+                            <strong>Your View on Service Utilization - will the service/product be beneficial for your company/personal use?</strong>
+                            <div>{testimonial.query2}</div>
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <strong>Unique selling proposition of the company-what made you switch to using this company s service/product-how were you doing earlier?</strong>
-                        <p>{testimonial.query3}</p>
+                        {testimonial.query3 && (
+                          <div>
+                            <strong>Unique selling proposition of the company - what made you switch to using this company’s service/product - how were you doing earlier?</strong>
+                            <div>{testimonial.query3}</div>
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <strong>Future of this Segment- in your view, what will be the future of this segment?</strong>
-                        <p>{testimonial.query4}</p>
+                        {testimonial.query4 && (
+                          <div>
+                            <strong>Future of this Segment - in your view, what will be the future of this segment?</strong>
+                            <div>{testimonial.query4}</div>
+                          </div>
+                        )}
                       </div>
                       {/* Query5 Label and Value */}
                       {testimonial.query5 && (

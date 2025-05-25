@@ -174,6 +174,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       title="Pipeline Projects"
       mainValue={`+${pipelineCount}`}
       subValue="+0% from last month"
+      onClick={() => router.push("/home/pipeline/Pipeline")}
       icon={
         <svg
           className="w-6 h-5 text-blue-500"
@@ -196,6 +197,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       title="Rejected Projects"
       mainValue={`+${rejectedCount}`}
       subValue="+0% from last year"
+      onClick={() => router.push("/home/RejectedProjects/RejectedProjects")}
       icon={
         <svg
           className="w-6 h-5 text-red-500"
@@ -218,6 +220,7 @@ const StartupStats: React.FC<StartupStatsProps> = ({ showInvestmentCard }) => {
       title="Completed Projects"
       mainValue={`+${completedCount}`}
       subValue="+0 since last year"
+      onClick={() => router.push("/home/CompletedProjects/CompletedProjects")}
       icon={
         <svg
           className="w-6 h-5 text-green-500"
