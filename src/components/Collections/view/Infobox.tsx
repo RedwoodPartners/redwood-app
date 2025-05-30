@@ -13,6 +13,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { MigrationButton } from "@/lib/migration";
 
 type Project = {
   startDate: string;
@@ -339,28 +341,34 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
 
         {/* Update/Save Button */}
         {!isEditing ? (
-          <span
+          <Button
             onClick={handleUpdateClick}
-            className="text-blue-500 font-semibold text-xs sm:text-sm cursor-pointer"
+            variant={"outline"}
           >
-            update
-          </span>
+            Update
+          </Button>
         ) : (
-          <span
+          <Button
             onClick={handleSaveClick}
-            className="text-green-500 font-semibold text-xs sm:text-sm cursor-pointer"
+            variant={"outline"}
           >
-            save
-          </span>
+            Save
+          </Button>
+        )}
+        {projectData.startupStatus === "Completed" && (
+          <MigrationButton startupId={startupId} />
         )}
       </div>
+      
 
       {/* Right Section */}
+      {/* 
       <div className="flex items-center space-x-4 sm:space-x-6 text-black hover:text-gray-700 transition-colors duration-200 ease-in-out">
         <Mail className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
         <MessageCircle className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
         <Globe className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
       </div>
+      */}
     </div>
   );
 };

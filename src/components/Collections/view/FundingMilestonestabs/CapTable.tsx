@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
-import { client, databases } from "@/lib/utils";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { client, databases, useIsStartupRoute } from "@/lib/utils";
 import { Storage, ID } from "appwrite";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,20 +64,26 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const storage = useMemo(() => new Storage(client), []);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+  const isStartupRoute = useIsStartupRoute();
+
 
   const fetchAllTables = useCallback(async () => {
     try {
+      const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+      const collectionId = isStartupRoute ? CAP_TABLE_COUNT_ID : CAP_TABLE_COUNT_ID;
       const tablesResponse = await databases.listDocuments(
-        STAGING_DATABASE_ID,
-        CAP_TABLE_COUNT_ID,
+        databaseId,
+        collectionId,
         [Query.equal("startupId", startupId)]
       );
 
       const tablesData = await Promise.all(
         tablesResponse.documents.map(async (tableDoc) => {
+          const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+          const collectionId = isStartupRoute ? CAP_TABLE_ID : CAP_TABLE_ID;
           const rowsResponse = await databases.listDocuments(
-            STAGING_DATABASE_ID,
-            CAP_TABLE_ID,
+            databaseId,
+            collectionId,
             [
               Query.equal("startupId", startupId),
               Query.equal("tableId", tableDoc.tableId)
@@ -107,7 +113,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
     } catch (error) {
       console.error("Error fetching tables:", error);
     }
-  }, [startupId, activeTableId]);
+  }, [startupId, activeTableId, isStartupRoute]);
 
   useEffect(() => {
     fetchAllTables();
@@ -444,7 +450,9 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium">Capital Table</h3>
+            { !isStartupRoute && (
             <ButtonWithIcon label="Add Round" onClick={handleAddNewTable} />
+            )}
         </div>
           <div className="flex gap-2 p-2">
             {tables.map(table => (

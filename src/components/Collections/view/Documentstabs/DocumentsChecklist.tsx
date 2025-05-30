@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo, useCallback, useContext } from "re
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
-import appwriteService, { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, STARTUP_ID } from "@/appwrite/config";
-import { databases, client } from "@/lib/utils";
+import appwriteService, { STAGING_DATABASE_ID, PROJECT_ID, API_ENDPOINT, STARTUP_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { databases, client, useIsStartupRoute } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { FaEye } from 'react-icons/fa';
 import { Textarea } from "@/components/ui/textarea";
@@ -58,7 +58,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   const [isCreatingDocuments, setIsCreatingDocuments] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string } | null>(null);
-  
+  const isStartupRoute = useIsStartupRoute();
+
   useEffect(() => {
     // Fetch current user on mount
     const fetchCurrentUser = async () => {
@@ -83,7 +84,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, DOC_CHECKLIST_ID, [
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? DOC_CHECKLIST_ID : DOC_CHECKLIST_ID;
+
+        const response = await databases.listDocuments(databaseId, collectionId, [
           Query.equal("startupId", startupId),
         ]);
         setDocData(response.documents);
@@ -135,7 +139,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
     fetchDocumentOptions();
     
     fetchDocuments();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
   
   // Function to handle file selection for new document
   const handleSaveDocument = async () => {

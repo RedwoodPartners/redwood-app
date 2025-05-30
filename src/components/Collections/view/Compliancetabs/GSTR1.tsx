@@ -11,8 +11,8 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/label";
 import ButtonWithIcon from "@/lib/addButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const GSTR_ID = "673b1988001c3d93380e";
+export const GSTR_ID = "673b1988001c3d93380e";
 
 interface GstrComplianceProps {
   startupId: string;
@@ -48,6 +48,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -60,7 +61,10 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, GSTR_ID, [
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? GSTR_ID : GSTR_ID
+
+        const response = await databases.listDocuments(databaseId, collectionId, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -76,7 +80,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
       }
     };
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
   useEffect(() => {
     // Check if all required fields are filled
     const requiredFieldsFilled =

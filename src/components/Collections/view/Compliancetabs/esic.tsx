@@ -10,8 +10,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Client, Databases, Query } from "appwrite";
-import { STAGING_DATABASE_ID, PROJECT_ID } from "@/appwrite/config";
-import { client, databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, PROJECT_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { client, databases, useIsStartupRoute } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,12 +65,18 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
     const [isEditingMetadata, setIsEditingMetadata] = useState(false);
     const [isEditingMetadata2, setIsEditingMetadata2] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const isStartupRoute = useIsStartupRoute();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+                const collectionId = isStartupRoute ? ESIC_COLLECTION_ID : ESIC_COLLECTION_ID;
+
                 const response = await databases.listDocuments(
-                    STAGING_DATABASE_ID,
-                    ESIC_COLLECTION_ID,
+                    databaseId,
+                    collectionId,
                     [Query.equal("startupId", startupId)]
                 );
 
@@ -98,9 +104,12 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
         };
         const fetchMetadata = async () => {
             try {
+                const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+                const collectionId = isStartupRoute ? ESIC_EPF_COLLECTION_ID : ESIC_EPF_COLLECTION_ID;
+
               const metadataResponse = await databases.listDocuments(
-                STAGING_DATABASE_ID,
-                ESIC_EPF_COLLECTION_ID,  
+                databaseId,
+                collectionId,  
                 [Query.equal("startupId", startupId)]
               );
       
@@ -119,7 +128,7 @@ const ESICDetails: React.FC<ESICDetailsProps> = ({ startupId, setIsDirty }) => {
           };
           fetchMetadata();
           fetchData();
-    }, [startupId]);
+    }, [startupId, isStartupRoute]);
 
     const formatNumber = (value: string) => {
         const number = parseFloat(value);

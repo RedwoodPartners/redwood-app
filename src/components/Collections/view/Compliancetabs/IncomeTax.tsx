@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, STARTUP_DATABASE, STARTUP_ID } from "@/appwrite/config";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { FORMS_ID } from "./ROCcompliance";
 
-const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
+export const INCOME_TAX_TABLE_ID = "6736e636001bd105c8c8";
 
 interface IncomeTaxComplianceProps {
   startupId: string;
@@ -52,11 +52,15 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId, se
   const [missingDocuments, setMissingDocuments] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, INCOME_TAX_TABLE_ID, [
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? INCOME_TAX_TABLE_ID : INCOME_TAX_TABLE_ID;
+
+        const response = await databases.listDocuments(databaseId, collectionId, [
           Query.equal("startupId", startupId),
         ]);
         const filteredDocuments = response.documents.map(doc => {
@@ -76,7 +80,7 @@ const IncomeTaxCompliance: React.FC<IncomeTaxComplianceProps> = ({ startupId, se
       }
     };
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
 
   useEffect(() => {
     const fetchQueryOptions = async () => {
