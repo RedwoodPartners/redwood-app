@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, STARTUP_DATABASE, STARTUP_ID } from "@/appwrite/config";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/select";
 import { SHAREHOLDERS_ID } from "../FundingMilestonestabs/Shareholders";
 import { ChevronRightIcon } from "lucide-react";
-const ROC_ID = "6739c2c40032254ca4b6";
+
+export const ROC_ID = "6739c2c40032254ca4b6";
 export const FORMS_ID = "67b45189001e40764c83";
 
 interface RocComplianceProps {
@@ -83,7 +84,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
   const [selectedAssociatedCompany, setSelectedAssociatedCompany] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showAssociatedCompaniesTable, setShowAssociatedCompaniesTable] = useState(false);
-
+  const isStartupRoute = useIsStartupRoute();
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -97,9 +98,12 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? ROC_ID : ROC_ID;
+
         const response = await databases.listDocuments(
-          STAGING_DATABASE_ID,
-          ROC_ID,
+          databaseId,
+          collectionId,
           [Query.equal("startupId", startupId)]
         );
         const filteredDocuments = response.documents.map((doc) => {
@@ -140,7 +144,7 @@ const RocCompliance: React.FC<RocComplianceProps> = ({ startupId, setIsDirty }) 
     };
     fetchShareholders();
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
 
   // Fetch dynamic query options based on natureOfCompany
   useEffect(() => {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
 import { databases, useIsStartupRoute } from "@/lib/utils";
 import { Query } from "appwrite";
 import { EditIcon, SaveIcon, InfoIcon } from "lucide-react";
@@ -79,9 +79,12 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? REGULATORY_COLLECTION_ID : REGULATORY_COLLECTION_ID;
+
         const response = await databases.listDocuments(
-          STAGING_DATABASE_ID,
-          REGULATORY_COLLECTION_ID,
+          databaseId,
+          collectionId,
           [Query.equal("startupId", startupId)]
         );
         if (response.documents.length > 0) {
@@ -123,11 +126,10 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
         console.error("Error fetching regulatory data:", error);
       }
     };
-  
-    if (startupId) {
-      fetchData();
-    }
-  }, [startupId]);
+
+    if (startupId) fetchData();
+  }, [startupId, isStartupRoute]);
+
 
   // Fetch Certificate of Incorporation fileId
   useEffect(() => {
@@ -534,6 +536,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
               </span>
             </div>
           ) : (
+            ! isStartupRoute && (
             <div
               onClick={handleEdit}
               className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
@@ -541,6 +544,7 @@ const RegulatoryInformation: React.FC<RegulatoryInformationProps> = ({ startupId
               <EditIcon size={15} />
               <span className="text-xs">Edit</span>
             </div>
+            )
           )}
         </div>
       </div>

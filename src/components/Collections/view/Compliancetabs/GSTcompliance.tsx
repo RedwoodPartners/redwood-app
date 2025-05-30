@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
-import { client, databases } from "@/lib/utils";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { client, databases, useIsStartupRoute } from "@/lib/utils";
 import { ID, Storage, Databases } from "appwrite";
 
 import {
@@ -40,7 +40,7 @@ import { Trash2, UploadCloud } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-const GST_ID = "6739ce42002b5b5036a8";
+export const GST_ID = "6739ce42002b5b5036a8";
 export const MISC_COLLECTION_ID = "6810ae530025f9307c3b";
 
 interface GstComplianceProps {
@@ -67,13 +67,18 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
   const [gstNumber, setGstNumber] = useState<string>("");
   const [gstDocId, setGstDocId] = useState<string | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const isStartupRoute = useIsStartupRoute();
   
   useEffect(() => {
     const fetchComplianceData = async () => {
       try {
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? GST_ID : GST_ID;
+
         const response = await databases.listDocuments(
-          STAGING_DATABASE_ID,
-          GST_ID,
+          databaseId,
+          collectionId,
           [Query.equal("startupId", startupId)]
         );
         const filteredDocuments = response.documents.map((doc) => {
@@ -86,7 +91,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
       }
     };
     fetchComplianceData();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
 
   // Fetch dynamic query options
   useEffect(() => {

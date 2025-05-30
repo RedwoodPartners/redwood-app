@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Query } from "appwrite";
-import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID } from "@/appwrite/config";
-import { client, databases } from "@/lib/utils";
+import { API_ENDPOINT, PROJECT_ID, STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { client, databases, useIsStartupRoute } from "@/lib/utils";
 import { Storage, ID } from "appwrite";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,8 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
   const [validatedFund, setValidatedFund] = useState("");
   const [amountMatchError, setAmountMatchError] = useState(false);
 
+  const isStartupRoute = useIsStartupRoute();
+
   useEffect(() => {
     if (hasUnsavedChanges) {
       setIsDirty(true);
@@ -80,17 +82,22 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
 
   const fetchAllTables = useCallback(async () => {
     try {
+      const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+      const collectionId = isStartupRoute ? TRANCHES_TABLE_COLLECTION_ID : TRANCHES_TABLE_COLLECTION_ID;
       const tablesResponse = await databases.listDocuments(
-        STAGING_DATABASE_ID,
-        TRANCHES_TABLE_COLLECTION_ID,
+        databaseId,
+        collectionId,
         [Query.equal("startupId", startupId)]
       );
 
       const tablesData = await Promise.all(
         tablesResponse.documents.map(async (tableDoc) => {
+          const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+          const collectionId = isStartupRoute ? TRANCHES_MILESTONES_ID : TRANCHES_MILESTONES_ID;
+
           const rowsResponse = await databases.listDocuments(
-            STAGING_DATABASE_ID,
-            TRANCHES_MILESTONES_ID,
+            databaseId,
+            collectionId,
             [
               Query.equal("startupId", startupId),
               Query.equal("tableId", tableDoc.tableId)
@@ -118,7 +125,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
     } catch (error) {
       console.error("Error fetching tables:", error);
     }
-  }, [startupId, activeTableId]);
+  }, [startupId, activeTableId, isStartupRoute]);
 
   useEffect(() => {
     fetchAllTables();
@@ -411,7 +418,9 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium">Tranches & Milestones</h3>
+            { !isStartupRoute && (
             <ButtonWithIcon label="Add Table" onClick={handleAddNewTable} />
+            )}
         </div>
           <div className="flex gap-2 p-2">
             {tables.map(table => (

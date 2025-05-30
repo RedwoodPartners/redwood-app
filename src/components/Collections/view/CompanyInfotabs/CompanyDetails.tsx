@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EditIcon, SaveIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { databases, useIsStartupRoute } from "@/lib/utils";
-import { API_ENDPOINT, BUCKET_ID, PROJECT_ID, PROJECTS_ID, STAGING_DATABASE_ID, STARTUP_ID } from "@/appwrite/config";
+import { API_ENDPOINT, BUCKET_ID, PROJECT_ID, PROJECTS_ID, STAGING_DATABASE_ID, STARTUP_DATABASE, STARTUP_ID } from "@/appwrite/config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactSelect from "react-select";
 import Link from "next/link";
@@ -72,51 +72,76 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
 
   useEffect(() => {
     const fetchStartupDetails = async () => {
-      if (startupId) {
-        try {
-          const data = await databases.getDocument(STAGING_DATABASE_ID, STARTUP_ID, startupId);
-          const parsedData = {
-            brandName: data.brandName,
-            businessType: data.businessType,
-            companyStage: data.companyStage,
-            registeredCountry: data.registeredCountry,
-            registeredCompanyName: data.registeredCompanyName,
-            dateOfIncorporation: data.dateOfIncorporation,
-            patentsCertifications: data.patentsCertifications,
-            registeredState: data.registeredState,
-            natureOfCompany: data.natureOfCompany,
-            domain: data.domain,
-            incubated: data.incubated,
-            revenue: data.revenue,
-            businessModel: data.businessModel,
-            subDomain: data.subDomain,
-            employees: data.employees,
+      if (!startupId) return;
+      try {
+        const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+        const collectionId = isStartupRoute ? STARTUP_ID : STARTUP_ID;
+
+        const data = await databases.getDocument(databaseId, collectionId, startupId);
+        const parsedData = {
+          brandName: data.brandName ?? "",
+          businessType: data.businessType ?? "",
+          companyStage: data.companyStage ?? "",
+          registeredCountry: data.registeredCountry ?? "",
+          registeredCompanyName: data.registeredCompanyName ?? "",
+          dateOfIncorporation: data.dateOfIncorporation ?? "",
+          patentsCertifications: data.patentsCertifications ?? "",
+          registeredState: data.registeredState ?? "",
+          natureOfCompany: data.natureOfCompany ?? "",
+          domain: data.domain ?? "",
+          incubated: data.incubated ?? "",
+          revenue: data.revenue ?? "",
+          businessModel: data.businessModel ?? [],
+          subDomain: data.subDomain ?? "",
+          employees: data.employees ?? "",
+        };
+        setStartupData(parsedData);
+        setUpdatedData(parsedData);
+
+        // fetch receivedDate to restrict dateOfIncorporation input date
+        const projectResponse = await databases.listDocuments(
+          STAGING_DATABASE_ID,
+          PROJECTS_ID,
+          [Query.equal("startupId", startupId)]
+        );
+
+        if (projectResponse.documents.length > 0) {
+          const projectData = projectResponse.documents[0];
+          setReceivedDate(projectData.receivedDate ?? null);
+        } else {
+          setReceivedDate(null);
+        }
+      } catch (error: any) {
+        if (error && error.code === 404) {
+          // No data found, set all fields to empty
+          const emptyData = {
+            brandName: "",
+            businessType: "",
+            companyStage: "",
+            registeredCountry: "",
+            registeredCompanyName: "",
+            dateOfIncorporation: "",
+            patentsCertifications: "",
+            registeredState: "",
+            natureOfCompany: "",
+            domain: "",
+            incubated: "",
+            revenue: "",
+            businessModel: [],
+            subDomain: "",
+            employees: "",
           };
-          setStartupData(parsedData);
-          setUpdatedData(parsedData);
-
-          // fetch receivedDate to restrict dateOfIncorporation input date
-          const projectResponse = await databases.listDocuments(
-            STAGING_DATABASE_ID,
-            PROJECTS_ID,
-            [Query.equal("startupId", startupId)] 
-          );
-
-          if (projectResponse.documents.length > 0) {
-            const projectData = projectResponse.documents[0]; 
-            setReceivedDate(projectData.receivedDate);
-          } else {
-            console.error("No matching document found in PROJECTS_ID collection.");
-          }
-        } catch (error) {
-          console.error("Error fetching startup details:", error);
+          setStartupData(emptyData);
+          setUpdatedData(emptyData);
+        } else {
           setError("Failed to fetch startup details. Please try again later.");
         }
       }
     };
 
     fetchStartupDetails();
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
+
 
   useEffect(() => {
     if (!startupId) return;
@@ -609,10 +634,15 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
             </span>
           </div>
         ) : (
-          <div className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1" onClick={handleEditClick}>
-            <EditIcon size={15} />
-            <span className="text-xs">Edit</span>
-          </div>
+          !isStartupRoute && (
+            <div
+              className="cursor-pointer border border-gray-300 rounded-full p-1 flex items-center space-x-1 mb-1"
+              onClick={handleEditClick}
+            >
+              <EditIcon size={15} />
+              <span className="text-xs">Edit</span>
+            </div>
+          )
         )}
       </div>
       <div className="grid gap-4 bg-white mx-auto p-3 rounded-lg border border-gray-300">

@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircleIcon, ChevronRightIcon, PlusCircle } from "lucide-react";
 import { Query } from "appwrite";
-import { STAGING_DATABASE_ID } from "@/appwrite/config";
-import { databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, STARTUP_DATABASE } from "@/appwrite/config";
+import { databases, useIsStartupRoute } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -43,6 +43,8 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId, 
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const isStartupRoute = useIsStartupRoute();
+
 
   useEffect(() => {
     if (hasUnsavedChanges) {
@@ -54,16 +56,20 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId, 
 
   const fetchTestimonials = useCallback(async () => {
     try {
+      const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
+      const collectionId = isStartupRoute ? CUSTOMER_COLLECTION_ID : CUSTOMER_COLLECTION_ID;
+
       const response = await databases.listDocuments(
-        STAGING_DATABASE_ID,
-        CUSTOMER_COLLECTION_ID,
+        databaseId,
+        collectionId,
         [Query.equal("startupId", startupId)]
       );
+
       setTestimonials(response.documents);
     } catch (error) {
       console.error("Error fetching testimonials:", error);
     }
-  }, [startupId]);
+  }, [startupId, isStartupRoute]);
 
   useEffect(() => {
     if (startupId) {
@@ -166,7 +172,9 @@ const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({ startupId, 
                 setHasUnsavedChanges(false);
               }}
             >
-              <ButtonWithIcon label="Add" />
+              { !isStartupRoute && (
+                <ButtonWithIcon label="Add" />
+              )}
             </div>
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl max-h-[80vh] overflow-y-auto">
