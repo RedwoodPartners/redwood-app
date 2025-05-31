@@ -89,7 +89,6 @@ export function Domain() {
     <Card>
       <CardHeader>
         <CardTitle>Top 5 Domains</CardTitle>
-        <CardDescription>Click on a domain to see startups</CardDescription>
       </CardHeader>
       <CardContent className="flex mt-3 gap-5">
         <ChartContainer config={chartConfig} className="w-[120px] h-[120px]">

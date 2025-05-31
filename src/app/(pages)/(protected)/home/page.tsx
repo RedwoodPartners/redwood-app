@@ -19,6 +19,13 @@ import { Domain } from "@/components/charts/domains";
 import { AreaChartPortfolio } from "@/components/charts/areaChart";
 import { ServicesChart } from "@/components/charts/services";
 
+// Dynamically import StartupFunnelChart with SSR disabled
+import dynamic from "next/dynamic";
+const StartupFunnelChart = dynamic(
+  () => import("@/components/charts/funnelChart"),
+  { ssr: false }
+);
+
 const Dashboard = () => {
   const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
 
@@ -65,6 +72,7 @@ const Dashboard = () => {
 
       <StartupStats showInvestmentCard={true} />
       <div className="grid grid-cols-3 gap-4 p-2">
+        <StartupFunnelChart />
         <ServicesChart />
         <Domain />
         <NoStartups />
