@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { CONTACT_ID } from "@/components/Collections/view/CompanyInfotabs/Contact";
 import { ABOUT_COLLECTION_ID } from "@/components/Collections/view/CompanyInfotabs/AboutBusiness";
 import { CUSTOMER_COLLECTION_ID } from "@/components/Collections/view/CompanyInfotabs/CustomerTestimonials";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,28 +45,23 @@ const collectionPairs = [
   { source: CONTACT_ID, target: CONTACT_ID },
   { source: ABOUT_COLLECTION_ID, target: ABOUT_COLLECTION_ID },
   { source: CUSTOMER_COLLECTION_ID, target: CUSTOMER_COLLECTION_ID },
-
-  { source: FUND_RAISED_ID, target: FUND_RAISED_ID},
-  { source: SHAREHOLDERS_ID, target: SHAREHOLDERS_ID},
-  { source: CAP_TABLE_COUNT_ID, target: CAP_TABLE_COUNT_ID},
-  { source: CAP_TABLE_ID, target: CAP_TABLE_ID},
-  { source: PROPOSED_FUND_ASK_ID, target: PROPOSED_FUND_ASK_ID},
-  { source: VALIDATED_FUND_ASK_ID, target: VALIDATED_FUND_ASK_ID},
-  { source: TRANCHES_TABLE_COLLECTION_ID, target: TRANCHES_TABLE_COLLECTION_ID},
-  { source: TRANCHES_MILESTONES_ID, target: TRANCHES_MILESTONES_ID},
-
+  { source: FUND_RAISED_ID, target: FUND_RAISED_ID },
+  { source: SHAREHOLDERS_ID, target: SHAREHOLDERS_ID },
+  { source: CAP_TABLE_COUNT_ID, target: CAP_TABLE_COUNT_ID },
+  { source: CAP_TABLE_ID, target: CAP_TABLE_ID },
+  { source: PROPOSED_FUND_ASK_ID, target: PROPOSED_FUND_ASK_ID },
+  { source: VALIDATED_FUND_ASK_ID, target: VALIDATED_FUND_ASK_ID },
+  { source: TRANCHES_TABLE_COLLECTION_ID, target: TRANCHES_TABLE_COLLECTION_ID },
+  { source: TRANCHES_MILESTONES_ID, target: TRANCHES_MILESTONES_ID },
   { source: ROC_ID, target: ROC_ID },
   { source: INCOME_TAX_TABLE_ID, target: INCOME_TAX_TABLE_ID },
   { source: GST_ID, target: GST_ID },
   { source: GSTR_ID, target: GSTR_ID },
   { source: ESIC_COLLECTION_ID, target: ESIC_COLLECTION_ID },
   { source: ESIC_EPF_COLLECTION_ID, target: ESIC_EPF_COLLECTION_ID },
-
-  { source: DOC_CHECKLIST_ID, target: DOC_CHECKLIST_ID},
-  { source: PATENTS_ID, target: PATENTS_ID},
-  { source: INCUBATION_ID, target: INCUBATION_ID},
-
-  // Add more collections
+  { source: DOC_CHECKLIST_ID, target: DOC_CHECKLIST_ID },
+  { source: PATENTS_ID, target: PATENTS_ID },
+  { source: INCUBATION_ID, target: INCUBATION_ID },
 ];
 
 export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) => {
@@ -78,6 +72,11 @@ export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) =
   const [progress, setProgress] = useState(0);
 
   const TARGET_STARTUP_ID = startupId;
+
+  // Function to deep compare two objects
+  const isEqual = (obj1: any, obj2: any): boolean => {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  };
 
   const migrateAllCollections = async () => {
     setLoading(true);
@@ -103,9 +102,33 @@ export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) =
 
         for (const doc of documentsToMigrate) {
           const { $id, $collectionId, $databaseId, $createdAt, $updatedAt, ...data } = doc;
-          await databases.createDocument(targetDatabaseId, target, $id, data);
-          const logMsg = `Migrated document ${doc.$id} from ${source} to ${target}`;
-          setLatestLog(logMsg);
+          let existingDoc = null;
+          try {
+            const result = await databases.listDocuments(targetDatabaseId, target, [
+              Query.equal('$id', [$id]),
+            ]);
+            existingDoc = result.documents.length > 0 ? result.documents[0] : null;
+          } catch (error: any) {
+            setLatestLog(`Error checking ${$id}: ${error.message || String(error)}`);
+            throw error;
+          }
+
+
+          if (existingDoc) {
+            // Exclude $id, $collectionId, $databaseId, $createdAt, $updatedAt for comparison
+            const { $id: _, $collectionId: __, $databaseId: ___, $createdAt: ____, $updatedAt: _____, ...existingData } = existingDoc;
+            if (!isEqual(existingData, data)) {
+              // Update if not the same
+              await databases.updateDocument(targetDatabaseId, target, $id, data);
+              setLatestLog(`Updated document ${$id} in ${target}`);
+            } else {
+              setLatestLog(`No changes for document ${$id} in ${target}`);
+            }
+          } else {
+            // Create if not exists
+            await databases.createDocument(targetDatabaseId, target, $id, data);
+            setLatestLog(`Migrated document ${$id} in ${target}`);
+          }
         }
         // Update progress after each collection pair
         const newProgress = Math.floor(((i + 1) / collectionPairs.length) * 100);
@@ -127,8 +150,7 @@ export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) =
 
   return (
     <div>
-      <Button 
-        onClick={migrateAllCollections} disabled={loading}>
+      <Button onClick={migrateAllCollections} disabled={loading}>
         {loading ? 'Migrating...' : 'Data Migration'}
       </Button>
 
