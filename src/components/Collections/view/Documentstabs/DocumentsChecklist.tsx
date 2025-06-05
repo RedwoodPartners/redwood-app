@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useContext } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useContext, useRef } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { PlusCircle, Trash2, UploadCloud, CheckCircle, Circle, MessageCircle } from "lucide-react";
 import { Query, ID, Storage } from "appwrite";
@@ -11,7 +11,6 @@ import { FaEye } from 'react-icons/fa';
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -60,6 +59,10 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
   const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string } | null>(null);
   const isStartupRoute = useIsStartupRoute();
 
+  const [checklistGenerated, setChecklistGenerated] = useState<boolean | null>(null);
+  const [isGeneratingChecklist, setIsGeneratingChecklist] = useState(false);
+
+
   useEffect(() => {
     // Fetch current user on mount
     const fetchCurrentUser = async () => {
@@ -103,6 +106,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
         console.error("Error fetching document data:", error);
       }
     };
+    
     //fetch Document checklist options
     const fetchDocumentOptions = async () => {
       try {
@@ -140,6 +144,25 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
     
     fetchDocuments();
   }, [startupId, isStartupRoute]);
+
+  // Fetch startup meta (including checklistGenerated)
+  useEffect(() => {
+    const fetchStartupMeta = async () => {
+      try {
+        const startup = await databases.getDocument(
+          STAGING_DATABASE_ID,
+          STARTUP_ID,
+          startupId
+        );
+        setNatureOfCompany(startup.natureOfCompany);
+        setChecklistGenerated(startup.checklistGenerated ?? false);
+      } catch (error) {
+        console.error("Error fetching startup meta:", error);
+        setChecklistGenerated(false); // fallback
+      }
+    };
+    fetchStartupMeta();
+  }, [startupId]);
   
   // Function to handle file selection for new document
   const handleSaveDocument = async () => {
@@ -380,57 +403,99 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
       });
     }
   };
+  
+  // Helper: get required doc names
+  const requiredDocNames = useMemo(
+    () =>
+      fetchedDocumentOptions
+        .filter((doc: any) => doc.natureOfCompany?.includes(natureOfCompany))
+        .map((doc: any) => doc.docName),
+    [fetchedDocumentOptions, natureOfCompany]
+  );
+  const createdDocNames = useMemo(
+    () => docData.map((doc: any) => doc.docName),
+    [docData]
+  );
+  const allDocsCreated = useMemo(
+    () => requiredDocNames.every((docName) => createdDocNames.includes(docName)),
+    [requiredDocNames, createdDocNames]
+  );
 
-  const createDocumentsForCompany = async () => {
-    setIsCreatingDocuments(true);
-    try {
-      if (!natureOfCompany || fetchedDocumentOptions.length === 0) return;
-  
-      const applicableDocs = fetchedDocumentOptions.filter((doc) =>
-        doc.natureOfCompany.includes(natureOfCompany)
-      );
-  
-      for (const docOption of applicableDocs) {
-        const exists = docData.some((doc) => doc.docName === docOption.docName);
-        if (!exists) {
-          try {
-            await databases.createDocument(
-              STAGING_DATABASE_ID,
-              DOC_CHECKLIST_ID,
-              ID.unique(),
-              {
-                docName: docOption.docName,
-                docType: docOption.docType,
-                status: "Pending",
-                description: docOption.description || "",
-                financialYear: "",
-                startupId,
-              }
-            );
-          } catch (error) {
-            console.error("Error creating document:", error);
+  // --- MAIN LOGIC: Auto-generate checklist ---
+  const hasRunChecklist = useRef(false);
+  useEffect(() => {
+    const generateChecklistIfNeeded = async () => {
+      // Only run if not already generated and not running
+      if (
+        checklistGenerated === false &&
+        !hasRunChecklist.current &&
+        natureOfCompany &&
+        fetchedDocumentOptions.length > 0
+      ) {
+        hasRunChecklist.current = true;
+        setIsGeneratingChecklist(true);
+        // 1. Generate missing docs
+        const applicableDocs = fetchedDocumentOptions.filter((doc) =>
+          doc.natureOfCompany?.includes(natureOfCompany)
+        );
+        for (const docOption of applicableDocs) {
+          const exists = docData.some((doc) => doc.docName === docOption.docName);
+          if (!exists) {
+            try {
+              await databases.createDocument(
+                STAGING_DATABASE_ID,
+                DOC_CHECKLIST_ID,
+                ID.unique(),
+                {
+                  docName: docOption.docName,
+                  docType: docOption.docType,
+                  status: "Pending",
+                  description: docOption.description || "",
+                  financialYear: "",
+                  startupId,
+                }
+              );
+            } catch (error) {
+              console.error("Error creating document:", error);
+            }
           }
         }
+        // 2. Mark checklist as generated in Startups collection
+        try {
+          await databases.updateDocument(
+            STAGING_DATABASE_ID,
+            STARTUP_ID,
+            startupId,
+            { checklistGenerated: true }
+          );
+          setChecklistGenerated(true);
+        } catch (error) {
+          console.error("Error updating checklistGenerated:", error);
+        }
+        // 3. Refresh document checklist
+        try {
+          const updatedDocs = await databases.listDocuments(
+            STAGING_DATABASE_ID,
+            DOC_CHECKLIST_ID,
+            [Query.equal("startupId", startupId)]
+          );
+          setDocData(updatedDocs.documents);
+        } catch (error) {
+          console.error("Error refreshing checklist:", error);
+        }
+        setIsGeneratingChecklist(false);
       }
-      // Refresh document checklist after creation
-      const updatedDocs = await databases.listDocuments(
-        STAGING_DATABASE_ID,
-        DOC_CHECKLIST_ID,
-        [Query.equal("startupId", startupId)]
-      );
-      setDocData(updatedDocs.documents);
-    } finally {
-      setIsCreatingDocuments(false);
-    }
-  };
-  
-  const requiredDocNames = fetchedDocumentOptions
-  .filter((doc: any) => doc.natureOfCompany.includes(natureOfCompany))
-  .map((doc: any) => doc.docName);
-  const createdDocNames = docData.map((doc: any) => doc.docName);
-  const allDocsCreated = requiredDocNames.every(docName =>
-    createdDocNames.includes(docName)
-  );
+    };
+    generateChecklistIfNeeded();
+  }, [
+    checklistGenerated,
+    natureOfCompany,
+    fetchedDocumentOptions,
+    docData,
+    startupId,
+  ]);
+  // --- END MAIN LOGIC ---
+
 
   const closeDialog = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -452,14 +517,8 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2 mb-2">
         <h3 className="text-lg font-medium">Document Checklist</h3>
-        {!allDocsCreated && (
-          <Button
-            onClick={createDocumentsForCompany}
-            disabled={isCreatingDocuments}
-            variant={"outline"}
-          >
-            {isCreatingDocuments ? "Generating..." : "Generate Document checklist"}
-          </Button>
+        {isGeneratingChecklist && (
+          <span className="text-sm text-gray-500 border border-gray-50 p-1">generating checklist..</span>
         )}
         </div>
       </div>
