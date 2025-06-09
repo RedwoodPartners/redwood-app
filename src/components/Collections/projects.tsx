@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Trash } from "lucide-react";
+import { PlusCircle, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { Checkbox } from "../ui/checkbox";
 
@@ -86,6 +86,9 @@ const ProjectsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingNewRecord, setIsCreatingNewRecord] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -101,7 +104,12 @@ const ProjectsPage: React.FC = () => {
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showInstructionsAlert, setShowInstructionsAlert] = useState(false);
-  
+  const [isCreatingNewStartup, setIsCreatingNewStartup] = useState(false);
+
+  const [founderMatches, setFounderMatches] = useState<Startup[]>([]);
+
+  const [showContinueWithExisting, setShowContinueWithExisting] = useState(false);
+
   useEffect(() => {
     // Get the count from sessionStorage (or default to 0)
     const alertCount = parseInt(sessionStorage.getItem("projectsInstructionsAlertCount") || "0", 10);
@@ -384,7 +392,7 @@ const ProjectsPage: React.FC = () => {
   });
   
   //Duplication Check and creating a new startup record 
-  const fetchExistingStartup = async (): Promise<Startup | undefined> => {
+  const fetchExistingStartup = async (): Promise<{ exactMatch?: Startup; founderMatches: Startup[] }> => {
     try {
       const existingStartup = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
       const startupData: Startup[] = existingStartup.documents.map((doc: any) => ({
@@ -393,42 +401,75 @@ const ProjectsPage: React.FC = () => {
         founderName: doc.founderName,
         phoneNumber: doc.phoneNumber,
       }));
-  
-      return startupData.find(
+
+      // Find exact match (name or phone)
+      const exactMatch = startupData.find(
         (startup) =>
           startup.name.toLowerCase() === editedProject?.name?.toLowerCase() ||
-          startup.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() ||
           startup.phoneNumber === editedProject?.phoneNumber
       );
+
+      // Find all startups with matching founder name
+      const founderMatches = startupData.filter(
+        (startup) =>
+          startup.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() &&
+          startup.id !== exactMatch?.id // Exclude exact match from founder matches
+      );
+
+      return { exactMatch, founderMatches };
     } catch (error) {
       console.error("Error fetching startup:", error);
-      return undefined;
+      return { founderMatches: [] };
     }
   };
   
-  const handleContinueWithExistingStartup = async () => {
-    try {
-      const existingStartupDoc = await fetchExistingStartup();
+  const handleDuplicateError = (existingStartupDoc: Startup, founderMatches: Startup[]) => {
+    let errorMsg = '';
+    
+    if (existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase()) {
+      errorMsg = `Startup with Name "${editedProject?.name}" already exists in startup record "${existingStartupDoc.name}".`;
+    } else if (existingStartupDoc.phoneNumber === editedProject?.phoneNumber) {
+      errorMsg = `Startup with Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`;
+    }
 
-      if (existingStartupDoc) {
-        setEditedProject({
-          ...editedProject!,
-          startupId: existingStartupDoc.id,
-          name: existingStartupDoc.name,
-          founderName: existingStartupDoc.founderName,  
-          phoneNumber: existingStartupDoc.phoneNumber,
-        });
-        setCurrentStep(2);
-        setErrorMessage(null);
-        setIsForm2Disabled(false);
-        setIsForm1Disabled(true);
-        setIsDuplicationButtonVisible(false);
-        setProjectCountError(null);
-      }
-    } catch (error) {
-      console.error("Error continuing with existing startup:", error);
+    setErrorMessage(errorMsg);
+
+    // If there are founder matches, set them in a separate state
+    if (founderMatches.length > 0) {
+      setFounderMatches(founderMatches);
     }
   };
+  
+  const handleCreateOrUpdateStartup = async () => {
+    setIsCheckingDuplication(true);
+
+    try {
+      const { exactMatch, founderMatches } = await fetchExistingStartup();
+      
+      if (exactMatch) {
+        handleDuplicateError(exactMatch, founderMatches);
+        setIsDuplicateCheckPassed(false);
+        setCurrentStartup(exactMatch);
+        // Fetch project statuses for existing startup
+        const projectStatuses = await fetchProjectStatusesForStartup(exactMatch.id);
+        setProjectCountError(projectStatuses.join(", "));
+        // Show the continue with existing button
+        setShowContinueWithExisting(true);
+      } else {
+        setIsDuplicateCheckPassed(true);
+        setIsFormModified(false);
+        setErrorMessage(null);
+        setCurrentStartup(null);
+        setFounderMatches([]);
+        setShowContinueWithExisting(false);
+      }
+    } catch (error) {
+      console.error("Error during duplication check:", error);
+    } finally {
+      setIsCheckingDuplication(false);
+    }
+  };
+  
 
   const fetchProjectStatusesForStartup = async (startupId: string): Promise<string[]> => {
     try {
@@ -449,73 +490,6 @@ const ProjectsPage: React.FC = () => {
   };
   
 
-  const handleCreateOrUpdateStartup = async () => {
-    setIsCheckingDuplication(true);
-
-    try {
-      const existingStartupDoc = await fetchExistingStartup();
-      
-      if (existingStartupDoc) {
-        handleDuplicateError(existingStartupDoc);
-        setIsDuplicateCheckPassed(false);
-        
-        setCurrentStartup(existingStartupDoc);
-        // Fetch project statuses for existing startup
-        const projectStatuses = await fetchProjectStatusesForStartup(existingStartupDoc.id);
-        setProjectCountError(projectStatuses.join(", "));
-      } else {
-        setIsDuplicateCheckPassed(true);
-        setIsFormModified(false);
-        setErrorMessage(null);
-        setCurrentStartup(null);
-      }
-    } catch (error) {
-      console.error("Error during duplication check:", error);
-    } finally {
-      setIsCheckingDuplication(false);
-    }
-  };
-  
-
-  const handleDuplicateError = (existingStartupDoc: Startup) => {
-    if (
-      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
-      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() &&
-      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
-    ) {
-      setErrorMessage(
-        `Startup with Name "${editedProject?.name}", Founder "${editedProject?.founderName}", and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
-      );
-    } else if (
-      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
-      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase()
-    ) {
-      setErrorMessage(
-        `Startup with Name "${editedProject?.name}" and Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}"`
-      );
-    } else if (
-      existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase() &&
-      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
-    ) {
-      setErrorMessage(
-        `Startup with Name "${editedProject?.name}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
-      );
-    } else if (
-      existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase() &&
-      existingStartupDoc.phoneNumber === editedProject?.phoneNumber
-    ) {
-      setErrorMessage(
-        `Startup with Founder "${editedProject?.founderName}" and Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`
-      );
-    } else if (existingStartupDoc.name.toLowerCase() === editedProject?.name?.toLowerCase()) {
-      setErrorMessage(`Startup with Name "${editedProject?.name}" already exists in startup record "${existingStartupDoc.name}".`);
-    } else if (existingStartupDoc.founderName?.toLowerCase() === editedProject?.founderName?.toLowerCase()) {
-      setErrorMessage(`Startup with Founder "${editedProject?.founderName}" already exists in startup record "${existingStartupDoc.name}".`);
-    } else if (existingStartupDoc.phoneNumber === editedProject?.phoneNumber) {
-      setErrorMessage(`Startup with Phone Number "${editedProject?.phoneNumber}" already exists in startup record "${existingStartupDoc.name}".`);
-    }
-  };
-  
   const createOrUpdateStartup = async () => {
     try {
       // Create the Startup document
@@ -530,7 +504,7 @@ const ProjectsPage: React.FC = () => {
           year: formattedDate,
         }
       );
-  
+
       // Create the Shareholder document using founderName and phoneNumber
       await databases.createDocument(
         STAGING_DATABASE_ID,
@@ -542,28 +516,71 @@ const ProjectsPage: React.FC = () => {
           startupId: response.$id,
         }
       );
-  
-      setEditedProject({
-        ...editedProject!,
-        startupId: response.$id,
-      });
+
+      return response.$id;
     } catch (error) {
       console.error("Error creating or updating startup:", error);
+      throw error;
     }
   };
-  
 
-  const handleCreateNewStartup = async () => {
+  const handleCreateNewStartupAndContinue = async () => {
+    setIsCreatingNewStartup(true);
+    setErrorMessage(null);
+    setProjectCountError(null);
+    setShowContinueWithExisting(false);
     setIsCreatingNewRecord(true);
+    
     try {
-      await createOrUpdateStartup();
+      // Create new startup record
+      const newStartupId = await createOrUpdateStartup();
+      
+      // Update editedProject with the new startup ID
+      setEditedProject({
+        ...editedProject!,
+        startupId: newStartupId,
+      });
+
+      // Enable project details form
       setCurrentStep(2);
       setIsDuplicateCheckPassed(false);
       setIsForm2Disabled(false);
       setIsForm1Disabled(true);
       setIsDuplicationButtonVisible(false);
+      setFounderMatches([]);
     } catch (error) {
       console.error("Error creating startup:", error);
+      setErrorMessage("Failed to create startup record. Please try again.");
+      setIsCreatingNewStartup(false);
+    } finally {
+      setIsCreatingNewRecord(false);
+    }
+  };
+
+  const handleCreateNewStartup = async () => {
+    setIsCreatingNewRecord(true);
+    try {
+      // Create new startup record
+      const newStartupId = await createOrUpdateStartup();
+      
+      // Update editedProject with the new startup ID
+      setEditedProject({
+        ...editedProject!,
+        startupId: newStartupId,
+      });
+
+      // Enable project details form
+      setCurrentStep(2);
+      setIsDuplicateCheckPassed(false);
+      setIsForm2Disabled(false);
+      setIsForm1Disabled(true);
+      setIsDuplicationButtonVisible(false);
+      setFounderMatches([]);
+      setErrorMessage(null);
+      setProjectCountError(null);
+    } catch (error) {
+      console.error("Error creating startup:", error);
+      setErrorMessage("Failed to create startup record. Please try again.");
     } finally {
       setIsCreatingNewRecord(false);
     }
@@ -591,10 +608,45 @@ const ProjectsPage: React.FC = () => {
     (project) => project.startupId === currentStartup?.id
   );
   
+  // Add pagination calculation
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProjects = projects.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(projects.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleContinueWithExistingStartup = async () => {
+    try {
+      const { exactMatch } = await fetchExistingStartup();
+      
+      if (exactMatch) {
+        setEditedProject({
+          ...editedProject!,
+          startupId: exactMatch.id,
+          name: exactMatch.name,
+          founderName: exactMatch.founderName,  
+          phoneNumber: exactMatch.phoneNumber,
+        });
+        setCurrentStep(2);
+        setErrorMessage(null);
+        setIsForm2Disabled(false);
+        setIsForm1Disabled(true);
+        setIsDuplicationButtonVisible(false);
+        setProjectCountError(null);
+        setShowContinueWithExisting(false);
+        setIsCreatingNewStartup(true);
+      }
+    } catch (error) {
+      console.error("Error continuing with existing startup:", error);
+    }
+  };
 
   return (
     <div className="p-2">
-      <div className="flex space-x-3 mb-4">
+      <div className="flex space-x-3">
         <h1 className="text-2xl font-semibold">Projects</h1>
         <div className="flex items-center space-x-2">
           <>
@@ -622,6 +674,27 @@ const ProjectsPage: React.FC = () => {
         </div>
       ) : (
       <div className="bg-white shadow-md rounded-lg border border-gray-300">
+        <div className="flex items-center justify-end p-2 space-x-2">
+          <Label>Items per page:</Label>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[70px]">
+              <SelectValue placeholder="10" />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 50].map((number) => (
+                <SelectItem key={number} value={number.toString()}>
+                  {number}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -640,7 +713,7 @@ const ProjectsPage: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => {
+            {currentProjects.map((project) => {
               // Find the corresponding startup for the project
               const startup = startups.find((s) => s.name === project.name);
               return (
@@ -697,6 +770,41 @@ const ProjectsPage: React.FC = () => {
             })}
           </TableBody>
         </Table>
+        
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between p-4 border-t">
+          <div className="text-sm text-gray-500">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, projects.length)} of {projects.length} entries
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+              <Button
+                key={number}
+                variant={currentPage === number ? "default" : "outline"}
+                size="sm"
+                onClick={() => handlePageChange(number)}
+              >
+                {number}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
       )}
       {editedProject && (
@@ -709,39 +817,64 @@ const ProjectsPage: React.FC = () => {
               <DialogDescription>
                 Enter Startup Details to check Project Status
               </DialogDescription>
-              {(errorMessage || projectCountError) && (
-              <div>
-                {errorMessage && (
-                  <Label className="text-red-500 text-base mb-1">{errorMessage}</Label>
-                )}
-                {projectCountError && (
-                  <div className="text-gray-800 text-base mt-2">
-                  <Label className="flex text-lg">
-                    Previous Projects for {currentStartup?.name}
-                  </Label>
-                  {previousProjects.length === 0 ? (
-                    <Label className="flex text-sm mt-2">No previous projects found.</Label>
-                  ) : (
-                    previousProjects.map((project, index) => (
-                      <div key={project.id} className="flex items-center gap-2 mt-2">
-                        <Label className="flex text-sm">
-                          Project {index + 1} Status: {project.startupStatus || "Unknown"}
-                        </Label>
-                        <Link
-                          href={`/projects/${project.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-xs"
-                        >
-                          View Project
-                        </Link>
+              {(errorMessage || projectCountError || founderMatches.length > 0) && !isCreatingNewStartup && (
+                <div>
+                  {errorMessage && (
+                    <Label className="text-red-500 text-base mb-1">{errorMessage}</Label>
+                  )}
+                  {founderMatches.length > 0 && (
+                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <Label className="text-yellow-800 font-medium">
+                        Found {founderMatches.length} other startup(s) with the same founder name:
+                      </Label>
+                      <div className="mt-2 space-y-2">
+                        {founderMatches.map((startup, index) => (
+                          <div key={startup.id} className="flex items-center gap-2 text-sm text-yellow-700">
+                            <span>{index + 1}.</span>
+                            <span>Startup Name: {startup.name}</span>
+                            <span>•</span>
+                            <span>Phone: {startup.phoneNumber}</span>
+                            <Link
+                              href={`/projects?startupId=${startup.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs ml-2"
+                            >
+                              View Details
+                            </Link>
+                          </div>
+                        ))}
                       </div>
-                    ))
+                    </div>
+                  )}
+                  {projectCountError && (
+                    <div className="text-gray-800 text-base mt-2">
+                      <Label className="flex text-lg">
+                        Previous Projects for {currentStartup?.name}
+                      </Label>
+                      {previousProjects.length === 0 ? (
+                        <Label className="flex text-sm mt-2">No previous projects found.</Label>
+                      ) : (
+                        previousProjects.map((project, index) => (
+                          <div key={project.id} className="flex items-center gap-2 mt-2">
+                            <Label className="flex text-sm">
+                              Project {index + 1} Status: {project.startupStatus || "Unknown"}
+                            </Label>
+                            <Link
+                              href={`/projects/${project.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs"
+                            >
+                              View Project
+                            </Link>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   )}
                 </div>
-                )}
-              </div>
-            )}
+              )}
             </DialogHeader>
             {/*Form 1*/}
               <div className={`grid grid-cols-3 gap-4 py-2 ${isForm1Disabled ? 'opacity-60 pointer-events-none' : ''}`}>
@@ -804,10 +937,17 @@ const ProjectsPage: React.FC = () => {
                 </div>
                 </div>
                 <div className="text-right">
-                {errorMessage ? (
-                  <Button onClick={handleContinueWithExistingStartup}>
-                    Continue with Existing Startup
-                  </Button>
+                {(!isCreatingNewStartup && (errorMessage || showContinueWithExisting)) ? (
+                  <div className="flex justify-end items-center gap-2">
+                    <Button onClick={handleCreateNewStartupAndContinue} variant="outline">
+                      Add new startup and continue
+                    </Button>
+                    {showContinueWithExisting && (
+                      <Button onClick={handleContinueWithExistingStartup}>
+                        Continue with Existing Startup
+                      </Button>
+                    )}
+                  </div>
                 ) : isDuplicateCheckPassed && !isFormModified ? (
                   <div className="flex justify-end items-center gap-4">
                     <span className="text-green-600 text-sm">
@@ -825,7 +965,6 @@ const ProjectsPage: React.FC = () => {
                     <Button
                       onClick={handleCreateOrUpdateStartup}
                       disabled={!isFormValid || isCheckingDuplication || isDuplicateCheckPassed}
-                      
                     >
                       {isCheckingDuplication ? "Checking for duplication!" : "Check for duplication!"}
                     </Button>

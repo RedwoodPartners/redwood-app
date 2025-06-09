@@ -50,11 +50,27 @@ type DomainOption = {
 export const HISTORY_COLLECTON_ID = "67c82d7b000b564ff2e4";
 const DOMAIN_COLLECTION_ID = "681e348e0037680abed9";
 
+// Add validation function
+const validateCompanyName = (name: string, natureOfCompany: string): boolean => {
+  if (natureOfCompany === "PvtLtd") {
+    return name.toLowerCase().includes("pvt ltd") || name.toLowerCase().includes("private limited");
+  } else if (natureOfCompany === "LLP") {
+    return name.toLowerCase().includes("llp") || name.toLowerCase().includes("limited liability partnership");
+  }
+  return true;
+};
+
+// Add interface for field errors
+interface FieldErrors {
+  registeredCompanyName?: string;
+}
+
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }) => {
   const [startupData, setStartupData] = useState<StartupData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedData, setUpdatedData] = useState<StartupData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
   const { toast } = useToast();
@@ -325,6 +341,17 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
   const handleSaveClick = async () => {
     if (!updatedData || !startupId) return;
     if (isSubmitting) return;
+
+    // Validate company name before saving
+    const isCompanyNameValid = validateCompanyName(updatedData.registeredCompanyName, updatedData.natureOfCompany);
+    if (!isCompanyNameValid && (updatedData.natureOfCompany === "PvtLtd" || updatedData.natureOfCompany === "LLP")) {
+      setFieldErrors({
+        ...fieldErrors,
+        registeredCompanyName: "Company name not matching with nature of company selected"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setIsDirty(false);
     try {
@@ -385,7 +412,30 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
       if (key === "subDomain" || key === "registeredState" || key === "registeredCountry") {
         newValue = validateCharacterInput(value);
       }
-      setUpdatedData({ ...updatedData, [key]: newValue });
+      
+      const newData = { ...updatedData, [key]: newValue };
+      
+      // Clear field errors when either registeredCompanyName or natureOfCompany changes
+      if (key === "registeredCompanyName" || key === "natureOfCompany") {
+        const isValid = validateCompanyName(
+          key === "registeredCompanyName" ? newValue : newData.registeredCompanyName,
+          key === "natureOfCompany" ? newValue : newData.natureOfCompany
+        );
+        
+        if (!isValid && (newData.natureOfCompany === "PvtLtd" || newData.natureOfCompany === "LLP")) {
+          setFieldErrors({
+            ...fieldErrors,
+            registeredCompanyName: "Company name not matching with nature of company selected"
+          });
+        } else {
+          setFieldErrors({
+            ...fieldErrors,
+            registeredCompanyName: undefined
+          });
+        }
+      }
+      
+      setUpdatedData(newData);
     }
   };
   
@@ -766,18 +816,25 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ startupId, setIsDirty }
                       min="0"
                     />
                   ) : ["companyStage", "businessType", "natureOfCompany", "domain", "incubated", "patentsCertifications"].includes(key) ? (
-                    renderDropdown(key)
+                    <div className="flex flex-col">
+                      {renderDropdown(key)}
+                    </div>
                   ) : (
-                    <Input
-                      disabled={!isEditing}
-                      value={updatedData?.[key] || ""}
-                      onChange={(e) => handleChange(key, e.target.value)}
-                      onKeyPress={(e) => {
-                        if (["subDomain", "registeredState", "registeredCountry"].includes(key) && !/[a-zA-Z\s]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
+                    <div className="flex flex-col">
+                      <Input
+                        disabled={!isEditing}
+                        value={updatedData?.[key] || ""}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        onKeyPress={(e) => {
+                          if (["subDomain", "registeredState", "registeredCountry"].includes(key) && !/[a-zA-Z\s]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                      />
+                      {key === "registeredCompanyName" && fieldErrors.registeredCompanyName && (
+                        <span className="text-red-500 text-sm mt-1">{fieldErrors.registeredCompanyName}</span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
