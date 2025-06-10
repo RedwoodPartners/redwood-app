@@ -226,7 +226,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
         
         ) : (
           <span className="text-black sm:text-base">
-            {formatDate(projectData.startDate)} - {formatDate(projectData.projectEndDate)}
+            {projectData.startDate ? formatDate(projectData.startDate) : "Start Date"} - {projectData.projectEndDate ? formatDate(projectData.projectEndDate) : "End Date"}
           </span>
         )}
         {projectData.receivedDate && (
@@ -234,11 +234,9 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             {formatDate(projectData.receivedDate)}
           </span>
         )}
-        {projectData.services && (
-          <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-            {projectData.services}
+        <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+            {projectData.services || "Services"}
           </span>
-        )}
         {/* Funding Need Field */}
         {isEditing ? (
           <div>
@@ -260,7 +258,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             </Select>
           </div>
         ) : (
-          <span className="text-black sm:text-base">{projectData?.appliedFor}</span>
+          <span className="text-black sm:text-base">{projectData?.appliedFor || "Funding Need"}</span>
         )}
 
         {/* Editable Stage */}
@@ -292,12 +290,10 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             </div>
           ) : (
             <>
-              {projectData.stage && (
-                <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+              <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
                   <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
-                  {projectData.stage}
+                  {projectData.stage || "TANSIM Stage"}
                 </span>
-              )}
             </>
           )
         )}
@@ -329,13 +325,11 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           </div>
         ) : (
           <>
-          {projectData.startupStatus && (
-            <span
+          <span
               className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}
             >
-              {projectData.startupStatus}
+              {projectData.startupStatus || "Project Status"}
             </span>
-          )}
           </>
         )}
 
