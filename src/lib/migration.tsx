@@ -155,19 +155,48 @@ export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) =
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="min-w-[200px]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Migration Status</AlertDialogTitle>
-            <AlertDialogDescription>
-              <div className="min-h-[50px] p-2 bg-gray-100 rounded font-mono text-sm whitespace-pre-wrap">
-                {progress > 0 && <div className="mb-4">Progress: {progress}%</div>}
-                {latestLog}
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              Migration Status
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              {/* Progress Section */}
+              {progress > 0 && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Migration Progress</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-300 ease-in-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Log Output */}
+              <div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  System Logs
+                </div>
+                <div className="min-h-[200px] max-h-[300px] overflow-y-auto p-4 bg-gray-900 rounded-md font-mono text-sm text-gray-200 whitespace-pre-wrap">
+                  {latestLog}
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setOpen(false)} disabled={loading}>
-              OK
+            <AlertDialogAction 
+              onClick={() => setOpen(false)} 
+              disabled={loading}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
+            >
+              {loading ? 'Migration in Progress...' : 'Close'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
