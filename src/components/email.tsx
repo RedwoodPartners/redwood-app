@@ -22,6 +22,54 @@ const SendMessage: React.FC = () => {
   const [messages, setMessages] = useState<Models.Document[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: Set<string> }>({});
 
+  // helper function for date formatting
+  const formatMessageDate = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  };
+
+  // helper function to group messages by date
+  const groupMessagesByDate = (messages: Models.Document[]) => {
+    const groups: { [key: string]: Models.Document[] } = {};
+    
+    messages.forEach(message => {
+      const date = new Date(message.timestamp);
+      const dateKey = date.toDateString();
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(message);
+    });
+    
+    return groups;
+  };
+
+  // message container ref for scrolling
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Update useEffect to scroll to bottom on new messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   useEffect(() => {
     account.get().then(
       (user) => {
@@ -155,7 +203,7 @@ const SendMessage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#f0f2f5] -mt-7">
+    <div className="flex h-[calc(100vh-0.1rem)] bg-[#f0f2f5] -mt-7">
       {/* Left sidebar - Contacts */}
       <div className="w-[30%] border-r border-gray-200 bg-white flex flex-col">
         {/* Header */}
@@ -229,32 +277,48 @@ const SendMessage: React.FC = () => {
             </div>
             {/* Messages area */}
             <div 
-              className="flex-1 overflow-y-auto p-4 space-y-2"
+              className="flex-1 overflow-y-auto p-4"
               style={{
                 backgroundImage: `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABoSURBVDiNY/z//z8DNQETlKYZGBlJN5CRkZGBiYkJQyybPgYyMjIyMDMzYxVnxGYgIyMjAzMzM1SQeC9TNfCpGvjkBzIy4M1DBAMZqZr5mJiYGP7//09YITF5+D8D6eUhIyMjVcsUYgAAUdqVHx8zU9QAAAAASUVORK5CYII=")`,
                 backgroundRepeat: 'repeat'
               }}
               onScroll={markMessagesAsRead}
             >
-              {messages.map((message) => (
-                <div
-                  key={message.$id}
-                  className={`flex ${message.senderEmail === currentUserEmail ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[65%] break-words rounded-lg px-4 py-2 ${
-                      message.senderEmail === currentUserEmail
-                        ? 'bg-[#dcf8c6]'
-                        : 'bg-white'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <p className="text-[11px] text-gray-500 text-right mt-1">
-                      {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+              <div className="space-y-4">
+                {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+                  <div key={date} className="space-y-2">
+                    <div className="flex justify-center">
+                      <div className="bg-[#E1F2D7] px-3 py-1 rounded-lg text-sm text-gray-600 shadow-sm">
+                        {formatMessageDate(new Date(date))}
+                      </div>
+                    </div>
+                    {dateMessages.map((message) => (
+                      <div
+                        key={message.$id}
+                        className={`flex ${message.senderEmail === currentUserEmail ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[65%] break-words rounded-lg px-4 py-2 ${
+                            message.senderEmail === currentUserEmail
+                              ? 'bg-[#dcf8c6]'
+                              : 'bg-white'
+                          }`}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                          <p className="text-[11px] text-gray-500 text-right mt-1">
+                            {new Date(message.timestamp).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message input */}
