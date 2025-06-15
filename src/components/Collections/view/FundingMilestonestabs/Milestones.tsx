@@ -163,8 +163,8 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
 
   useEffect(() => {
     if (editingRow) {
-      const { trancheType, amount, status } = editingRow;
-      const requiredFieldsFilled = !!trancheType && !!amount && !!status;
+      const { trancheType, amount } = editingRow;
+      const requiredFieldsFilled = !!trancheType && !!amount;
       setIsSaveButtonDisabled(!requiredFieldsFilled);
     } else {
       setIsSaveButtonDisabled(true);
@@ -481,7 +481,7 @@ const TranchesMilestones: React.FC<TranchesMilestones> = ({ startupId, setIsDirt
                 }} />  
               </div>
               <div>
-                <Label htmlFor="status">Status<span className="text-red-500">*</span></Label>
+                <Label htmlFor="status">Status</Label>
                 <Select
                   value={editingRow?.status || ""}
                   onValueChange={(value) => {

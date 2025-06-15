@@ -117,15 +117,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
     if (!selectedInvestment) return;
 
     const modeToSave = selectedInvestment.mode === "Other" ? otherMode : selectedInvestment.mode;
-    
-    if (!selectedInvestment.date) {
-      toast({
-        title: "Error",
-        description: "Investment date is required.",
-        variant: "destructive",
-      });
-      return;
-    }
+
     if (!selectedInvestment.mode) {
       toast({
         title: "Error",
@@ -466,7 +458,7 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                   </div>
                 )}
               <div>
-                <Label>Investment Date<span className="text-red-500">*</span></Label>
+                <Label>Investment Date</Label>
                 <Input
                   type="date"
                   max={receivedDate || new Date().toISOString().split('T')[0]}
@@ -477,9 +469,8 @@ const FundRaisedSoFar: React.FC<FundRaisedSoFarProps> = ({ startupId, setIsDirty
                       date: e.target.value,
                     } as Investment);
                     setHasUnsavedChanges(true);
-                  }}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                />
+                  }} 
+                  />
               </div>
               <div>
                 <Label>Investment Amount (INR)<span className="text-red-500">*</span></Label>

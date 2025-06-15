@@ -85,9 +85,7 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
     // Check if all required fields are filled
     const requiredFieldsFilled =
       filingType &&
-      (filingType === "Monthly" ? newCompliance.date : quarter) &&
-      newCompliance.gstr1 &&
-      newCompliance.gst3b;
+      (filingType === "Monthly" ? newCompliance.date : quarter);
     setIsSaveButtonDisabled(!requiredFieldsFilled);
   }, [filingType, quarter, newCompliance]);
 
@@ -302,16 +300,16 @@ const GstrCompliance: React.FC<GstrComplianceProps> = ({ startupId, setIsDirty }
               </div>
             )}
             <div>
-              <Label htmlFor="gstr1" className="text-right">GST R1<span className="text-red-500">*</span></Label>
+              <Label htmlFor="gstr1" className="text-right">GST R1</Label>
               <Input
                 id="gstr1"
-                value={newCompliance.gstr1}
+                value={newCompliance.gstr1} 
                 onChange={(e) => handleInputChange(e, 'gstr1')}
                 className="col-span-3"
               />
             </div>
             <div>
-              <Label htmlFor="gst3b" className="text-right">GST 3B<span className="text-red-500">*</span></Label>
+              <Label htmlFor="gst3b" className="text-right">GST 3B</Label>
               <Input
                 id="gst3b"
                 value={newCompliance.gst3b}

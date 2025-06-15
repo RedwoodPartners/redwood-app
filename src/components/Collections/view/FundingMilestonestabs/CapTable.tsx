@@ -175,10 +175,10 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   useEffect(() => {
     // Check if required fields are filled
     if (editingRow) {
-      const { shareholderName, type, role, shares, capitalStructure } =
+      const { shareholderName, type, role, capitalStructure } =
         editingRow;
       const requiredFieldsFilled =
-        !!shareholderName && !!type && !!role && !!shares && !!capitalStructure;
+        !!shareholderName && !!type && !!role && !!capitalStructure;
       setIsSaveButtonDisabled(!requiredFieldsFilled);
     } else {
       setIsSaveButtonDisabled(true);
@@ -563,7 +563,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
                 }} />  
               </div>
               <div>
-                <Label htmlFor="shares">No of Shares<span className="text-red-500">*</span></Label>
+                <Label htmlFor="shares">No of Shares</Label>
                 <Input id="shares" type="number" placeholder="No of Shares" value={editingRow?.shares || ""} 
                 onChange={(e) => {
                   setEditingRow({ ...editingRow, shares: e.target.value });

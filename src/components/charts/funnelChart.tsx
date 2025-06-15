@@ -27,34 +27,45 @@ interface StatusCount {
 const StartupFunnelChart = () => {
   const [chartData, setChartData] = useState<StatusCount[]>([]);
 
+  const fetchStatusCounts = async () => {
+    try {
+      const response = await databases.listDocuments<Models.Document>(
+        STAGING_DATABASE_ID,
+        PROJECTS_ID
+      );
+      const projects = response.documents;
+
+      // Count each status
+      const counts = STATUSES.reduce((acc, status) => {
+        acc[status] = projects.filter(p => p.startupStatus === status).length;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Format for Highcharts
+      const formattedData = STATUSES.map(status => ({
+        name: status,
+        y: counts[status] || 0
+      }));
+
+      setChartData(formattedData);
+    } catch (error) {
+      console.error("Error fetching status counts:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStatusCounts = async () => {
-      try {
-        const response = await databases.listDocuments<Models.Document>(
-          STAGING_DATABASE_ID,
-          PROJECTS_ID
-        );
-        const projects = response.documents;
+    fetchStatusCounts();
 
-        // Count each status
-        const counts = STATUSES.reduce((acc, status) => {
-          acc[status] = projects.filter(p => p.startupStatus === status).length;
-          return acc;
-        }, {} as Record<string, number>);
-
-        // Format for Highcharts
-        const formattedData = STATUSES.map(status => ({
-          name: status,
-          y: counts[status] || 0
-        }));
-
-        setChartData(formattedData);
-      } catch (error) {
-        console.error("Error fetching status counts:", error);
-      }
+    // Listen for project data changes
+    const handleProjectDataChange = () => {
+      fetchStatusCounts();
     };
 
-    fetchStatusCounts();
+    window.addEventListener('projectDataChanged', handleProjectDataChange);
+
+    return () => {
+      window.removeEventListener('projectDataChanged', handleProjectDataChange);
+    };
   }, []);
 
   const chartOptions: Highcharts.Options = {
