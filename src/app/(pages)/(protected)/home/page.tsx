@@ -18,6 +18,8 @@ import StartupStats from "@/components/charts/startupStats";
 import { Domain } from "@/components/charts/domains";
 import { AreaChartPortfolio } from "@/components/charts/areaChart";
 import { ServicesChart } from "@/components/charts/services";
+import { client, databases } from "@/lib/utils";
+import { STAGING_DATABASE_ID, STARTUP_ID, PROJECTS_ID } from "@/appwrite/config";
 
 // Dynamically import StartupFunnelChart with SSR disabled
 import dynamic from "next/dynamic";
@@ -42,6 +44,60 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Set up real-time subscriptions
+  useEffect(() => {
+    let isSubscribed = true;
+    let subscriptions: Array<(() => void) | null> = [];
+
+    const setupSubscriptions = async () => {
+      try {
+        const unsubscribeStartups = client.subscribe(
+          `databases.${STAGING_DATABASE_ID}.collections.${STARTUP_ID}.documents`,
+          (response: any) => {
+            if (!isSubscribed) return;
+            window.dispatchEvent(new CustomEvent('startupDataChanged'));
+          }
+        );
+        subscriptions.push(unsubscribeStartups);
+
+        const unsubscribeProjects = client.subscribe(
+          `databases.${STAGING_DATABASE_ID}.collections.${PROJECTS_ID}.documents`,
+          (response: any) => {
+            if (!isSubscribed) return;
+            window.dispatchEvent(new CustomEvent('projectDataChanged'));
+          }
+        );
+        subscriptions.push(unsubscribeProjects);
+
+        const unsubscribeFundRaised = client.subscribe(
+          `databases.${STAGING_DATABASE_ID}.collections.6731e2fb000d9580025f.documents`,
+          (response: any) => {
+            if (!isSubscribed) return;
+            window.dispatchEvent(new CustomEvent('fundRaisedDataChanged'));
+          }
+        );
+        subscriptions.push(unsubscribeFundRaised);
+      } catch (error) {
+        console.error("Error setting up subscriptions:", error);
+      }
+    };
+
+    setupSubscriptions();
+
+    return () => {
+      isSubscribed = false;
+      subscriptions.forEach((unsubscribe) => {
+        if (unsubscribe) {
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.error("Error unsubscribing:", error);
+          }
+        }
+      });
+    };
+  }, []);
+
   return (
     <>
       <AlertDialog open={showWelcomeAlert} onOpenChange={setShowWelcomeAlert}>
@@ -63,9 +119,6 @@ const Dashboard = () => {
             <AlertDialogCancel onClick={() => setShowWelcomeAlert(false)}>
               Got it
             </AlertDialogCancel>
-            {/*<AlertDialogAction onClick={() => setShowWelcomeAlert(false)}>
-              Close
-            </AlertDialogAction>*/}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -76,7 +129,6 @@ const Dashboard = () => {
         <ServicesChart />
         <Domain />
         <NoStartups />
-        {/*<LineChartPortfolio />*/}
         <AreaChartPortfolio />
         <NoUsers />
       </div>

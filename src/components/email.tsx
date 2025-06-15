@@ -21,6 +21,7 @@ const SendMessage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [messages, setMessages] = useState<Models.Document[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: Set<string> }>({});
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // helper function for date formatting
   const formatMessageDate = (date: Date) => {
@@ -92,35 +93,57 @@ const SendMessage: React.FC = () => {
       } catch (err) {
         console.error("Error fetching users:", err);
         setError("Failed to fetch users.");
+      } finally {
+        setIsInitialLoading(false);
       }
     };
 
     fetchUsers();
 
-    const unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
-      (response: RealtimeResponseEvent<Models.Document>) => {
-        if (response.events.includes("databases.*.collections.*.documents.*.create")) {
-          const newMessage = response.payload;
-          if (newMessage.receiverEmail === currentUserEmail) {
-            setUnreadMessages((prev) => {
-              const newUnreadMessages = { ...prev };
-              if (!newUnreadMessages[newMessage.senderEmail]) {
-                newUnreadMessages[newMessage.senderEmail] = new Set();
+    let isSubscribed = true;
+    let unsubscribe: (() => void) | null = null;
+
+    const setupSubscription = async () => {
+      try {
+        unsubscribe = client.subscribe(
+          `databases.${DATABASE_ID}.collections.${MESSAGES_COLLECTION_ID}.documents`,
+          (response: RealtimeResponseEvent<Models.Document>) => {
+            if (!isSubscribed) return;
+            
+            if (response.events.includes("databases.*.collections.*.documents.*.create")) {
+              const newMessage = response.payload;
+              if (newMessage.receiverEmail === currentUserEmail) {
+                setUnreadMessages((prev) => {
+                  const newUnreadMessages = { ...prev };
+                  if (!newUnreadMessages[newMessage.senderEmail]) {
+                    newUnreadMessages[newMessage.senderEmail] = new Set();
+                  }
+                  newUnreadMessages[newMessage.senderEmail].add(newMessage.$id);
+                  return newUnreadMessages;
+                });
+                if (selectedReceiver === newMessage.senderEmail) {
+                  setMessages((prevMessages) => [...prevMessages, newMessage]);
+                }
               }
-              newUnreadMessages[newMessage.senderEmail].add(newMessage.$id);
-              return newUnreadMessages;
-            });
-            if (selectedReceiver === newMessage.senderEmail) {
-              setMessages((prevMessages) => [...prevMessages, newMessage]);
             }
           }
-        }
+        );
+      } catch (error) {
+        console.error("Error setting up subscription:", error);
       }
-    );
+    };
+
+    setupSubscription();
 
     return () => {
-      unsubscribe();
+      isSubscribed = false;
+      if (unsubscribe) {
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing:", error);
+        }
+      }
     };
   }, [currentUserEmail, selectedReceiver]);
 
@@ -212,7 +235,7 @@ const SendMessage: React.FC = () => {
             <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-white">
 
             </div>
-            <span className="font-medium">Chats</span>
+            <span className="font-medium">Team Chats</span>
           </div>
         </div>
 
@@ -229,30 +252,37 @@ const SendMessage: React.FC = () => {
 
         {/* Contacts list */}
         <div className="flex-1 overflow-y-auto">
-          {users.map((user) => (
-            <div
-              key={user.$id}
-              onClick={() => handleSelectUser(user.email)}
-              className={`flex items-center space-x-3 px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] relative ${
-                selectedReceiver === user.email ? 'bg-[#f0f2f5]' : ''
-              }`}
-            >
-              <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xl font-bold text-white">
-                {getAvatarChar(user.name, user.email)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium truncate">{user.name}</h3>
-                </div>
-                <p className="text-sm text-gray-500 truncate">{user.email}</p>
-              </div>
-              {unreadMessages[user.email] && unreadMessages[user.email].size > 0 && (
-                <span className="w-5 h-5 bg-[#25D366] text-white rounded-full flex items-center justify-center text-xs">
-                  {unreadMessages[user.email].size}
-                </span>
-              )}
+          {isInitialLoading ? (
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <div className="w-8 h-8 border-4 border-[#25D366] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-gray-500">Loading users...</p>
             </div>
-          ))}
+          ) : (
+            users.map((user) => (
+              <div
+                key={user.$id}
+                onClick={() => handleSelectUser(user.email)}
+                className={`flex items-center space-x-3 px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] relative ${
+                  selectedReceiver === user.email ? 'bg-[#f0f2f5]' : ''
+                }`}
+              >
+                <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xl font-bold text-white">
+                  {getAvatarChar(user.name, user.email)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium truncate">{user.name}</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                </div>
+                {unreadMessages[user.email] && unreadMessages[user.email].size > 0 && (
+                  <span className="w-5 h-5 bg-[#25D366] text-white rounded-full flex items-center justify-center text-xs">
+                    {unreadMessages[user.email].size}
+                  </span>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
