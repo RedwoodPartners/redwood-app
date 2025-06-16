@@ -49,6 +49,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSaved, setShowSaved] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const[isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -67,8 +68,11 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const isStartupRoute = useIsStartupRoute();
 
 
-  const fetchAllTables = useCallback(async () => {
+  const fetchAllTables = useCallback(async (isInitialLoad = false) => {
     try {
+      if (isInitialLoad) {
+        setIsInitialLoading(true);
+      }
       const databaseId = isStartupRoute ? STARTUP_DATABASE : STAGING_DATABASE_ID;
       const collectionId = isStartupRoute ? CAP_TABLE_COUNT_ID : CAP_TABLE_COUNT_ID;
       const tablesResponse = await databases.listDocuments(
@@ -112,11 +116,15 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
       }
     } catch (error) {
       console.error("Error fetching tables:", error);
+    } finally {
+      if (isInitialLoad) {
+        setIsInitialLoading(false);
+      }
     }
   }, [startupId, activeTableId, isStartupRoute]);
 
   useEffect(() => {
-    fetchAllTables();
+    fetchAllTables(true);
   }, [fetchAllTables]);
 
   useEffect(() => {
@@ -190,7 +198,6 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
     setIsSubmitting(true);
     
     try {
-
       const table = tables.find(t => t.tableId === activeTableId);
       if (!table) return;
 
@@ -234,7 +241,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
         });
       }
 
-      fetchAllTables();
+      fetchAllTables(false);
       setIsDialogOpen(false);
       setEditingRow(null);
       setError(null);
@@ -251,7 +258,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
   const handleDeleteRow = async (id: string) => {
     try {
       await databases.deleteDocument(STAGING_DATABASE_ID, CAP_TABLE_ID, id);
-      fetchAllTables();
+      fetchAllTables(false);
       setIsDialogOpen(false);
       setEditingRow(null);
       setHasUnsavedChanges(false);
@@ -344,7 +351,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
         fileId: uploadResponse.$id,
         fileName: file.name,
       });
-      fetchAllTables();
+      fetchAllTables(false);
       toast({
         title: "Document upload successful",
         description: "Your document has been uploaded successfully!",
@@ -366,7 +373,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
         fileId: null,
         fileName: null,
       });
-      fetchAllTables();
+      fetchAllTables(false);
       toast({
         title: "File deleted",
         description: "The file has been successfully deleted.",
@@ -390,7 +397,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
         fileId: uploadResponse.$id,
         fileName: file.name,
       });
-      fetchAllTables();
+      fetchAllTables(false);
       toast({
         title: "Document upload successful",
         description: "Your document has been uploaded successfully!",
@@ -412,7 +419,7 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
         fileId: null,
         fileName: null,
       });
-      fetchAllTables();
+      fetchAllTables(false);
       toast({
         title: "File deleted",
         description: "The file has been successfully deleted.",
@@ -638,7 +645,18 @@ const CapTable: React.FC<CapTableProps> = ({ startupId, setIsDirty }) => {
           </form>
         </DialogContent>
       </Dialog>
-      {activeTable && (
+      {isInitialLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      ) : !activeTable ? (
+        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border border-gray-300">
+          <p className="text-lg text-gray-600 mb-4">No Capital Tables found</p>
+          {!isStartupRoute && (
+            <ButtonWithIcon label="Add New Table" onClick={handleAddNewTable} />
+          )}
+        </div>
+      ) : (
       <div className="bg-white p-1 shadow-md rounded-lg border border-gray-300">
       <div onClick={() => {
           setEditingRow({});
