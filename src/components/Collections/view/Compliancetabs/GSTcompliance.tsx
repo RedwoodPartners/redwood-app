@@ -205,7 +205,7 @@ const GstCompliance: React.FC<GstComplianceProps> = ({ startupId, setIsDirty }) 
       Array.isArray(formData.yesNo) &&
       formData.yesNo.length > 0
     ) {
-      const index = yesNoValue === "yes" ? 0 : 1;
+      const index = yesNoValue === "Yes" ? 0 : 1;
       return formData.yesNo[index] || ""; // Return corresponding description
     }
     return "";

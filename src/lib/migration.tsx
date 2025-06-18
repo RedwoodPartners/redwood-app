@@ -150,7 +150,7 @@ export const MigrationButton: React.FC<MigrationButtonProps> = ({ startupId }) =
 
   return (
     <div>
-      <Button onClick={migrateAllCollections} disabled={loading}>
+      <Button variant={"outline"} onClick={migrateAllCollections} disabled={loading}>
         {loading ? 'Migrating...' : 'Data Migration'}
       </Button>
 

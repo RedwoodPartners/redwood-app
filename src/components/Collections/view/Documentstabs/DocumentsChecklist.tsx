@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import jsPDF from 'jspdf';
+import ButtonWithIcon from "@/lib/addButton";
 
 export const DOC_CHECKLIST_ID = "673c200b000a415bbbad";
 const BUCKET_ID = "66eb0cfc000e821db4d9";
@@ -78,6 +79,11 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSavingCredentials, setIsSavingCredentials] = useState(false);
+
+  // required field validation function
+  const isFormValid = useMemo(() => {
+    return newDoc.docName.trim() !== "" && newDoc.docType.trim() !== "";
+  }, [newDoc.docName, newDoc.docType]);
 
   useEffect(() => {
     // Fetch current user on mount
@@ -621,6 +627,36 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
            docName === "Income Tax Login and Password";
   };
 
+  const closeAddDialog = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
+      if (confirmClose) {
+        setIsAddDialogOpen(false);
+        setHasUnsavedChanges(false);
+        setNewDoc({
+          docName: "",
+          docType: "",
+          status: "",
+          description: "",
+          financialYear: "",
+        });
+        setNewDocFile(null);
+      }
+    } else {
+      setIsAddDialogOpen(false);
+      setNewDoc({
+        docName: "",
+        docType: "",
+        status: "",
+        description: "",
+        financialYear: "",
+      });
+      setNewDocFile(null);
+    }
+  }, [hasUnsavedChanges]);
+
   return (
     <div>
       <div className="flex justify-between items-center">
@@ -630,6 +666,7 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
             <span className="text-sm text-gray-500 border border-gray-50 p-1">generating checklist..</span>
           )}
         </div>
+        <ButtonWithIcon label="Add Custom Document" onClick={() => setIsAddDialogOpen(true)} />
       </div>
       <div className="p-2 bg-white shadow-md rounded-lg border border-gray-300">
         <Table>
@@ -999,6 +1036,119 @@ const DocumentChecklist: React.FC<DocChecklistProps> = ({ startupId, setIsDirty 
             <Button onClick={handleDeleteDocument} className="bg-white text-black border border-black hover:bg-neutral-200">Delete</Button>
             <Button onClick={handleEditDocument} disabled={isSavingEdit}>
               {isSavingEdit ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Custom Document Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={closeAddDialog}>
+        <DialogContent className="w-full max-w-5xl p-6">
+          <DialogHeader>
+            <DialogTitle>Add Custom Document</DialogTitle>
+            <DialogDescription>
+              Add a new custom document to the checklist.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-4 mt-4">
+            <div>
+              <Label>
+                Document Name
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={newDoc.docName}
+                onChange={(e) => {
+                  setNewDoc({ ...newDoc, docName: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Enter document name"
+              />
+            </div>
+            <div>
+              <Label>
+                Document Type
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={newDoc.docType}
+                onChange={(e) => {
+                  setNewDoc({ ...newDoc, docType: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Enter document type"
+              />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select
+                value={newDoc.status}
+                onValueChange={(value) => {
+                  setNewDoc({ ...newDoc, status: value });
+                  setHasUnsavedChanges(true);
+                }}
+              >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Received">Received</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Financial Year</Label>
+              <Select
+                value={newDoc.financialYear}
+                onValueChange={(value) => {
+                  setNewDoc({ ...newDoc, financialYear: value });
+                  setHasUnsavedChanges(true);
+                }}
+              >
+                <SelectTrigger className="w-full p-2 text-sm border rounded">
+                  <SelectValue placeholder="Select Financial Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2020-21">2020-21</SelectItem>
+                  <SelectItem value="2021-22">2021-22</SelectItem>
+                  <SelectItem value="2022-23">2022-23</SelectItem>
+                  <SelectItem value="2023-24">2023-24</SelectItem>
+                  <SelectItem value="2024-25">2024-25</SelectItem>
+                  <SelectItem value="2025-26">2025-26</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label>Description</Label>
+              <Textarea
+                value={newDoc.description}
+                onChange={(e) => {
+                  setNewDoc({ ...newDoc, description: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Enter document description"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label>Document File</Label>
+              <Input
+                type="file"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setNewDocFile(e.target.files[0]);
+                    setHasUnsavedChanges(true);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleSaveDocument} 
+              disabled={isSubmitting || !isFormValid}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
