@@ -282,8 +282,8 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
 
   return (
     <div className="space-y-4 w-full">
-      <div className="grid grid-cols-4 gap-4 w-full">
-        <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-4 w-full">
+        <div>
           <Label htmlFor="customerName">Customer Name<span className="text-red-500">*</span></Label>
           <Input
             id="customerName"
@@ -292,7 +292,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             onChange={(e) => handleChange("customerName", e.target.value)}
           />
         </div>
-        <div className="space-y-2">
+        <div>
           <Label htmlFor="designation">Designation<span className="text-red-500">*</span></Label>
           <Input
             id="designation"
@@ -301,7 +301,16 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
             onChange={(e) => handleChange("designation", e.target.value)}
           />
         </div>
-        <div className="space-y-2">
+        <div>
+          <Label htmlFor="nameOfInstitution">Name of Institution</Label>
+          <Input
+            id="nameOfInstitution"
+            placeholder="Enter institution name"
+            value={testimonial.nameOfInstitution || ""}
+            onChange={(e) => handleChange("nameOfInstitution", e.target.value)}
+          />
+        </div>
+        <div>
           <Label htmlFor="phone">Phone<span className="text-red-500">*</span></Label>
           <Input
             type="text"
@@ -318,7 +327,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({
           />
           {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
         </div>
-        <div className="space-y-2">
+        <div>
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -485,6 +494,7 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
           <TableRow>
             <TableHead>Customer Name</TableHead>
             <TableHead>Designation</TableHead>
+            <TableHead>Name of Institution</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead>Email</TableHead>
             <TableHead></TableHead>
@@ -499,6 +509,7 @@ const TestimonialsTable: React.FC<TestimonialsTableProps> = ({ testimonials, onE
               >
                 <TableCell>{testimonial.customerName}</TableCell>
                 <TableCell>{testimonial.designation}</TableCell>
+                <TableCell>{testimonial.nameOfInstitution}</TableCell>
                 <TableCell>{testimonial.phone}</TableCell>
                 <TableCell>{testimonial.email}</TableCell>
                 <TableCell>

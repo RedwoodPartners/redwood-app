@@ -180,12 +180,12 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between p-2 mx-auto rounded-xl border border-gray-300 space-y-4 sm:space-y-0">
-      <div className="flex flex-wrap items-center space-x-4 space-y-2 sm:space-y-0">
+    <div className="flex flex-wrap items-center justify-between p-3 mx-auto rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 space-y-4 sm:space-y-0">
+      <div className="flex items-center gap-3 flex-nowrap overflow-x-auto">
       {isEditing ? (
-          <div className="flex flex-row gap-2">
-          <div className="flex flex-col gap-2">
-            <Label>Start Date</Label>
+          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs font-medium text-gray-700">Start Date</Label>
             <input
               type="date"
               value={updatedStartDate}
@@ -202,11 +202,11 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
                   console.log("Start date must be after the received date.");
                 }
               }}
-              className="border rounded px-2 py-1 text-sm"
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all w-32"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label>End Date</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs font-medium text-gray-700">End Date</Label>
             <input
               type="date"
               value={updatedEndDate}
@@ -219,34 +219,34 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
                   console.log("End date must be after the start date.");
                 }
               }}
-              className="border rounded px-2 py-1 text-sm"
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all w-32"
             />
           </div>
         </div>
         
         ) : (
-          <span className="text-black sm:text-base">
+          <span className="text-gray-700 font-medium sm:text-base whitespace-nowrap">
             {projectData.startDate ? formatDate(projectData.startDate) : "Start Date"} - {projectData.projectEndDate ? formatDate(projectData.projectEndDate) : "End Date"}
           </span>
         )}
         {projectData.receivedDate && (
-          <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+          <span className="text-gray-700 font-medium bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-xs sm:text-sm shadow-sm whitespace-nowrap">
             {formatDate(projectData.receivedDate)}
           </span>
         )}
-        <span className="text-black font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
+        <span className="text-gray-700 font-medium bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-xs sm:text-sm shadow-sm whitespace-nowrap">
             {projectData.services || "Services"}
           </span>
         {/* Funding Need Field */}
         {isEditing ? (
-          <div>
-            <Label htmlFor="appliedFor">Funding Need</Label>
+          <div className="w-32 flex-shrink-0">
+            <Label htmlFor="appliedFor" className="text-xs font-medium text-gray-700">Funding Need</Label>
             <Select
               value={updatedAppliedFor}
               onValueChange={setUpdatedAppliedFor}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an option" />
+              <SelectTrigger className="w-full border-gray-200 focus:ring-2 focus:ring-blue-500 h-8">
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
                 {["Equity", "Grant", "Debt"].map((option) => (
@@ -258,17 +258,17 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             </Select>
           </div>
         ) : (
-          <span className="text-black sm:text-base">{projectData?.appliedFor || "Funding Need"}</span>
+          <span className="text-gray-700 font-medium bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-xs sm:text-sm shadow-sm whitespace-nowrap">{projectData?.appliedFor || "Funding Need"}</span>
         )}
 
         {/* Editable Stage */}
         {projectData.projectTemplate === 'TANSIM' && (
           isEditing ? (
-            <div className="w-36">
-              <Label>TANSIM Stage</Label>
+            <div className="w-32 flex-shrink-0">
+              <Label className="text-xs font-medium text-gray-700">TANSIM Stage</Label>
               <Select value={updatedStage} onValueChange={setUpdatedStage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an option" />
+                <SelectTrigger className="border-gray-200 focus:ring-2 focus:ring-blue-500 h-8">
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {[
@@ -290,8 +290,8 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
             </div>
           ) : (
             <>
-              <span className="text-black flex gap-2 font-medium border border-gray-300 px-3 py-1 rounded-full text-xs sm:text-sm">
-                  <div className="bg-red-500 rounded-full text-sm h-3 w-3 mt-1" />
+              <span className="text-gray-700 flex items-center gap-2 font-medium bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-xs sm:text-sm shadow-sm whitespace-nowrap">
+                  <div className="bg-red-500 rounded-full h-2.5 w-2.5" />
                   {projectData.stage || "TANSIM Stage"}
                 </span>
             </>
@@ -300,11 +300,11 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
 
         {/* Editable Startup Status */}
         {isEditing ? (
-          <div className="w-36">
-            <Label>Project Status</Label>
+          <div className="w-32 flex-shrink-0">
+            <Label className="text-xs font-medium text-gray-700">Project Status</Label>
           <Select value={updatedStartupStatus} onValueChange={setUpdatedStartupStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
+            <SelectTrigger className="border-gray-200 focus:ring-2 focus:ring-blue-500 h-8">
+              <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
               {[
@@ -326,7 +326,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
         ) : (
           <>
           <span
-              className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm`}
+              className={`border ${getBorderColor()} font-medium px-3 py-1 rounded-full text-xs sm:text-sm shadow-sm whitespace-nowrap`}
             >
               {projectData.startupStatus || "Project Status"}
             </span>
@@ -338,6 +338,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           <Button
             onClick={handleUpdateClick}
             variant={"outline"}
+            className="border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all h-8 px-3 flex-shrink-0"
           >
             Update
           </Button>
@@ -345,6 +346,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           <Button
             onClick={handleSaveClick}
             variant={"outline"}
+            className="border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all h-8 px-3 flex-shrink-0"
           >
             Save
           </Button>
@@ -353,16 +355,6 @@ const InfoBox: React.FC<InfoBoxProps> = ({ startupId, projectId }) => {
           <MigrationButton startupId={startupId} />
         )}
       </div>
-      
-
-      {/* Right Section */}
-      {/* 
-      <div className="flex items-center space-x-4 sm:space-x-6 text-black hover:text-gray-700 transition-colors duration-200 ease-in-out">
-        <Mail className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
-        <MessageCircle className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
-        <Globe className="icon-class h-5 w-5 sm:h-6 sm:w-6" />
-      </div>
-      */}
     </div>
   );
 };
