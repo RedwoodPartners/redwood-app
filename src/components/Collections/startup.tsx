@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import {nanoid} from "nanoid";
+import { Query } from "appwrite";
 import LoadingSpinner from "../ui/loading";
 
 type Startup = {
@@ -57,7 +58,7 @@ const StartupsPage: React.FC = () => {
     const fetchStartups = async () => {
       setLoading(true);
       try {
-        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID);
+        const response = await databases.listDocuments(STAGING_DATABASE_ID, STARTUP_ID, [Query.limit(300)]);
         const startupData = response.documents.map((doc: Document) => ({
           id: doc.$id,
           name: doc.name || "",
@@ -403,16 +404,69 @@ const StartupsPage: React.FC = () => {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-              <Button
-                key={number}
-                variant={currentPage === number ? "default" : "outline"}
-                size="sm"
-                onClick={() => handlePageChange(number)}
-              >
-                {number}
-              </Button>
-            ))}
+            {/* Condensed Pagination Logic */}
+            {(() => {
+              const pageButtons = [];
+              const pageNeighbors = 2; // how many neighbors to show on each side
+              let startPage = Math.max(2, currentPage - pageNeighbors);
+              let endPage = Math.min(totalPages - 1, currentPage + pageNeighbors);
+
+              // Always show first page
+              pageButtons.push(
+                <Button
+                  key={1}
+                  variant={currentPage === 1 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(1)}
+                >
+                  1
+                </Button>
+              );
+
+              // Show left ellipsis if needed
+              if (startPage > 2) {
+                pageButtons.push(
+                  <span key="start-ellipsis" className="px-1">...</span>
+                );
+              }
+
+              // Show middle page numbers
+              for (let i = startPage; i <= endPage; i++) {
+                pageButtons.push(
+                  <Button
+                    key={i}
+                    variant={currentPage === i ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(i)}
+                  >
+                    {i}
+                  </Button>
+                );
+              }
+
+              // Show right ellipsis if needed
+              if (endPage < totalPages - 1) {
+                pageButtons.push(
+                  <span key="end-ellipsis" className="px-1">...</span>
+                );
+              }
+
+              // Always show last page if more than one
+              if (totalPages > 1) {
+                pageButtons.push(
+                  <Button
+                    key={totalPages}
+                    variant={currentPage === totalPages ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(totalPages)}
+                  >
+                    {totalPages}
+                  </Button>
+                );
+              }
+
+              return pageButtons;
+            })()}
             <Button
               variant="outline"
               size="sm"
