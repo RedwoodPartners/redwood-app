@@ -9,7 +9,7 @@ export const STARTUP_ID = process.env.NEXT_PUBLIC_STARTUP_ID!;
 export const PROJECTS_ID = process.env.NEXT_PUBLIC_PROJECTS_ID!;
 export const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID!;
 
-export const STARTUP_DATABASE = "startup";
+export const STARTUP_DATABASE = process.env.NEXT_PUBLIC_STARTUP_DATABASE!;
 
 
 type CreateUserAccount = {
